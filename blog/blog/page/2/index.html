@@ -9,7 +9,7 @@
   <meta name="author" content="Alex Beal">
 
   
-  <meta name="description" content="Recently I&#8217;ve been playing around with a neat command line utility called netcat. It makes it incredibly easy to add networking functionality &hellip;">
+  <meta name="description" content="When putting together a backup solution for this web server, I was looking for a few things: Simplicity: The less new software, the better. Rsync is &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -77,118 +77,6 @@
     <div id="content">
       <div class="blog-index">
   
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/blog/2011/08/15/a-database-engine-in-16-lines/">A Database Engine in 16 Lines</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2011-08-15T13:36:00-06:00" pubdate data-updated="true">Aug 15<span>th</span>, 2011</time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>Recently I&#8217;ve been playing around with a neat command line utility called netcat. It makes it incredibly easy to add networking functionality to your scripts. What it does is allow you to open a port on your machine and listen for incoming connections. Should a connection occur, anything the remote machine sends is dumped to stdout, and anything written to stdin is sent out to the remote machine. As a demo, I decided to write a database engine with it, and I managed to do it in 16 lines.</p>
-
-<pre><code>#!/bin/bash
-
-PORT=1234
-DATA_FILE="/full/path/to/data"
-
-listen () {
-    TIMEOUT=10
-    echo "$2" | nc -l -p $1 -w $TIMEOUT -q 0 
-}
-
-while :; do
-    ANSWER_PORT=$((RANDOM % 1000 + 1028))
-    QUERY="$(echo $ANSWER_PORT | nc -l -p $PORT -q 2)"
-    ANSWER="$(grep "^$QUERY," "$DATA_FILE" | sed "s/ $QUERY, //")"
-    listen "$ANSWER_PORT" "$ANSWER" &amp;
-done
-</code></pre>
-
-<p>The database itself is simply a text file full of key-value pairs. So, a remote machine can send over a key, and the database responds with that key&#8217;s corresponding value. If, for example, the database was full of names (keys) and phone numbers (values), a remote machine could send over someone&#8217;s name, and the database would respond with that person&#8217;s phone number. Not bad for 16 lines.</p>
-
-<p>Before I step through the code, I&#8217;ll explain its overall functionality. When first executed, the script opens up port 1234 and listens. When a remote machine wants to query it, the remote machine connects to port 1234 and sends over its query (a key). The script receives this and, over the same connection, sends back a random number between 1028 and 2028. Suppose the random number is 1050. The database will then open up port 1050, and when the remote machine connect to that port, the database will send its answer over that connection (the value corresponding to the key), and the transaction is finished. Let&#8217;s look at the code now.</p>
-
-<h2>Analysis</h2>
-
-<p>The script starts off with two variables. The first is the port that the script listens on for incoming queries. The second points to the text file containing the key-value pairs. The file would look something like this:</p>
-
-<pre><code>alex beal, 555-555-5555
-bob, 111-111-1111
-joe, 222-222-2222
-</code></pre>
-
-<p>Where, &#8220;alex beal&#8221;, &#8220;bob&#8221;, and &#8220;joe&#8221; are the keys, and the values corresponding to those keys are listed after the comma. Let&#8217;s skip over the listen function for now and examine the while loop below it.</p>
-
-<pre><code>while :; do
-    ANSWER_PORT=$((RANDOM % 1000 + 1028))
-    QUERY="$(echo $ANSWER_PORT | nc -l -p $PORT -q 2)"
-    ANSWER="$(grep "^$QUERY," "$DATA_FILE" | sed "s/^$QUERY, //")" 
-    listen "$ANSWER_PORT" "$ANSWER" &amp;
-done
-</code></pre>
-
-<p>The first line is a while loop that continues forever until the script receives an interrupt. The second two lines get a random number between 1028 and 2028 and store it to <code>$ANSWER_PORT</code>. That value is piped into the netcat instance on the third line, which listens for connections (<code>-l</code>) on port 1234 (<code>-p $PORT</code>). Once a connection is established, and the random port number is sent, the remote host has 2 seconds to send over a query (<code>-q 2</code>), which gets stored to <code>$QUERY</code>. This means that after the first two lines have executed, the query is received, and the random answer port is sent.</p>
-
-<p>The next lines search through the database file for the key-value pair. Searching the database is as simple as <code>grep</code>-ing the data file for the line beginning with the key, and stripping that key from the output with sed.</p>
-
-<p>Finally we call the <code>listen</code> function defined above. This is passed the port that the client must connect to to receive the answer (<code>$ANSWER_PORT</code>), and the answer itself (<code>$ANSWER</code>).</p>
-
-<pre><code>listen () {
-    TIMEOUT=10
-    echo "$2" | nc -l -p $1 -w $TIMEOUT -q 0 
-}
-</code></pre>
-
-<p>The answer, which is the second argument (<code>$2</code>), is piped into netcat (<code>nc</code>). The flags tell it to listen (<code>-l</code>) on the port passed to it as the first argument (<code>-p $1</code>). The netcat instance will stop listening after <code>$TIMEOUT</code> seconds, and after the answer is sent, it will close immediately (<code>-q 0</code>). As you can see, the listen function is called as a background process, so the loop can continue back to the top, allowing other requests to be handled while the answer is sent to the client in the background.</p>
-
-<h2>The Client&#8217;s Script</h2>
-
-<p>You can query it remotely with this script:</p>
-
-<pre><code>#!/bin/bash
-ANSWERPORT=$(echo "$2" | nc $1 1234)
-sleep 1s
-nc $1 $ANSWERPORT
-</code></pre>
-
-<p>The first line both receives the answer port, and sends over the query. The script then sleeps for 1 second, while the database handles the request. Finally, it connects a second time to retrieve its answer. The script is used as follows:</p>
-
-<pre><code>query.sh REMOTE_IP QUERY_STRING
-</code></pre>
-
-<h2>Conclusion</h2>
-
-<p>Although this was a fun exercise, the script itself isn&#8217;t very practical. It&#8217;s slow (at least compared to MySQL), and probably insecure, but there might be a use for it on a private network with trusted users. The take away points here are the different netcat constructs that you could apply to your own programs, such as sending and receiving at the same time, and setting up a client-server model. Definitely let me know in the comments if you end up making something cool!</p>
-
-<p><a href="http://media.usrsb.in/db/db-scripts.zip">Download the scripts.</a></p>
-</div>
-  
-  
-
-
-    </article>
   
   
     <article>
@@ -1019,6 +907,89 @@ done
 
     </article>
   
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/blog/2011/03/17/backing-up-a-directorys-permissions/">Backing Up a Directory&#8217;s Permissions</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-03-17T10:39:00-06:00" pubdate data-updated="true">Mar 17<span>th</span>, 2011</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>We&#8217;ve all done it before, and if it hasn&#8217;t happened to you yet, it&#8217;s only a matter of time. You&#8217;re attempting to set the permissions on a directory and and you&#8217;re doing something along the lines of <code>sudo chmod -R 660 ./foobar</code>. You execute the command only to realize that you&#8217;re in the wrong directory or you&#8217;ve mistyped the directory&#8217;s name, and now your permissions are totally clobbered. If you&#8217;ve kept good backups, this is annoying, but not devastating. Either you could completely restore the files, or perhaps you could write a script which would copy the old file permissions back over. An easier alternative would be to plan ahead and backup the file permissions before disaster strikes. Here&#8217;s a script that will do that for you:</p>
+
+<pre><code>#!/bin/bash
+
+#Check that we've been passed a directory.
+if [ ! -d "$1" ]; then
+   echo "$1 is not a directory. Exiting."
+   exit 1
+fi
+
+#Check if we've been passed a relative or absolute
+#path. If it's relative, store $PWD in $DIR. We'll need
+#this later to build the absolute path.
+echo "$1" | grep -q '^/'
+if [ $? == 0 ]; then
+   DIR='' 
+else
+   DIR="$PWD/"
+fi
+
+#Generate the header comments for the script.
+echo "#!/bin/bash"
+echo "#"
+echo "#This script will restore permissions under $DIR$1"
+echo "#to how they were on `date`"
+echo "#"
+
+#Loop through the given directory's tree and 
+#echo the commands to restore the permissions and owner.
+find "$1" -print0 | while read -d $'\0' i
+do
+   echo chmod `stat -c %a "$i"` \"$DIR$i\"
+   echo chown `stat -c "%U:%G" "$i"` \"$DIR$i\"
+done
+</code></pre>
+
+<p>What this script does is generate another script, which, when run, will restore a directory&#8217;s permissions, owner, and group (and also the permissions, owner, and group of any files and directories under it). Suppose you drop this script into a file called <code>backup.sh</code> and you want to backup the permissions of a directory called <code>/home/you/mystuff</code>. Here&#8217;s how you&#8217;d do it:</p>
+
+<pre><code>./backup.sh /home/you/mystuff &gt; mystuff-backup.sh
+</code></pre>
+
+<p>Now when you execute <code>mystuff-backup.sh</code>, all of <code>/home/you/mystuff</code>&#8217;s permissions will be restored. Easy.</p>
+
+<p>There is one security caveat you should keep in mind. The resultant script will contain the names of all the files and subdirectories in the directory tree. The upshot is that anyone who has read access to the script will be able to see this information. If this is a problem, you should adjust the script&#8217;s permissions accordingly.</p>
+
+<p>The script itself is pretty straight forward. On line 4, we tell a relative path from an absolute path by seeing if it&#8217;s prefixed with a forward slash. If it is, then it&#8217;s absolute. If it isn&#8217;t, then it&#8217;s relative. We&#8217;ll need this information later to build the absolute path to all the files. The next step is to loop through the files, which is a bit tricky. On line 28, we need to pipe the output of <code>find</code> to a <code>while read</code> because the more intuitive <code>for</code> loop construct doesn&#8217;t handle spaces and newlines in filenames properly (of course, anyone who puts newlines in a filename needs to be thrown into the <a href="http://www.starwars.com/databank/creature/sarlacc/">sarlacc</a>). In fact, you may just want to memorize that line, as it&#8217;s a common problem with a far from obvious solution. Finally, on line 30 and 31, we read the file&#8217;s permission and owners with <code>stat</code>, which is a handy command that, among other things, outputs file information in a user definable format.</p>
+
+<p>So there you have it. <a href="http://media.usrsb.in/dir-perm/backupperm.sh">Download the script here.</a> Now go forth and make this a cron job.</p>
+</div>
+  
+  
+
+
+    </article>
+  
   <div class="pagination">
     
       <a class="prev" href="/blog/blog/page/3/">&larr; Older</a>
@@ -1036,10 +1007,6 @@ done
   <ul id="recent_posts">
     
       <li class="post">
-        <a href="/blog/blog/2012/03/16/making-data-structures-from-functions/">Making Data Structures from Functions</a>
-      </li>
-    
-      <li class="post">
         <a href="/blog/blog/2012/02/05/super-bowl-probabilities/">Super Bowl Probabilities: The Coin Toss</a>
       </li>
     
@@ -1053,6 +1020,10 @@ done
     
       <li class="post">
         <a href="/blog/blog/2012/01/11/picking-random-items-from-a-file/">Picking Random Items From a File</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/blog/2012/01/03/a-program-analysis-for-tail-call-optimization/">A Program Analysis For Tail Call Optimization</a>
       </li>
     
   </ul>

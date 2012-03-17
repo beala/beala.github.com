@@ -4,7 +4,7 @@
   <title><![CDATA[Category: programming | /usr/sbin/blog]]></title>
   <link href="http://usrsb.in/blog/blog/categories/programming/atom.xml" rel="self"/>
   <link href="http://usrsb.in/blog/"/>
-  <updated>2012-03-16T20:17:10-06:00</updated>
+  <updated>2012-03-16T20:21:47-06:00</updated>
   <id>http://usrsb.in/blog/</id>
   <author>
     <name><![CDATA[Alex Beal]]></name>
@@ -12,60 +12,6 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
-  
-  <entry>
-    <title type="html"><![CDATA[Making Data Structures from Functions]]></title>
-    <link href="http://usrsb.in/blog/blog/2012/03/16/making-data-structures-from-functions/"/>
-    <updated>2012-03-16T08:41:00-06:00</updated>
-    <id>http://usrsb.in/blog/blog/2012/03/16/making-data-structures-from-functions</id>
-    <content type="html"><![CDATA[<p>Here's a puzzle I've adapted form <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-14.html#%_sec_2.1.3">exercise 2.4</a> of SICP.</p>
-
-<blockquote><p>Suppose I were programming in a language that only supported function application. That is, all that could be done in this language is define functions, and apply arguments to those functions. How could I model linked lists in such a language? Is it possible?</p></blockquote>
-
-<p>Surprisingly, the answer is yes, and the exercise linked to above provides a partial solution. Below, I've translated that solution into Python, and completed the exercise:</p>
-
-<p>```python Solution in Python</p>
-
-<h1>Create a pair from l and r</h1>
-
-<p>def cons(l, r):</p>
-
-<pre><code>return lambda get: get(l, r)
-</code></pre>
-
-<h1>Given a pair, return the head (left) value.</h1>
-
-<p>def head(pair):</p>
-
-<pre><code>return pair(lambda l, r: l)
-</code></pre>
-
-<h1>Give a pair, return the tail (right) value.</h1>
-
-<p>def tail(pair):</p>
-
-<pre><code>return pair(lambda l, r: r)
-</code></pre>
-
-<p>```</p>
-
-<p>First, let's examine how these functions can be used, and then I'll explain how they work. Consider the snippet below:</p>
-
-<p><code>python Usage Example
-l1 = cons(1, 2)
-print head(l1)       # Prints 1
-print tail(l1)       # Prints 2
-l2 = cons(0, l1)
-print head(l2)       # Prints 0
-print head(tail(l2)) # Prints 1
-print tail(tail(l2)) # Prints 2
-</code></p>
-
-<p>As can be seen, <code>cons()</code> is a constructor for this pair type. Give it two values, and it will create a pair of those two values. <code>head()</code> and <code>tail()</code> are the basic operators that let us access values inside these pairs; they return the left and right element of the pair, respectively. Also notice that we can create pairs of pairs. The last half of the example creates a pair composed of <code>0</code> and <code>(1,2)</code>. Why is this significant? Well, we've just made a linked list! Linked lists are simply pairs of pairs. The list <code>[1,2,3,4]</code> can, for example, be represented as <code>cons(1,cons(2,cons(3,cons(4,None))))</code>. Incredible! What's <code>None</code> doing at the end of the list? You can think of it like the <code>NULL</code> pointer at the end of a linked list in C. If a function were traversing the list, <code>None</code> would signify to the function that it has reached the end. Mathematically, you can think of a linked list as an inductively defined data structure, where <code>None</code> is the base case. <code>None</code> is referred to as the <em>empty list</em>.</p>
-
-<p>This is a pony.</p>
-]]></content>
-  </entry>
   
   <entry>
     <title type="html"><![CDATA[Implementing a Logic Evaluator Without if-expressions or Boolean Operators]]></title>
@@ -695,6 +641,74 @@ return y
 <li>This is one reason dynamic languages can be slow, but most compilers perform additional optimizations to cut down on so called "dispatch code" by detecting variables types at compile time. This is possible when, for example, an integer is explicitly assigned to a variable: <code>x = 1</code>. In that case, it's guaranteed that <code>x</code> contains an integer.</li>
 <li>Dead code elimination. (2011, October 20). In Wikipedia, The Free Encyclopedia. Retrieved 16:56, December 24, 2011, from <a href="http://en.wikipedia.org/w/index.php?title=Dead_code_elimination&amp;oldid=456578651">http://en.wikipedia.org/w/index.php?title=Dead_code_elimination&amp;oldid=456578651</a></li>
 <li>At first blush, this doesn't look nested, but it is: <code>x = (((input()) + 1) + g())</code>. The infix notation is deceptive, but, as demonstrated by the parenthesized version, there are actually 2 levels of addition that roughly correspond to the structure of the flattened code.</li>
+</ol>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Implementing Switches With Dictionaries (Python)]]></title>
+    <link href="http://usrsb.in/blog/blog/2011/12/29/implementing-switches-with-dictionaries/"/>
+    <updated>2011-12-29T10:55:00-07:00</updated>
+    <id>http://usrsb.in/blog/blog/2011/12/29/implementing-switches-with-dictionaries</id>
+    <content type="html"><![CDATA[<p>One thing I like about Python is that it lets you do just about anything. Classes can be modified at runtime, lists can contain a mix of types, and functions are first-class. The built in dictionaries are especially powerful. They are fast, and can hash and contain just about any immutable datatype, including functions. This allows for a novel use: fast <code>switch</code> statements. Consider the following bit of C, which adds, subtracts, or multiplies two numbers based on the value of <code>op</code>:</p>
+
+<p>``` c A C Calculator
+switch(op) {</p>
+
+<pre><code>case '+':
+    c = a + b;
+    break;
+case '-':
+    c = a - b;
+    break;
+default:
+    c = a * b;
+    break;
+</code></pre>
+
+<p>}
+```</p>
+
+<p>This behavior could be duplicated in Python using an <code>if ... elif ... elif ...</code> sequence,<sup>1</sup> or we could use the following dictionary:</p>
+
+<p>``` python A Python Calculator
+def add():</p>
+
+<pre><code>return a + b
+</code></pre>
+
+<p>def sub():</p>
+
+<pre><code>return a - b
+</code></pre>
+
+<p>def mult():</p>
+
+<pre><code>return a * b
+</code></pre>
+
+<p>switch_substitute = {</p>
+
+<pre><code>'+' : add,
+'-' : sub }
+</code></pre>
+
+<p>c = switch_substitute.get(op, mult)()
+```</p>
+
+<p>There, the three operations are wrapped in functions, and added as values to the dictionary. The <code>get()</code> method looks for the function associated with the value of <code>op</code> and returns the <code>mult</code> function if the key is not in the dictionary, mimicking the action of the <code>default</code> case.<sup>2</sup> Once one of the functions is retrieved, it's immediately called, and the appropriate value gets assigned to <code>c</code>.</p>
+
+<p>The advantage of this method is that it's fast. Dictionaries are implemented as hash tables, so the lookup happens in constant time.<sup>3</sup> <code>elif</code>s and <code>switch</code>es probably take linear time, but would depend on the implementation.</p>
+
+<p>It's also worth thinking about how something similar could be built using a class and Python's <a href="http://docs.python.org/library/functions.html#getattr">getattr</a> function.</p>
+
+<h2>Footnotes:</h2>
+
+<ol>
+<li><a href="http://docs.python.org/tutorial/controlflow.html#if-statements">http://docs.python.org/tutorial/controlflow.html#if-statements</a></li>
+<li><a href="http://docs.python.org/library/stdtypes.html#dict.get">http://docs.python.org/library/stdtypes.html#dict.get</a></li>
+<li><a href="http://docs.python.org/library/stdtypes.html#mapping-types-dict">http://docs.python.org/library/stdtypes.html#mapping-types-dict</a></li>
 </ol>
 
 ]]></content>
