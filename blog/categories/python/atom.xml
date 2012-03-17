@@ -1,0 +1,742 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: python | /usr/sbin/blog]]></title>
+  <link href="http://usrsb.in/blog/blog/categories/python/atom.xml" rel="self"/>
+  <link href="http://usrsb.in/blog/"/>
+  <updated>2012-03-16T20:05:49-06:00</updated>
+  <id>http://usrsb.in/blog/</id>
+  <author>
+    <name><![CDATA[Alex Beal]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Making Data Structures from Functions]]></title>
+    <link href="http://usrsb.in/blog/blog/2012/03/16/making-data-structures-from-functions/"/>
+    <updated>2012-03-16T08:41:00-06:00</updated>
+    <id>http://usrsb.in/blog/blog/2012/03/16/making-data-structures-from-functions</id>
+    <content type="html"><![CDATA[<p>Here's a puzzle I've adapted form <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-14.html#%_sec_2.1.3">exercise 2.4</a> of SICP.</p>
+
+<blockquote><p>Suppose I were programming in a language that only supported function application. That is, all that could be done in this language is define functions, and apply arguments to those functions. How could I model linked lists in such a language? Is it possible?</p></blockquote>
+
+<p>Surprisingly, the answer is yes, and the exercise linked to above provides a partial solution. Below, I've translated that solution into Python, and completed the exercise:</p>
+
+<p>```python Solution in Python</p>
+
+<h1>Create a pair from l and r</h1>
+
+<p>def cons(l, r):</p>
+
+<pre><code>return lambda get: get(l, r)
+</code></pre>
+
+<h1>Given a pair, return the head (left) value.</h1>
+
+<p>def head(pair):</p>
+
+<pre><code>return pair(lambda l, r: l)
+</code></pre>
+
+<h1>Give a pair, return the tail (right) value.</h1>
+
+<p>def tail(pair):</p>
+
+<pre><code>return pair(lambda l, r: r)
+</code></pre>
+
+<p>```</p>
+
+<p>First, let's examine how these functions can be used, and then I'll explain how they work. Consider the snippet below:</p>
+
+<p><code>python Usage Example
+l1 = cons(1, 2)
+print head(l1)       # Prints 1
+print tail(l1)       # Prints 2
+l2 = cons(0, l1)
+print head(l2)       # Prints 0
+print head(tail(l2)) # Prints 1
+print tail(tail(l2)) # Prints 2
+</code></p>
+
+<p>As can be seen, <code>cons()</code> is a constructor for this pair type. Give it two values, and it will create a pair of those two values. <code>head()</code> and <code>tail()</code> are the basic operators that let us access values inside these pairs; they return the left and right element of the pair, respectively. Also notice that we can create pairs of pairs. The last half of the example creates a pair composed of <code>0</code> and <code>(1,2)</code>. Why is this significant? Well, we've just made a linked list! Linked lists are simply pairs of pairs. The list <code>[1,2,3,4]</code> can, for example, be represented as <code>cons(1,cons(2,cons(3,cons(4,None))))</code>. Incredible! What's <code>None</code> doing at the end of the list? You can think of it like the <code>NULL</code> pointer at the end of a linked list in C. If a function were traversing the list, <code>None</code> would signify to the function that it has reached the end. Mathematically, you can think of a linked list as an inductively defined data structure, where <code>None</code> is the base case. <code>None</code> is referred to as the <em>empty list</em>.</p>
+
+<p>This is a pony.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Super Bowl Probabilities: The Coin Toss]]></title>
+    <link href="http://usrsb.in/blog/blog/2012/02/05/super-bowl-probabilities/"/>
+    <updated>2012-02-05T09:53:00-07:00</updated>
+    <id>http://usrsb.in/blog/blog/2012/02/05/super-bowl-probabilities</id>
+    <content type="html"><![CDATA[<p>Browsing through my Twitter stream, I came across a blog post discussing an allegedly 3.8-sigma event: <a href="http://blogs.discovermagazine.com/cosmicvariance/2012/02/04/a-3-8-sigma-anomaly/">Apparently the last 14 Super Bowl coin tosses have been won by the NFC</a>. What are the chances of this? The blog linked to above claims a probability of (1/2)<sup>13</sup>. Another <a href="http://www.outsidethebeltway.com/super-bowl-coin-flip/">blog</a> claims (1/2)<sup>14</sup>. Which is correct? Before I get into the mathematics, I'll try to disentangle three different questions:</p>
+
+<ol>
+<li>Out of 14 tosses, what's the probability that they all come up heads?</li>
+<li>Out of 14 tosses, what's the probability that one team wins all of them?</li>
+<li>Out of 45 tosses (one for each Super Bowl), what's the probability that one team wins a string of 14 of them?<sup>1</sup></li>
+</ol>
+
+
+<p><strong>(1/2)<sup>14</sup></strong> is the correct answer to question (1). There's a 1 in 2 chance of getting heads. The probability of getting heads 14 times out of 14 tosses is therefore (1/2)<sup>14</sup>.</p>
+
+<p><strong>(1/2)<sup>13</sup></strong> is the correct answer to question (2). If you call a coin in the air, there's 1 in 2 chance you'll win the toss. Out of 14 tosses, the chance that <em>either</em> the NFC will win the toss 14 times <em>or</em> the AFC will win the toss 14 times is: (1/2)<sup>14</sup> + (1/2)<sup>14</sup> = (1/2)<sup>13</sup>.</p>
+
+<p>The last situation is much more difficult to calculate, and similar questions are often the cause for much surprise. For example, if you toss a coin 20 times, do you think it's likely or unlikely that you'll get a string of 5 heads in a row? It seems like this should be unlikely. After all, the probability of tossing a coin 5 times, and ending up with heads every time is quite small: (1/2)<sup>5</sup> = 1/32  (approx. 3%). Believe it or not, the actual probability is around 25%.<sup>2</sup></p>
+
+<p>How are these probabilities found? One solution is a rather nasty recursive formula. You might recognize this as a dynamic programming problem.</p>
+
+<blockquote><p>  A similar recursion can be given to calculate the probability that in <em>n</em> fair coin tosses a run of <em>r</em> heads or <em>r</em> tails occurs. In this case, we say that the tossing process is in state <em>(i, k)</em> when there are <em>k</em> tosses still to go and the last <em>i</em> tosses all showed the same outcome but so far no run of <em>r</em> heads or <em>r</em> tails has occurred. The probability <em>v<sub>k</sub>(i)</em> is defined as</p>
+
+<p>  v<sub>k</sub>(i) = the probability of getting a run of <em>r</em> heads or <em>r</em> tails during <em>n</em> tosses when the current state of the tossing process is <em>(i, k)</em>.</p>
+
+<p>The probability <em>v<sub>n-1</sub>(1)</em> is being sought (why?). Verify for yourself that the following recursion applies for k = 1,2,...,<em>n</em>.</p>
+
+<p>  v<sub>k</sub> = 0.5*v<sub>k-1</sub>(i + 1) + 0.5*v<sub>k-1</sub>(1) for i =,...,r - 1.</p>
+
+<p>The boundary conditions are <em>v<sub>0</sub>(i) = 0</em> for <em>1 &lt;= i &lt;= r -1</em> and <em>v<sub>j</sub>(r) = 1</em> for <em>0 &lt;= j &lt;= n - 1</em>.<sup>3</sup></p></blockquote>
+
+<p>I'm actually not sure why we're looking for <em>v<sub>n-1</sub>(1)</em> as opposed to <em>v<sub>n</sub>(0)</em>. I tested it for a few values, and those expressions seem to be equal.<sup>4</sup> In any case, the formula is dense, but you can see the logic behind it. If you're in the midst of a streak of heads, and your next flip comes up heads, your state is now <em>(i+1, k-1)</em>. That is, your streak has increased, but your tosses to go has decreased. This explains the first half of the formula: <em>0.5*v<sub>k-1</sub>(i + 1)</em>. The other case is that you're in the midst of a streak of heads, but then you get a tail, so your state becomes <em>(1, k-1)</em>. That is, you now have a streak of 1 tail, and your total number of tosses to go decrements by one. This explains the last half of the equation. The equation then branches out like a tree, solving for each possibility along the way. Here's a bit of Scheme that implements this:</p>
+
+<p>``` scheme An Exact Solution in Scheme
+(define (coin-streak n r)</p>
+
+<pre><code>(define (cs-helper k i)
+  (cond ((and (&lt;= 1 i) (&lt;= i (- r 1)) (= k 0)) 0)
+        ((and (&lt;= 0 k) (&lt;= k (- n 1)) (= i r)) 1)
+        (else (+
+               (* (/ 1 2) (ct-string r n (- k 1) (+ i 1)))
+               (* (/ 1 2) (ct-string r n (- k 1) 1 ))))
+        ))
+(cs-helper (- n 1) 1))
+</code></pre>
+
+<p>```</p>
+
+<p>Notice that this problem quickly becomes intractable for large values of <em>n</em>. Each call branches into two different calls, giving an exponential growth (props to the first person who posts a tail recursive memoization). This is why I prefer solving this by simulation. What we need to do is simulate 45 coin flips, and check if we've encountered a string of 14 heads or 14 tails. Do this, say, 100,000 times and see how often this event occurs.</p>
+
+<p>``` python ctsim.py: An Approximation by Simulation in Python</p>
+
+<h1>!/usr/bin/python -O</h1>
+
+<p>import random
+import sys</p>
+
+<p>STREAK_LEN  = int(sys.argv[1])
+TOSSES      = int(sys.argv[2])
+TRIALS      = int(sys.argv[3])</p>
+
+<p>def simulation(trials, tosses, streak):</p>
+
+<pre><code>''' Simulates *trials* trials of *tosses* tosses and returns the
+    fraction of trials that contained at least one streak
+    of *streak* or higher.
+'''
+
+def run_trial():
+    ''' Flips a coin *tosses* times and returns True if a streak of
+        *streak* length is encountered.
+    '''
+    cur_streak = 1      # Length of the current streak.
+    prev_outcome = None # Outcome of a previous toss.
+    # Simulate the tosses.
+    for toss in range(tosses):
+        outcome = random.randint(0,1)
+        # If the last toss is the same as the current toss,
+        # increment the length of the current streak.
+        if outcome == prev_outcome:
+            cur_streak += 1
+        else:
+            cur_streak = 1
+
+        # If the current streak is equal to the target
+        # length, return True
+        if cur_streak == streak:
+            return True
+
+        prev_outcome = outcome
+
+    return False
+
+streak_count = 0
+# Simulate all the trials, and keep track of how many had
+# a streak.
+for trial in range(trials):
+    had_a_streak = run_trial()
+    if had_a_streak:
+        streak_count += 1
+
+return streak_count / float(trials)
+</code></pre>
+
+<p>if <strong>name</strong> == "<strong>main</strong>":</p>
+
+<pre><code>print simulation(TRIALS, TOSSES, STREAK_LEN)
+</code></pre>
+
+<p>```</p>
+
+<p>We can now simulate the Super Bowl situation by looking for a streak of 14 wins out of 45 tosses with 100,000 simulations.</p>
+
+<p><code>bash ctsim.py Usage
+% ./ctsim.py 14 45 100000
+0.00202
+</code></p>
+
+<p>So, the probability of this happening is <strong>0.00202</strong> or around <strong>0.2%</strong>. This is still tiny, but not as small as (1/2)<sup>13</sup> (approx. 0.00012 or 0.012%).</p>
+
+<h2>Notes:</h2>
+
+<ol>
+<li>Even this is slightly ambiguous. The exact question that we'll be looking at is: What is the probability that one team will have at least one winning streak of at least 14 tosses.</li>
+<li>Tijms, H. (2010). Understanding probability: Chance rules in everyday life. (2 ed.). Cambridge, UK: Cambridge University Press.</li>
+<li>Ibid.</li>
+<li>Perhaps the equation <em>v<sub>n</sub>(0)</em> is technically undefined. That is, <em>i</em> cannot equal 0 because you must have a streak of at least 1 head or 1 tail. Nevertheless, it looks like the formula still works for this technically undefined state.</li>
+</ol>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Picking Random Items: Take Two (Hacking Python's Generators)]]></title>
+    <link href="http://usrsb.in/blog/blog/2012/01/14/picking-random-items-take-2/"/>
+    <updated>2012-01-14T10:29:00-07:00</updated>
+    <id>http://usrsb.in/blog/blog/2012/01/14/picking-random-items-take-2</id>
+    <content type="html"><![CDATA[<p>Earlier today I had my mind blown by David Beazley's <a href="http://www.dabeaz.com/generators/">presentation on the power of Python's generators</a>, and it inspired me to write this highly Pythonic version of <a href="/blog/2012/01/11/picking-random-items-from-a-file/">the random word selector</a>, made almost entirely of generators:</p>
+
+<p>``` python
+import heapq
+import random</p>
+
+<p>lines       = (line for line in open("/usr/share/dict/words"))
+word_pairs  = ((random.random(), word) for word in lines)
+rand_pairs  = heapq.nlargest(4, word_pairs)</p>
+
+<p>rand_words  = [word for rand, word in rand_pairs]
+print rand_words
+```</p>
+
+<p>How does this work? First recall that a generator is an object that returns the next item in a sequence every time its <code>next()</code> method is called. There's an example of this on line 4 where a generator named <code>lines</code> is created, which returns the next line of the file every time <code>lines.next()</code> is called. What's so handy about a generator is that it can be automatically consumed by a <code>for</code> loop. That is, put a generator in a <code>for</code> loop, and the loop will automatically call the generator's <code>next()</code> method on every iteration. There's an example of this on line 5 where another generator is created that uses a <code>for</code> loop to consume the <code>lines</code> generator. This outputs a tuple containing a random number and the line returned by <code>lines.next()</code>. So, the result is that each time <code>word_pairs.next()</code> is called, you get the next line of the file paired with a random value (e.g., <code>(0.12345, 'fire\n')</code>). Finally, we use <code>heapq.nlargest(n, iter)</code> to grab the <code>n</code> largest elements from <code>iter</code>. In this case, it repeatedly calls <code>word_pairs.next()</code> and outputs a list of the 4 words with the highest random values.<sup>1</sup> These are our 4 random words. This is all done in around 3 lines (excluding <code>import</code>s and <code>print</code>ing). Wowza.</p>
+
+<p>As Beazley points out, one advantage of this technique is that it resembles the way simple commands are chained together in the shell to create a pipeline. And, just like in the shell, the pipeline is highly modular, so different filters and stages can be easily inserted at different points. Below, I've added two stages to the pipeline that strip the words of their newline characters, and skip words that aren't exactly 13 characters long:</p>
+
+<p>``` python
+import heapq
+import random</p>
+
+<p>def isValid(word):</p>
+
+<pre><code>return len(word) == 13
+</code></pre>
+
+<p>lines       = (line for line in open("/usr/share/dict/words"))
+words       = (line.strip() for line in lines)
+valid_words = (word for word in words if isValid(word))
+word_pairs  = ((random.random(), word) for word in valid_words)
+rand_pairs  = heapq.nlargest(4, word_pairs)</p>
+
+<p>rand_words  = [word for rand, word in rand_pairs]
+print rand_words
+```</p>
+
+<p>The <code>words</code> generator calls <code>strip()</code> on each <code>line</code> which removes the newline character. The <code>valid_words</code> generator only returns words that pass the <code>isValid</code> test. In this case, <code>isValid</code> returns <code>True</code> only if the word is exactly 13 characters long. The end result is 4 random words that are 13 characters long.</p>
+
+<p>One other advantage is that each generator creates its output only when requested. This translates into minimal memory use. The dictionary file being consumed might be gigabytes in size, but only one word will be loaded into memory at a time (excluding buffering done by the <code>file</code> class, etc). It's definitely a neat way of parsing large files.</p>
+
+<p>If you enjoyed this, definitely check out <a href="http://www.dabeaz.com/generators/">Beazley's presentation</a>, and venture further down the rabbit hole.</p>
+
+<h2>Notes</h2>
+
+<ol>
+<li>You could even use the built-in function <code>max()</code> if you only need one word.</li>
+</ol>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Picking Random Items From a File]]></title>
+    <link href="http://usrsb.in/blog/blog/2012/01/11/picking-random-items-from-a-file/"/>
+    <updated>2012-01-11T10:29:00-07:00</updated>
+    <id>http://usrsb.in/blog/blog/2012/01/11/picking-random-items-from-a-file</id>
+    <content type="html"><![CDATA[<p>Here's a deceptively simple programming puzzle: Develop an algorithm for randomly selecting <em>n</em> words from a dictionary file. This is essentially the puzzle I had to solve in order to write my <a href="https://github.com/beala/xkcd-password">xkcd-style password generator</a>, which implements the <a href="http://xkcd.com/936/">xkcd password spec</a>.<sup>1</sup></p>
+
+<p>The simplest solution is to parse the dictionary into individual words (easy to do in Python) and put those words into a list. Selecting four random words is then as easy as selecting four random items from the list. This is fast, easy to implement, and simple to understand, but it is also very memory inefficient. I have to load 50,000+ words into memory in order to select four of them.<sup>2</sup> Can we do better? Yes.</p>
+
+<h2>A Memory Efficient Algorithm</h2>
+
+<p>The key insight into developing a better algorithm is realizing that it should be possible to select the words as the dictionary file is being parsed, rather than loading the entire thing into memory. The difficulty is making sure that each word has an equal chance of being chosen, and that at least <em>n</em> words are chosen. If, for example, we simply give each word a 1 in 10 chance of being chosen, we'll end up with way more words than we need (assuming <em>n</em> is small). If we give each a 1 in 50,000 chance, there's the possibility that we won't choose enough words. Bryce Boe has <a href="http://www.bryceboe.com/2009/03/23/random-lines-from-a-file/">a clever solution</a> to this problem where he chooses exactly <em>n</em> words, but the proof that it works is non-trivial, and he doesn't provide it. This is why I came up with my algorithm.</p>
+
+<p>In order to explain my algorithm, it's best to think of it in terms of rolling dice. Consider the following procedure for randomly selecting 4 dice from 10.</p>
+
+<ol>
+<li>Roll all 10 dice.</li>
+<li>Select the 4 with the highest values.
+
+<ol>
+<li>If, suppose, 5 of the dice all end up with a value of 6, randomly choose 4 from those 5 (perhaps by repeating the procedure with those 5).</li>
+<li>If, suppose 2 dice get a value of 6, and 3 get a value of 5, select the 2 with the value of 6, and then randomly select 2 of the 3 with a value of 5.</li>
+</ol>
+</li>
+</ol>
+
+
+<p>How can we adapt this procedure to select random words from a file, rather than dice? Here's how: as we're parsing the dictionary file, we give each word a random value, and then select the <em>n</em> words with the highest values. The issue is, the naive implementation of this procedure doesn't really solve our memory problem. If every word gets a random value, don't we now have to store every word in memory, along with its value? The key here is to observe that only the words with the <em>n</em> highest values need to be kept in memory, and all the others can be immediately discarded. Think about this in terms of the dice example. I want to select 1 die from 10:</p>
+
+<ol>
+<li>I roll the first die. I get a value of 1. I keep this die.</li>
+<li>I roll the second. I get a value of 3. I keep this die, and discard the other.</li>
+<li>I roll the third. I get a value of 3. I keep both dice.</li>
+<li>Fourth: I get a value of 6. I keep this die and discard the other 2.</li>
+</ol>
+
+
+<p>By the end of the procedure, I might end up with 3 dice that all got a value of 6. I would then randomly select 1 from those 3.</p>
+
+<p>How can we adapt this procedure for selecting random words? We use a priority queue:</p>
+
+<ol>
+<li>Read a word from the dictionary.</li>
+<li>Give it a random value.</li>
+<li>Insert the value-word pair (as a tuple) into the priority queue.</li>
+<li>If the queue has more than <em>n</em> items, pop an item.</li>
+<li>Repeat until every word has been read.</li>
+</ol>
+
+
+<p>Remember that popping from a priority queue removes the item with the lowest value. So, we insert a word, and if we have too many words, we pop the one with the lowest value. At the end of this procedure there will be exactly <em>n</em> words in the queue. These are our <em>n</em> random words. Neat.</p>
+
+<p>There is one issue, though. What if two words have the same random value? Well, one solution is to keep both words, and then break the tie at the end like we did in the dice example, but that breaks the elegance of the priority queue implementation. Another is to break ties randomly as soon as they occur, and discard the losing word, but I'm not sure how to do this in a statistically safe way. The easiest solution is to just pray that collisions don't occur. In Python, each call to <code>random()</code> produces 53-bits of precision, so it's very unlikely that two values will collide. If 53-bits isn't enough (yeah right), you can use multiple random numbers. So, rather than a tuple of <code>(value, word)</code>, you can use <code>(value_1, value_2, value_3, word)</code>.<sup>3</sup> Python's priority queue implementation will automatically know how to sort that.</p>
+
+<p>Without further ado, here's the proof of concept:</p>
+
+<p>``` python</p>
+
+<h1>!/usr/bin/python -O</h1>
+
+<p>import random
+import heapq</p>
+
+<p>DICT_PATH = "/usr/share/dict/words"
+WORD_COUNT = 4</p>
+
+<p>dict_file = open(DICT_PATH)
+wordq = []
+for line in dict_file:</p>
+
+<pre><code>word = line.strip()
+rand_val = random.random()
+heapq.heappush(wordq, (rand_val, word) )
+if len(wordq) &gt; WORD_COUNT:
+    heapq.heappop(wordq)
+</code></pre>
+
+<p>print wordq
+```</p>
+
+<h2>Endnotes</h2>
+
+<ol>
+<li>Summary: a good password is composed of four random words.</li>
+<li>A slight improvement on this would be to store only the word's position in the file, rather than the word itself. Then the word could be retrieved by seeking to that position. <a href="http://www.bryceboe.com/2009/03/23/random-lines-from-a-file">http://www.bryceboe.com/2009/03/23/random-lines-from-a-file</a></li>
+<li><del>If you're only using one random value, and your dictionary file has 50,000 words, the chance of a collision is 50,000/2<sup>53</sup> , which is roughly 3 in 562 trillion. I'll take those odds.</del> Whoops! This is actually a version of the <a href="http://en.wikipedia.org/wiki/Birthday_problem">birthday problem</a>. The actual probability of a collision is: 1.39e-7. Still quite good.</li>
+</ol>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[A Program Analysis For Tail Call Optimization]]></title>
+    <link href="http://usrsb.in/blog/blog/2012/01/03/a-program-analysis-for-tail-call-optimization/"/>
+    <updated>2012-01-03T12:08:00-07:00</updated>
+    <id>http://usrsb.in/blog/blog/2012/01/03/a-program-analysis-for-tail-call-optimization</id>
+    <content type="html"><![CDATA[<p>In this post I will outline a method <a href="http://jwepman.com">Josh Wepman</a> and I have developed for detecting tail calls in programs constructed from a subset of Python. Its original purpose was a Python to x86 compiler we worked on together for a compiler construction course at CU.<sup>1</sup> The approach probably isn't new, but it is straightforward and understandable, and might help other novice compiler writers understand a fundamental optimization.</p>
+
+<h2>1. What is a tail call?</h2>
+
+<p>A tail call occurs when a function (the caller) calls another function (the callee) and then immediately returns the callee's value. Here is a simple example where <code>f()</code> is the caller, and <code>g()</code> is the callee:</p>
+
+<p>``` python Example 1.1</p>
+
+<pre><code>def f():
+    return g()
+</code></pre>
+
+<p>```</p>
+
+<p>So, a function call is in <em>tail call position</em> when its return value is immediately returned. In the above example, it is <code>g()</code> that is in tail call position. Contrast this with the following example, where <code>g()</code> is not in tail call position:</p>
+
+<p>``` python Example 1.2</p>
+
+<pre><code>def f():
+    return g() * 2
+</code></pre>
+
+<p>```</p>
+
+<p>Here, <code>g()</code> falls within the return statement of <code>f()</code>, but is not in tail call position because <code>g()</code>'s return value is used in the multiplication before it is returned by <code>f()</code>.<sup>2</sup></p>
+
+<p>Also consider the following example where <code>g()</code> is not in tail call position, but could easily be transformed into a program that is:</p>
+
+<p>``` python Example 1.3</p>
+
+<pre><code>def f():
+    x = g()
+    y = x
+    return y
+</code></pre>
+
+<p>```</p>
+
+<p>Since the only thing that happens to <code>g()</code>'s value is that it is copied and then returned, the assignments could be removed, and <code>g()</code>'s value could be immediately returned without modifying the semantics of the program. Also notice that <code>x</code> and <code>y</code> are local variables, so it's guaranteed that their values are not used elsewhere in the program, and so they can be safely removed. The semantically equivalent tail calling program would look like the original example (1.1):</p>
+
+<p>``` python Example 1.1</p>
+
+<pre><code>def f():
+    return g()
+</code></pre>
+
+<p>```</p>
+
+<h2>2. Why bother detecting them?</h2>
+
+<p>Why are tail calls interesting? I want this post to be mainly about the analysis, so I won't delve too deeply into the mechanics of the machine code, but essentially tail calls allow for a compiler optimization where the callee can hand its return value straight to the caller of the caller. This will make more sense when you consider this extended version of example 1.1:</p>
+
+<p>``` python Example 2.1</p>
+
+<pre><code>def g():
+    return 1
+
+def f():
+    return g()
+
+print f()
+</code></pre>
+
+<p>```</p>
+
+<p>Here, <code>g()</code> will return 1 to <code>f()</code> and <code>f()</code> will return 1 to <code>print</code>, but, since all <code>f()</code> does is immediately return <code>g()</code>'s value to <code>print</code>, why not skip that step entirely? That is, why not simply have <code>g()</code> give its return value directly to <code>print</code>? That's how tail call optimization works. In the optimized version, <code>g()</code> returns its value directly to <code>print</code> rather than forcing <code>f()</code> to be the middleman. This is implemented on the machine code level by having the call to <code>g()</code> reuse <code>f()</code>'s stack frame. The result is that when <code>g()</code> returns, it hands its value directly to <code>print</code>.<sup>3</sup> The advantage is that since each call doesn't result in the allocation of a new stack frame, the compiled code will be slightly faster, and the recursion depth will be practically unlimited (or at least not limited by the size of the call stack).</p>
+
+<p>Notice, though, that the actual optimization occurs at the machine code level, in the instruction selection phase of the compiler, which isn't the subject of this post. Instead, the subject is detecting when this optimization can be performed, and, additionally, transforming programs into ones that are eligible for this optimization. More on that in the next section.</p>
+
+<h2>3. Goals of the Analysis</h2>
+
+<p>One of the design goals of the analysis is for it to detect both of the situations outlined in section 1. That is, it should:</p>
+
+<ol>
+<li>Detect obvious cases of tail calls, where a function call is directly nested within a <code>return</code> statement and</li>
+<li>Detect less obvious cases where a program isn't tail calling, but could be transformed into one that is.</li>
+</ol>
+
+
+<p>To elaborate on the second goal, <em>we want to detect instances where a return value is assigned to a variable, copied through a series of assignments, and then immediately returned without any intervening code.</em> This situation occurs in example 1.3, and is the reason it could be transformed into a tail calling program. Here is another example:</p>
+
+<p>``` python Example 3.1</p>
+
+<pre><code>def f():
+    if input():
+        x = g()
+    else:
+        x = 1
+    return x
+</code></pre>
+
+<p>```</p>
+
+<p>If <code>input()</code> evaluates to true, then the value of <code>g()</code> gets assigned to <code>x</code>, and is immediately returned. Transforming this into a semantically equivalent tail calling program is as simple as pushing the <code>return</code> statement up into the <code>if</code> branch:</p>
+
+<p>``` python Example 3.2</p>
+
+<pre><code>def f():
+    if input():
+        return g()
+    else:
+        x = 1
+    return x
+</code></pre>
+
+<p>```</p>
+
+<p>Now <code>g()</code> is in tail call position, but the semantics of the program haven't changed.</p>
+
+<p>Contrast that with this example that can't be optimized (at least not by this analysis):</p>
+
+<p>``` python Example 3.3</p>
+
+<pre><code>def f():
+    x = g()
+    print "About to return"
+    return x
+</code></pre>
+
+<p>```</p>
+
+<p>This example doesn't meet the last requirement that the copied return value is "immediately returned without any intervening code." Since our transformation pushes the <code>return</code> statement up to the function call to <code>g()</code>, we get the following program:</p>
+
+<p>``` python   Example 3.4</p>
+
+<pre><code>def f():
+    return g()
+    print "About to return"
+</code></pre>
+
+<p>```</p>
+
+<p>Now the <code>print</code> statement is never reached. A more nuanced analysis might handle a case like this, but ours won't.</p>
+
+<h2>4. Complications: The naive analysis, dispatch code, and flattening.</h2>
+
+<p>Now that we understand the parameters of the analysis--what we will detect, and what we won't--how do we implement it? The first requirement is to detect obvious cases where function calls are nested within <code>return</code> statements. This seems simple. Just traverse the AST<sup>4</sup> and look for that precise situation: where function calls are nested within <code>return</code> statements. The trouble with this technique, and the reason that I call it the "naive analysis," is that, through the course of compilation, every function call gets turned into a set of nested <code>if</code> statements. Returning to example 1.1:</p>
+
+<p>``` python Example 1.1</p>
+
+<pre><code>def f():
+    return g()
+</code></pre>
+
+<p>```</p>
+
+<p>This might get transformed into something like:</p>
+
+<p>``` python Example 4.1</p>
+
+<pre><code>def f():
+    if ...:
+        tmp0 = g()
+    else:
+        if ...:
+            tmp1 = h()
+        else:
+            tmp1 = throw_error()
+        tmp0 = tmp1
+    return tmp0
+</code></pre>
+
+<p>```</p>
+
+<p>Why the additional complexity? Remember that Python is a dynamic language. One consequence of this is that at compile time, the compiler doesn't know the type of each variable. Is <code>g</code> an <code>int</code>? A <code>float</code>? A class? In many cases, the program needs this information. In the example above, <code>g()</code> will compile to different code if <code>g</code> is the name of a class, versus if <code>g</code> is the name of a function. Because this can't always be detected at compile time, the executable must be able to detect the types of variables, and be ready for every case.<sup>5</sup> Returning to the example, the first <code>if</code> might be testing if <code>g</code> is the name of a class. If it is, instead of calling a function named <code>g</code>, it needs to execute <code>g</code>'s <code>__init__()</code> method. If <code>g</code> isn't a class, then it needs to make sure <code>g</code> is a function. If it isn't, then the program needs to throw a runtime error. This is one reason why dynamic languages can be slow.</p>
+
+<p>In any case, what matters to us is how this affects our analysis, but thankfully it doesn't. Although our compiler has effectively eliminated instances of "obvious" tail calls, the example above is still eligible for transformation into a program that contains tail calls. Since the return values of the function calls are assigned to temporary variables, then returned, the transformation is the same as in the simpler examples: push the <code>return</code> statement up to the function calls:</p>
+
+<p>``` python Example 4.2</p>
+
+<pre><code>def f():
+    if ...:
+        return g()
+    else:
+        if ...:
+            return h()
+        else:
+            return throw_error()
+        tmp0 = tmp1
+    return tmp0
+</code></pre>
+
+<p>```</p>
+
+<p>The <code>return</code> statements have now been pushed up into the branches of the <code>if</code> statement, and <code>g()</code>, <code>h()</code>, and <code>throw_error()</code> are now in tail call position. Nice. Notice that this transformation leaves behind <em>dead code</em>. The assignment <code>tmp0 = tmp1</code> and <code>return tmp0</code> are considered "dead" because they will never be reached. Many compilers have a separate phase that removes the dead code that gets created from optimizations like this, but that's beyond the scope of this article.<sup>6</sup></p>
+
+<p>Aside from the addition of dispatch code, there's another important transformation to the code before it reaches the analysis phase. Happily, this transformation actually make detecting tail calls easier. This transformation is called <em>flattening</em>, which means that deeply nested expressions get broken down into simpler statements. Consider this:</p>
+
+<p>``` python Example 4.3</p>
+
+<pre><code>x = input() + 1 + g()
+</code></pre>
+
+<p>```</p>
+
+<p>That would get flattened into:</p>
+
+<p>``` python Example 4.4</p>
+
+<pre><code>tmp0 = input()
+tmp1 = tmp0 + 1
+tmp2 = g()
+tmp3 = tmp1 + tmp2
+x = tmp3
+</code></pre>
+
+<p>```</p>
+
+<p>Notice that the semantics of the program haven't changed, but the nested expression <code>input() + 1 + g()</code> gets broken down, or flattened, into a simple series of assignments.<sup>7</sup> Although this appears to add additional complexity, it actually reduces the number of possible cases our analysis will encounter, and shrinks the depth of the AST. Notice that the examples above have already been flattened.</p>
+
+<p>So now that we have a fuller description of what we're up against, what does the not-so-naive analysis look like?</p>
+
+<h2>5. The Not-So-Naive Analysis</h2>
+
+<p>The not-so-naive analysis is a <em>flow sensitive static analysis</em>. The analysis follows the control flow of the program and, at each program point, records information about the contents of the variables based on certain rules. A <em>program point</em> is roughly every place in a program where the state of the program could change. In a flattened program, this roughly corresponds to the point before and after every line or statement of code. In the example below, each program point is numbered. The numbers correspond to the order in which each program point will be visited:</p>
+
+<p>``` python Example 5.1</p>
+
+<pre><code>{0}
+tmp0 = input()
+{1}
+if tmp0:
+    {2}
+    tmp1 = f()
+    {3}
+else:
+    {4}
+    tmp1 = g()
+    {5}
+{6}
+return tmp1
+</code></pre>
+
+<p>```</p>
+
+<p>So, there is a program point before and after each assignment, and a program point before and after the entire <code>if</code> statement. The order in which the two branches of the <code>if</code> statement are visited doesn't matter, but both branches should be visited before leaving the <code>if</code> statement.</p>
+
+<p>Stepping through the program in this order is easy. Each line of code is an item in a list. Traverse the list in order. If you get to an <code>if</code> statement, do a postorder traversal. First visit the <code>if</code> branch and then the <code>else</code>. Once the value of these branches is determined, the value after the entire <code>if</code> statement can be determined. In other words, in order to determine the value at program point 6, the values at 3 and 5 must be evaluated first.</p>
+
+<p>What do I mean by "the value at program point 6?" As hinted at above, each program point is associated with a set of variables. Roughly, this set corresponds to the set of variables that contain return values. The specifics of how variables get added and removed from the set is the subject of a set of rules. Formally, each rule is a function that takes in the set at a program point (usually the one above the current statement) and the statement itself, and outputs a new set that corresponds to the program point after that statement. So, for example, the value at program point 5 is determined by looking at program point 4 and the statement on line 10 (<code>tmp1 = g()</code>). Because that statement stores a return value to <code>tmp1</code>, <code>tmp1</code> gets added to the set at point 5. This is one of the rules. Below are the rules in full. As a shorthand, the program point before a statement is called R<sub>before</sub> and the point after is called R<sub>after</sub>.</p>
+
+<ol>
+<li>If the statement is an assignment between variable <code>v</code> and a function call (<code>v = g()</code>), then <em>R<sub>after</sub> = {v}</em>.</li>
+<li>If the statement is an assignment from variable <code>t</code> to variable <code>v</code> (<code>v = t</code>), and <code>t</code> is in R<sub>before</sub>, then <em>R<sub>after</sub> = {v}</em>.</li>
+<li>At the start of a program, the beginning of a new code block (e.g. the beginning of a branch in an <code>if</code> statement), or the beginning and end of a new scope <em>R<sub>before</sub> = {}</em>.</li>
+<li>If the statement is an <code>if</code> statement, then <em>R<sub>after</sub> = R<sub>after-if</sub> ∪ R<sub>after-else</sub></em>. In other words, it is the union of the R<sub>after</sub>s of each branch.</li>
+<li>If the statement is a <code>return</code> statement, and variable <code>v</code> is being returned (<code>return v</code>), and <code>v</code> is in R<sub>before</sub>, then the <code>return</code> statement can be pushed up to wherever <code>v</code>'s value was originally created. In other words, there's some function call above that can be put into tail call position (the function that created the value held by <code>v</code>).</li>
+<li>In all other cases, <em>R<sub>after</sub> = {}</em>.</li>
+</ol>
+
+
+<p>Some of these rules are intuitive. Some aren't. I'll go through them one by one and explain them. Keep in mind the goal of the analysis: we're trying to detect when return values are copied through a series of assignments and then returned without any intervening code.</p>
+
+<p>This makes the first rule the most intuitive. If a variable gets assigned a return value, add that variable to the set. This would be the first step in detecting something like example 1.3, reproduced below with the sets at each program point. Notice rule 1 in action on lines 4 and 5:</p>
+
+<p>``` python Example 1.3/5.2
+{}
+def f():</p>
+
+<pre><code>{}
+x = g()
+{x}
+y = x
+{y}
+return y
+</code></pre>
+
+<p>```</p>
+
+<p>The second rule keeps track of return values that get copied between variables, and is the reason the set contains <code>y</code> after the 6<sup>th</sup> line. The value of <code>x</code> gets copied to <code>y</code>, and <code>x</code> happens to be in R<sub>before</sub>, so, by rule 2, <code>y</code> is now in R<sub>after</sub>.</p>
+
+<p>The third rules initializes the analysis, and starts the program with an empty set. This rule should also be applied to new code blocks. The two branches of an <code>if</code> statement should begin with empty sets as shown below in a new example:</p>
+
+<p>``` python Example 5.3
+{}
+y = g()
+{y}
+if input():</p>
+
+<pre><code>{}
+y = f()
+{y}
+</code></pre>
+
+<p>else:</p>
+
+<pre><code>{}
+y = h()
+{y}
+print "Called h()"
+{}
+</code></pre>
+
+<p>{y}
+return y
+```</p>
+
+<p>Although <code>y</code> is in the set before the <code>if</code> statement, both branches of the <code>if</code> statement begin with an empty set.</p>
+
+<p>Example 5.3 also demonstrates rule four. The set after an <code>if</code> statement contains the union of the two branches, in this case just <code>y</code>.</p>
+
+<p>The fifth rule comes into play on line 15. <code>y</code> is returned, and it also happens to be in R<sub>before</sub>. This means that the function call that gave <code>y</code> its value can be put in tail call position. This is done by pushing the <code>return</code> statement up to the call to <code>f()</code> on line 6:</p>
+
+<p>``` python Example 5.4
+{}
+x = g()
+{x}
+if input():</p>
+
+<pre><code>{}
+return f() # Optimized to tail call position.
+{y}
+</code></pre>
+
+<p>else:</p>
+
+<pre><code>{}
+y = h()
+{y}
+print "Called h()"
+{}
+</code></pre>
+
+<p>{y}
+return y
+```</p>
+
+<p>The program has now been transformed into a tail calling program. The analysis has detected that a return value was assigned to a variable, and then returned without any intervening code. Notice, though, that the call to <code>h()</code> on line 10 wasn't optimized. It was almost eligible for transformation, but the intervening <code>print</code> statement on line 12 trigged the last rule, and, correctly, prevented the <code>return</code> statement from being pushed up to the call  to <code>h()</code>. This is the purpose of the last rule--to prevent intervening code from becoming dead code.</p>
+
+<p>There is one last bit of housekeeping. In order for rule 5 to be executed, it needs to know where a variable's value was originally created. Consider, once again, example 1.3:</p>
+
+<p>``` python Example 1.3/5.2
+{}
+def f():</p>
+
+<pre><code>{}
+x = g()
+{x}
+y = x
+{y}
+return y
+</code></pre>
+
+<p>```</p>
+
+<p>The analysis will detect that <code>y</code> is being returned, and recognize that <code>y</code> is in R<sub>before</sub>. This will trigger rule 5, and the analysis will need to know where <code>y</code>'s value was originally created. How will it determine this? The algorithm is simple:</p>
+
+<ol>
+<li>When <code>g()</code> is first assigned to <code>x</code> and <code>x</code> gets added to R<sub>after</sub>, the analysis will record that <code>x</code> is associated with that line (or AST node).</li>
+<li>When <code>x</code> gets copied to <code>y</code>, the analysis looks up whichever node/line <code>x</code> was associated with, and then records that <code>y</code> is associated with that same node/line.</li>
+<li>When the analysis gets to the last line, it knows that <code>y</code> is associated with line 4 (<code>x = g()</code>), and knows that it can push the <code>return</code> statement up to that position.</li>
+</ol>
+
+
+<p>We are left with the optimized version:</p>
+
+<p>``` python Example 5.5</p>
+
+<pre><code>def f():
+    return g()
+    # Dead code
+    y = x
+    return y
+</code></pre>
+
+<p>```</p>
+
+<h2>6. Conclusion</h2>
+
+<p>Congratulations if you've gotten this far. We've covered a lot of ground. I've touched on several parts of the compiler, and described, in detail, a program analysis for detecting tail calls. Notice, though, that this analysis only covers a very small subset of Python. The rules assume that all <code>if</code> statements also have an <code>else</code> branch. How could this be fixed? I also haven't addressed other control flow structures. Adding a rule for <code>while</code> loops would be an important addition. All of these issues would be good exercises to think about, and will, perhaps be the subjects of followup posts.</p>
+
+<h2>Footnotes</h2>
+
+<ol>
+<li>I'm currently in the early stages of forking the project, which I've redubbed <a href="http://github.com/beala/bullfrog">bullfrog</a>.</li>
+<li><a href="http://en.wikipedia.org/wiki/Tail_call#Syntactic_form">http://en.wikipedia.org/wiki/Tail_call#Syntactic_form</a></li>
+<li><a href="http://en.wikipedia.org/wiki/Tail_call#In_assembler">http://en.wikipedia.org/wiki/Tail_call#In_assembler</a></li>
+<li>AST: Abstract Syntax Tree. A tree representation of the structure (syntax) of a program. <a href="http://en.wikipedia.org/wiki/Abstract_syntax_tree">Wiki</a>.</li>
+<li>This is one reason dynamic languages can be slow, but most compilers perform additional optimizations to cut down on so called "dispatch code" by detecting variables types at compile time. This is possible when, for example, an integer is explicitly assigned to a variable: <code>x = 1</code>. In that case, it's guaranteed that <code>x</code> contains an integer.</li>
+<li>Dead code elimination. (2011, October 20). In Wikipedia, The Free Encyclopedia. Retrieved 16:56, December 24, 2011, from <a href="http://en.wikipedia.org/w/index.php?title=Dead_code_elimination&amp;oldid=456578651">http://en.wikipedia.org/w/index.php?title=Dead_code_elimination&amp;oldid=456578651</a></li>
+<li>At first blush, this doesn't look nested, but it is: <code>x = (((input()) + 1) + g())</code>. The infix notation is deceptive, but, as demonstrated by the parenthesized version, there are actually 2 levels of addition that roughly correspond to the structure of the flattened code.</li>
+</ol>
+
+]]></content>
+  </entry>
+  
+</feed>
