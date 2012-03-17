@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: oop | /usr/sbin/blog]]></title>
+  <link href="http://usrsb.in/blog/blog/categories/oop/atom.xml" rel="self"/>
+  <link href="http://usrsb.in/blog/"/>
+  <updated>2012-03-16T20:17:10-06:00</updated>
+  <id>http://usrsb.in/blog/</id>
+  <author>
+    <name><![CDATA[Alex Beal]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Implementing a Logic Evaluator Without if-expressions or Boolean Operators]]></title>
+    <link href="http://usrsb.in/blog/blog/2012/01/28/implementing-a-logic-evaluator-without-if-expressions/"/>
+    <updated>2012-01-28T10:19:00-07:00</updated>
+    <id>http://usrsb.in/blog/blog/2012/01/28/implementing-a-logic-evaluator-without-if-expressions</id>
+    <content type="html"><![CDATA[<p>I've slowly been making my way through <a href="http://www.scala-lang.org/sites/default/files/linuxsoft_archives/docu/files/ScalaOverview.pdf">An Overview of the Scala Programming Language</a> [PDF], and was struck by this interesting implementation of Booleans:</p>
+
+<p>``` scala
+abstract class Bool {</p>
+
+<pre><code>def &amp;&amp; (x: =&gt; Bool): Bool
+def || (x: =&gt; Bool): Bool
+</code></pre>
+
+<p>}
+object False extends Bool {</p>
+
+<pre><code>def &amp;&amp; (x: =&gt; Bool): Bool = this
+def || (x: =&gt; Bool): Bool = x
+</code></pre>
+
+<p>}
+object True extends Bool {</p>
+
+<pre><code>def &amp;&amp; (x: =&gt; Bool): Bool = x
+def || (x: =&gt; Bool): Bool = this
+</code></pre>
+
+<p>}
+```</p>
+
+<p>If you're not a Scala programmer, don't let the syntax trip you up. It's pretty straightforward. <code>True</code> and <code>False</code> are singleton objects that inherit from the <code>abstract class Bool</code>. Each object implements the <code>&amp;&amp;</code> (and) and <code>||</code> (or) operators. As you'd expect, they each take a <code>Bool</code> as an argument and return a <code>Bool</code>. When you execute:</p>
+
+<p><code>scala
+True &amp;&amp; False
+</code></p>
+
+<p>It applies <code>True</code>'s <code>&amp;&amp;</code> method to <code>False</code>, and correctly returns <code>x</code>, which is, in this case, <code>False</code>.</p>
+
+<p>What's so interesting about this is the absence of any if-expressions or built-in boolean operators. To illustrate, a less clever, but more obvious implementation would be as follows:</p>
+
+<p>``` scala
+def and(x: Boolean, y: Boolean): Boolean = {</p>
+
+<pre><code>if(x)
+    if(y)
+        true
+    else
+        false
+else
+    false
+</code></pre>
+
+<p>}
+```</p>
+
+<p>So, if <code>x</code> and <code>y</code> are both <code>true</code>, return <code>true   </code>, otherwise return <code>false</code> (Scala returns the value of the last executed expression). It works, but doesn't win any style points. The nested if-expressions are especially ugly.<sup>1<sup></p>
+
+<p>So, this is a neat way of cutting down on if-expressions. Can it be extended to the other operations? Yes:</p>
+
+<p>``` scala
+object True extends Bool {
+  def &amp;&amp; (x: => Bool): Bool = x
+  def || (x: => Bool): Bool = this
+  def unary<em>! : Bool = False
+  def xor (x: => Bool): Bool = !x
+  def if</em> (x: => Bool): Bool = this
+  def iff(x: => Bool): Bool = x
+}</p>
+
+<p>object False extends Bool {
+  def &amp;&amp; (x: => Bool): Bool = this
+  def || (x: => Bool): Bool = x
+  def unary<em>! : Bool = True
+  def xor (x: => Bool): Bool = x
+  def if</em> (x: => Bool): Bool = !this
+  def iff(x: => Bool): Bool = !x
+}
+```</p>
+
+<p>One thing I like about this implementation is the pleasing symmetry between <code>True</code>'s methods and <code>False</code>'s methods. The <code>unary_!</code> (not) method is trivially opposite. <code>True</code> returns <code>False</code> and vice versa, but the symmetry continues throughout <code>xor</code>, <code>if_</code>, and <code>iff</code>. For example, <code>False</code>'s <code>xor</code> returns its parameter, while <code>True</code>'s <code>xor</code> returns the opposite of its parameter. <code>False xor True</code> returns <code>True</code>, whereas <code>True xor True</code> returns <code>False</code>. I'll leave verifying the rest of these rules as an exercise to the reader.<sup>2</sup></p>
+
+<p>It's also interesting to compare this to the <a href="http://en.wikipedia.org/wiki/State_pattern">State Pattern</a>, where a state machine is simulated through the use of objects that implement a common interface. Each state is an object, and transitioning between states is as easy as switching between the different objects. Without this pattern, the alternative would be a complex set of if-expressions dictating what you're allowed to do in a certain state, and which states you can switch to given your current state. The State Pattern essentially hides all this behind polymorphism, similar to what's happening in the logic evaluator.</p>
+
+<h2>Notes</h2>
+
+<ol>
+<li>You can cut it down to one if-expression if you're on your toes.</li>
+<li>Note that <code>if_</code> is backwards. <code>True if_ False</code> is the same as <code>False -&gt; True</code>, because that's closer to the English.</li>
+</ol>
+
+]]></content>
+  </entry>
+  
+</feed>

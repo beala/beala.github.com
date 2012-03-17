@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: statistics | /usr/sbin/blog]]></title>
+  <link href="http://usrsb.in/blog/blog/categories/statistics/atom.xml" rel="self"/>
+  <link href="http://usrsb.in/blog/"/>
+  <updated>2012-03-16T20:17:10-06:00</updated>
+  <id>http://usrsb.in/blog/</id>
+  <author>
+    <name><![CDATA[Alex Beal]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Super Bowl Probabilities: The Coin Toss]]></title>
+    <link href="http://usrsb.in/blog/blog/2012/02/05/super-bowl-probabilities/"/>
+    <updated>2012-02-05T09:53:00-07:00</updated>
+    <id>http://usrsb.in/blog/blog/2012/02/05/super-bowl-probabilities</id>
+    <content type="html"><![CDATA[<p>Browsing through my Twitter stream, I came across a blog post discussing an allegedly 3.8-sigma event: <a href="http://blogs.discovermagazine.com/cosmicvariance/2012/02/04/a-3-8-sigma-anomaly/">Apparently the last 14 Super Bowl coin tosses have been won by the NFC</a>. What are the chances of this? The blog linked to above claims a probability of (1/2)<sup>13</sup>. Another <a href="http://www.outsidethebeltway.com/super-bowl-coin-flip/">blog</a> claims (1/2)<sup>14</sup>. Which is correct? Before I get into the mathematics, I'll try to disentangle three different questions:</p>
+
+<ol>
+<li>Out of 14 tosses, what's the probability that they all come up heads?</li>
+<li>Out of 14 tosses, what's the probability that one team wins all of them?</li>
+<li>Out of 45 tosses (one for each Super Bowl), what's the probability that one team wins a string of 14 of them?<sup>1</sup></li>
+</ol>
+
+
+<p><strong>(1/2)<sup>14</sup></strong> is the correct answer to question (1). There's a 1 in 2 chance of getting heads. The probability of getting heads 14 times out of 14 tosses is therefore (1/2)<sup>14</sup>.</p>
+
+<p><strong>(1/2)<sup>13</sup></strong> is the correct answer to question (2). If you call a coin in the air, there's 1 in 2 chance you'll win the toss. Out of 14 tosses, the chance that <em>either</em> the NFC will win the toss 14 times <em>or</em> the AFC will win the toss 14 times is: (1/2)<sup>14</sup> + (1/2)<sup>14</sup> = (1/2)<sup>13</sup>.</p>
+
+<p>The last situation is much more difficult to calculate, and similar questions are often the cause for much surprise. For example, if you toss a coin 20 times, do you think it's likely or unlikely that you'll get a string of 5 heads in a row? It seems like this should be unlikely. After all, the probability of tossing a coin 5 times, and ending up with heads every time is quite small: (1/2)<sup>5</sup> = 1/32  (approx. 3%). Believe it or not, the actual probability is around 25%.<sup>2</sup></p>
+
+<p>How are these probabilities found? One solution is a rather nasty recursive formula. You might recognize this as a dynamic programming problem.</p>
+
+<blockquote><p>  A similar recursion can be given to calculate the probability that in <em>n</em> fair coin tosses a run of <em>r</em> heads or <em>r</em> tails occurs. In this case, we say that the tossing process is in state <em>(i, k)</em> when there are <em>k</em> tosses still to go and the last <em>i</em> tosses all showed the same outcome but so far no run of <em>r</em> heads or <em>r</em> tails has occurred. The probability <em>v<sub>k</sub>(i)</em> is defined as</p>
+
+<p>  v<sub>k</sub>(i) = the probability of getting a run of <em>r</em> heads or <em>r</em> tails during <em>n</em> tosses when the current state of the tossing process is <em>(i, k)</em>.</p>
+
+<p>The probability <em>v<sub>n-1</sub>(1)</em> is being sought (why?). Verify for yourself that the following recursion applies for k = 1,2,...,<em>n</em>.</p>
+
+<p>  v<sub>k</sub> = 0.5*v<sub>k-1</sub>(i + 1) + 0.5*v<sub>k-1</sub>(1) for i =,...,r - 1.</p>
+
+<p>The boundary conditions are <em>v<sub>0</sub>(i) = 0</em> for <em>1 &lt;= i &lt;= r -1</em> and <em>v<sub>j</sub>(r) = 1</em> for <em>0 &lt;= j &lt;= n - 1</em>.<sup>3</sup></p></blockquote>
+
+<p>I'm actually not sure why we're looking for <em>v<sub>n-1</sub>(1)</em> as opposed to <em>v<sub>n</sub>(0)</em>. I tested it for a few values, and those expressions seem to be equal.<sup>4</sup> In any case, the formula is dense, but you can see the logic behind it. If you're in the midst of a streak of heads, and your next flip comes up heads, your state is now <em>(i+1, k-1)</em>. That is, your streak has increased, but your tosses to go has decreased. This explains the first half of the formula: <em>0.5*v<sub>k-1</sub>(i + 1)</em>. The other case is that you're in the midst of a streak of heads, but then you get a tail, so your state becomes <em>(1, k-1)</em>. That is, you now have a streak of 1 tail, and your total number of tosses to go decrements by one. This explains the last half of the equation. The equation then branches out like a tree, solving for each possibility along the way. Here's a bit of Scheme that implements this:</p>
+
+<p>``` scheme An Exact Solution in Scheme
+(define (coin-streak n r)</p>
+
+<pre><code>(define (cs-helper k i)
+  (cond ((and (&lt;= 1 i) (&lt;= i (- r 1)) (= k 0)) 0)
+        ((and (&lt;= 0 k) (&lt;= k (- n 1)) (= i r)) 1)
+        (else (+
+               (* (/ 1 2) (ct-string r n (- k 1) (+ i 1)))
+               (* (/ 1 2) (ct-string r n (- k 1) 1 ))))
+        ))
+(cs-helper (- n 1) 1))
+</code></pre>
+
+<p>```</p>
+
+<p>Notice that this problem quickly becomes intractable for large values of <em>n</em>. Each call branches into two different calls, giving an exponential growth (props to the first person who posts a tail recursive memoization). This is why I prefer solving this by simulation. What we need to do is simulate 45 coin flips, and check if we've encountered a string of 14 heads or 14 tails. Do this, say, 100,000 times and see how often this event occurs.</p>
+
+<p>``` python ctsim.py: An Approximation by Simulation in Python</p>
+
+<h1>!/usr/bin/python -O</h1>
+
+<p>import random
+import sys</p>
+
+<p>STREAK_LEN  = int(sys.argv[1])
+TOSSES      = int(sys.argv[2])
+TRIALS      = int(sys.argv[3])</p>
+
+<p>def simulation(trials, tosses, streak):</p>
+
+<pre><code>''' Simulates *trials* trials of *tosses* tosses and returns the
+    fraction of trials that contained at least one streak
+    of *streak* or higher.
+'''
+
+def run_trial():
+    ''' Flips a coin *tosses* times and returns True if a streak of
+        *streak* length is encountered.
+    '''
+    cur_streak = 1      # Length of the current streak.
+    prev_outcome = None # Outcome of a previous toss.
+    # Simulate the tosses.
+    for toss in range(tosses):
+        outcome = random.randint(0,1)
+        # If the last toss is the same as the current toss,
+        # increment the length of the current streak.
+        if outcome == prev_outcome:
+            cur_streak += 1
+        else:
+            cur_streak = 1
+
+        # If the current streak is equal to the target
+        # length, return True
+        if cur_streak == streak:
+            return True
+
+        prev_outcome = outcome
+
+    return False
+
+streak_count = 0
+# Simulate all the trials, and keep track of how many had
+# a streak.
+for trial in range(trials):
+    had_a_streak = run_trial()
+    if had_a_streak:
+        streak_count += 1
+
+return streak_count / float(trials)
+</code></pre>
+
+<p>if <strong>name</strong> == "<strong>main</strong>":</p>
+
+<pre><code>print simulation(TRIALS, TOSSES, STREAK_LEN)
+</code></pre>
+
+<p>```</p>
+
+<p>We can now simulate the Super Bowl situation by looking for a streak of 14 wins out of 45 tosses with 100,000 simulations.</p>
+
+<p><code>bash ctsim.py Usage
+% ./ctsim.py 14 45 100000
+0.00202
+</code></p>
+
+<p>So, the probability of this happening is <strong>0.00202</strong> or around <strong>0.2%</strong>. This is still tiny, but not as small as (1/2)<sup>13</sup> (approx. 0.00012 or 0.012%).</p>
+
+<h2>Notes:</h2>
+
+<ol>
+<li>Even this is slightly ambiguous. The exact question that we'll be looking at is: What is the probability that one team will have at least one winning streak of at least 14 tosses.</li>
+<li>Tijms, H. (2010). Understanding probability: Chance rules in everyday life. (2 ed.). Cambridge, UK: Cambridge University Press.</li>
+<li>Ibid.</li>
+<li>Perhaps the equation <em>v<sub>n</sub>(0)</em> is technically undefined. That is, <em>i</em> cannot equal 0 because you must have a streak of at least 1 head or 1 tail. Nevertheless, it looks like the formula still works for this technically undefined state.</li>
+</ol>
+
+]]></content>
+  </entry>
+  
+</feed>

@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: fibonacci | /usr/sbin/blog]]></title>
+  <link href="http://usrsb.in/blog/blog/categories/fibonacci/atom.xml" rel="self"/>
+  <link href="http://usrsb.in/blog/"/>
+  <updated>2012-03-16T20:17:10-06:00</updated>
+  <id>http://usrsb.in/blog/</id>
+  <author>
+    <name><![CDATA[Alex Beal]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Fibonacci Sequence, Part II]]></title>
+    <link href="http://usrsb.in/blog/blog/2011/08/03/fibonacci-sequence-part-ii/"/>
+    <updated>2011-08-03T16:49:00-06:00</updated>
+    <id>http://usrsb.in/blog/blog/2011/08/03/fibonacci-sequence-part-ii</id>
+    <content type="html"><![CDATA[<p>The matrix equation in the last post can actually be whittled down a bit further to produce another equation that, in some ways, is easier to work with. The result is as follows:</p>
+
+<p><img src="http://media.usrsb.in/fib2/fib.png" alt="fib" /></p>
+
+<p>F<sub>k</sub> is, of course, the k<sup>th</sup> Fibonacci number. Now, before I go on, I want to point out that I stumbled upon these two equations and the proofs for these equations in <a href="http://www-math.mit.edu/~gs/">Gilbert Strang's</a> excellent <a href="http://www.amazon.com/Linear-Algebra-Applications-Gilbert-Strang/dp/0030105676/ref=sr_1_2?s=books&amp;ie=UTF8&amp;qid=1312385275&amp;sr=1-2">Linear Algebra and Its Applications</a>. All credit goes to him for coming up with this, and I recommend his book for an even more in depth explanation.</p>
+
+<p>Anyway, back to the equation, which I found interesting for a few reasons:</p>
+
+<ol>
+<li>This equation allows you to easily find the kth term using only a pocket calculator. The last equation requires something that can deal with matrices.</li>
+<li>This also makes it easier to use in programming applications. There's no need to write functions or import libraries to deal with matrices. It's also probably faster than writing some sort of recursive function to compute the kth Fibonacci number.</li>
+<li>As Strang points out, that equation, amazingly, produces an integer, despite all the fractions and square roots.</li>
+<li>We can simplify that equation further for a very good approximation (so good that it's not really an approximation).</li>
+</ol>
+
+
+<p>To see how we get that equation from the equation in the last post, let's begin with the way Mr. Strang has it written in his book (it's the same as mine, but flipped upside down).</p>
+
+<p><img src="http://media.usrsb.in/fib2/fibmat.png" alt="title" /></p>
+
+<p>Where F<sub>0</sub>=0, F<sub>1</sub>=1, F<sub>2</sub>=1, etc. Let's now make some substitutions:</p>
+
+<p><img src="http://media.usrsb.in/fib2/subs.png" alt="title" /></p>
+
+<p>We now have:</p>
+
+<p><img src="http://media.usrsb.in/fib2/matform.png" alt="title" /></p>
+
+<p>This hasn't changed the content of the equation at all. We've just substituted in new symbols to represent the different terms.</p>
+
+<p>The next step is to diagonalize the matrix A. Remember that diagonalizing A produces A = SΛS<sup>-1</sup> where S contains A's eigenvectors and Λ contains A's eigenvalues. Substituting A = SΛS<sup>-1</sup> into the previous equation yields:</p>
+
+<p><img src="http://media.usrsb.in/fib2/diag.png" alt="title" /></p>
+
+<p>Notice how everything but the first and last S and S<sup>-1</sup> cancel, giving the final form: SΛ<sup>k</sup>S<sup>-1</sup>u<sub>0</sub>. This is important, because Λ is a diagonal matrix, making Λ<sup>k</sup> very simple:</p>
+
+<p><img src="http://media.usrsb.in/fib2/lampow.png" alt="title" /></p>
+
+<p>λ<sub>1</sub> and λ<sub>2</sub> are, of course, the eigenvalues of A. Let's now make one last substitution and put all this diagonalization stuff together. First we define c as</p>
+
+<p><img src="http://media.usrsb.in/fib2/csub.png" alt="title" /></p>
+
+<p>Then we substitute it into the equation:</p>
+
+<p><img src="http://media.usrsb.in/fib2/diag2.png" alt="title" /></p>
+
+<p>That might need some explaining. The first bit is simply the equation with c substituted in. Following that, the first matrix is S, but written to show that it contains x<sub>1</sub> and x<sub>2</sub>, which are the eigenvectors of A placed vertically in the two columns. The middle matrix is Λ<sup>k</sup> and the last is simply the matrix c. Finally, the matrices are multiplied out, yielding the final c<sub>1</sub>λ<sup>k</sup><sub>1</sub>x<sub>1</sub>+c<sub>2</sub>λ<sup>k</sup><sub>2</sub>x<sub>2</sub></p>
+
+<p>The final steps are simply to compute c, and A's eigenvalues and eigenvectors. I'll spare you the tedious algebra and simply tell you that:</p>
+
+<p><img src="http://media.usrsb.in/fib2/eigenvals.png" alt="title" /></p>
+
+<p><img src="http://media.usrsb.in/fib2/eigenvec.png" alt="title" /></p>
+
+<p>This can be computed the standard way, by solving: det(A-λI)=0.</p>
+
+<p>All the variables are then plugged into the equation for u<sub>k</sub>.</p>
+
+<p><img src="http://media.usrsb.in/fib2/almost-there.png" alt="title" /></p>
+
+<p>We want F<sub>k</sub>, so we multiply, factor, and take the bottom row, giving the equation we want:</p>
+
+<p><img src="http://media.usrsb.in/fib2/approx.png" alt="title" /></p>
+
+<p>That's the full equation, but now notice that the second term is always less than 1/2. This mean we can simply drop it, yielding:</p>
+
+<p>In fact, since the second term is always less than 1/2 and the full equation always gives us an integer, we can take this a step further: <strong>Rounding the approximation to the nearest integer will always give you the exact value for F<sub>k</sub>.</strong> Cool.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Using Matrices to Generate the Fibonacci Sequence]]></title>
+    <link href="http://usrsb.in/blog/blog/2011/04/10/using-matrices-to-generate-the-fibonacci-sequence/"/>
+    <updated>2011-04-10T12:47:00-06:00</updated>
+    <id>http://usrsb.in/blog/blog/2011/04/10/using-matrices-to-generate-the-fibonacci-sequence</id>
+    <content type="html"><![CDATA[<p>Here's a fun little matrix:</p>
+
+<p><img src="http://media.usrsb.in/fib-mat/equation.png" alt="Fib Matrix" /></p>
+
+<p>That generates the a<sub>n</sub> and a<sub>n+1</sub> terms of the Fibonacci sequence.<sup>1</sup> To see why, let's look at a recursive definition of the Fibonacci sequence.</p>
+
+<p><img src="http://media.usrsb.in/fib-mat/1.png" alt="Fib Def" /></p>
+
+<p><img src="http://media.usrsb.in/fib-mat/2.png" alt="Fib Def" /></p>
+
+<p>That's easy enough to understand. The first and second terms are both 1, and the next term is the sum of the last term plus the current term. To see how this relates to the matrix above, we must turn this into a matrix equation. The trick here is to have a good understanding of matrix multiplication. If you need a refresher, <a href="http://www.mathsisfun.com/algebra/matrix-multiplying.html">here's a site</a> with a tutorial. Let's look at an example of a 2x2 matrix multiplied by a 2x1 (even if you have a good understanding of matrix multiplication, hang tight, this is going somewhere).</p>
+
+<p><img src="http://media.usrsb.in/fib-mat/3.png" alt="title" /></p>
+
+<p>Now let's make some substitutions and multiply it out:</p>
+
+<p><img src="http://media.usrsb.in/fib-mat/7.png" alt="title" /></p>
+
+<p>As you can see, the effect of multiplying the b matrix by the Fibonacci matrix is that it moves the b<sub>1,2</sub> position to the b<sub>1,1</sub> position, and the b<sub>1,2</sub> gets filled with the sum of b<sub>1,1</sub> and b<sub>1,2</sub>. Let's now substitute the b's for a<sub>n-1</sub> and a<sub>n</sub>:</p>
+
+<p><img src="http://media.usrsb.in/fib-mat/8.png" alt="title" /></p>
+
+<p>Does the resultant matrix look familiar? If you look above, you'll see that it's the same as our recursive definition of the Fibonacci sequence! The top row is equal to the current number in the sequence (a<sub>n</sub>) and the bottom row is equal to the next number in the sequence (a<sub>n-1</sub> + a<sub>n</sub> = a<sub>n+1</sub>). Continuing to multiply the resultant matrix by the Fibonacci matrix will cause consecutive entries to be produced. Because matrix multiplication is associative, we can move our multiplication to the exponent, and multiply that result by the first two terms in the sequence (0, 1), leading to our initial matrix:</p>
+
+<p><img src="http://media.usrsb.in/fib-mat/equation.png" alt="Fib Matrix" /></p>
+
+<h3>References</h3>
+
+<p>1: Strang, Gilbert. "<a href="http://www.amazon.com/Linear-Algebra-Applications-Gilbert-Strang/dp/0030105676/ref=sr_1_2?s=books&amp;ie=UTF8&amp;qid=1312385275&amp;sr=1-2">Linear Algebra and Its Applications</a>."</p>
+]]></content>
+  </entry>
+  
+</feed>

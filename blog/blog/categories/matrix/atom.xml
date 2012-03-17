@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: matrix | /usr/sbin/blog]]></title>
+  <link href="http://usrsb.in/blog/blog/categories/matrix/atom.xml" rel="self"/>
+  <link href="http://usrsb.in/blog/"/>
+  <updated>2012-03-16T20:17:10-06:00</updated>
+  <id>http://usrsb.in/blog/</id>
+  <author>
+    <name><![CDATA[Alex Beal]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Using Matrices to Generate the Fibonacci Sequence]]></title>
+    <link href="http://usrsb.in/blog/blog/2011/04/10/using-matrices-to-generate-the-fibonacci-sequence/"/>
+    <updated>2011-04-10T12:47:00-06:00</updated>
+    <id>http://usrsb.in/blog/blog/2011/04/10/using-matrices-to-generate-the-fibonacci-sequence</id>
+    <content type="html"><![CDATA[<p>Here's a fun little matrix:</p>
+
+<p><img src="http://media.usrsb.in/fib-mat/equation.png" alt="Fib Matrix" /></p>
+
+<p>That generates the a<sub>n</sub> and a<sub>n+1</sub> terms of the Fibonacci sequence.<sup>1</sup> To see why, let's look at a recursive definition of the Fibonacci sequence.</p>
+
+<p><img src="http://media.usrsb.in/fib-mat/1.png" alt="Fib Def" /></p>
+
+<p><img src="http://media.usrsb.in/fib-mat/2.png" alt="Fib Def" /></p>
+
+<p>That's easy enough to understand. The first and second terms are both 1, and the next term is the sum of the last term plus the current term. To see how this relates to the matrix above, we must turn this into a matrix equation. The trick here is to have a good understanding of matrix multiplication. If you need a refresher, <a href="http://www.mathsisfun.com/algebra/matrix-multiplying.html">here's a site</a> with a tutorial. Let's look at an example of a 2x2 matrix multiplied by a 2x1 (even if you have a good understanding of matrix multiplication, hang tight, this is going somewhere).</p>
+
+<p><img src="http://media.usrsb.in/fib-mat/3.png" alt="title" /></p>
+
+<p>Now let's make some substitutions and multiply it out:</p>
+
+<p><img src="http://media.usrsb.in/fib-mat/7.png" alt="title" /></p>
+
+<p>As you can see, the effect of multiplying the b matrix by the Fibonacci matrix is that it moves the b<sub>1,2</sub> position to the b<sub>1,1</sub> position, and the b<sub>1,2</sub> gets filled with the sum of b<sub>1,1</sub> and b<sub>1,2</sub>. Let's now substitute the b's for a<sub>n-1</sub> and a<sub>n</sub>:</p>
+
+<p><img src="http://media.usrsb.in/fib-mat/8.png" alt="title" /></p>
+
+<p>Does the resultant matrix look familiar? If you look above, you'll see that it's the same as our recursive definition of the Fibonacci sequence! The top row is equal to the current number in the sequence (a<sub>n</sub>) and the bottom row is equal to the next number in the sequence (a<sub>n-1</sub> + a<sub>n</sub> = a<sub>n+1</sub>). Continuing to multiply the resultant matrix by the Fibonacci matrix will cause consecutive entries to be produced. Because matrix multiplication is associative, we can move our multiplication to the exponent, and multiply that result by the first two terms in the sequence (0, 1), leading to our initial matrix:</p>
+
+<p><img src="http://media.usrsb.in/fib-mat/equation.png" alt="Fib Matrix" /></p>
+
+<h3>References</h3>
+
+<p>1: Strang, Gilbert. "<a href="http://www.amazon.com/Linear-Algebra-Applications-Gilbert-Strang/dp/0030105676/ref=sr_1_2?s=books&amp;ie=UTF8&amp;qid=1312385275&amp;sr=1-2">Linear Algebra and Its Applications</a>."</p>
+]]></content>
+  </entry>
+  
+</feed>
