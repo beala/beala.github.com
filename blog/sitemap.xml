@@ -107,8 +107,16 @@
         <lastmod>2012-02-05T11:01:11-07:00</lastmod>
     </url>
     <url>
+        <loc>http://usrsb.in/blog/tools/</loc>
+        <lastmod>2012-03-26T13:11:51-06:00</lastmod>
+    </url>
+    <url>
+        <loc>http://usrsb.in/blog/resume/</loc>
+        <lastmod>2012-03-26T14:00:15-06:00</lastmod>
+    </url>
+    <url>
         <loc>http://usrsb.in/blog/about/</loc>
-        <lastmod>2012-03-26T14:02:06-06:00</lastmod>
+        <lastmod>2012-03-27T09:17:18-06:00</lastmod>
     </url>
     <url>
         <loc>http://usrsb.in/blog/blog/archives/</loc>
@@ -117,13 +125,5 @@
     <url>
         <loc>http://usrsb.in/blog/</loc>
         <lastmod>2012-02-05T11:01:11-07:00</lastmod>
-    </url>
-    <url>
-        <loc>http://usrsb.in/blog/resume/</loc>
-        <lastmod>2012-03-26T14:00:15-06:00</lastmod>
-    </url>
-    <url>
-        <loc>http://usrsb.in/blog/tools/</loc>
-        <lastmod>2012-03-26T13:11:51-06:00</lastmod>
     </url>
 </urlset>
