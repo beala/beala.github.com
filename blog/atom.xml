@@ -4,7 +4,7 @@
   <title><![CDATA[/usr/sbin/blog]]></title>
   <link href="http://usrsb.in/blog/atom.xml" rel="self"/>
   <link href="http://usrsb.in/blog/"/>
-  <updated>2012-03-27T10:52:54-06:00</updated>
+  <updated>2012-04-01T08:57:01-06:00</updated>
   <id>http://usrsb.in/blog/</id>
   <author>
     <name><![CDATA[Alex Beal]]></name>
@@ -12,6 +12,109 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Building Data Structures from Functions]]></title>
+    <link href="http://usrsb.in/blog/blog/2012/04/01/building-data-structures-from-functions/"/>
+    <updated>2012-04-01T09:00:00-06:00</updated>
+    <id>http://usrsb.in/blog/blog/2012/04/01/building-data-structures-from-functions</id>
+    <content type="html"><![CDATA[<p>Here&#8217;s a puzzle I&#8217;ve adapted from <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-14.html#%_sec_2.1.3">exercise 2.4</a> of SICP.</p>
+
+<blockquote><p>Suppose you are programming in a language that only supports function application. That is, defining functions and applying arguments to these functions are the only things this language supports. Using only these building blocks, could you construct a linked list?</p></blockquote>
+
+<p>Surprisingly, the answer is yes, and the exercise linked to above provides a partial solution. Below, I&#8217;ve translated that solution into Python, and completed the exercise:</p>
+
+<figure class='code'><figcaption><span>Solution in Python</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c"># Create a pair from l and r</span>
+</span><span class='line'><span class="k">def</span> <span class="nf">cons</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">return</span> <span class="k">lambda</span> <span class="n">get</span><span class="p">:</span> <span class="n">get</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
+</span><span class='line'><span class="c"># Given a pair, return the head (left) value.</span>
+</span><span class='line'><span class="k">def</span> <span class="nf">head</span><span class="p">(</span><span class="n">pair</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">pair</span><span class="p">(</span><span class="k">lambda</span> <span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">:</span> <span class="n">l</span><span class="p">)</span>
+</span><span class='line'><span class="c"># Give a pair, return the tail (right) value.</span>
+</span><span class='line'><span class="k">def</span> <span class="nf">tail</span><span class="p">(</span><span class="n">pair</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">pair</span><span class="p">(</span><span class="k">lambda</span> <span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">:</span> <span class="n">r</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>First, let&#8217;s examine how these functions can be used, and then I&#8217;ll explain how they work. Consider the snippet below:</p>
+
+<figure class='code'><figcaption><span>Usage Example</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">l1</span> <span class="o">=</span> <span class="n">cons</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+</span><span class='line'><span class="k">print</span> <span class="n">head</span><span class="p">(</span><span class="n">l1</span><span class="p">)</span>       <span class="c"># Prints 1</span>
+</span><span class='line'><span class="k">print</span> <span class="n">tail</span><span class="p">(</span><span class="n">l1</span><span class="p">)</span>       <span class="c"># Prints 2</span>
+</span><span class='line'><span class="n">l2</span> <span class="o">=</span> <span class="n">cons</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">l1</span><span class="p">)</span>
+</span><span class='line'><span class="k">print</span> <span class="n">head</span><span class="p">(</span><span class="n">l2</span><span class="p">)</span>       <span class="c"># Prints 0</span>
+</span><span class='line'><span class="k">print</span> <span class="n">head</span><span class="p">(</span><span class="n">tail</span><span class="p">(</span><span class="n">l2</span><span class="p">))</span> <span class="c"># Prints 1</span>
+</span><span class='line'><span class="k">print</span> <span class="n">tail</span><span class="p">(</span><span class="n">tail</span><span class="p">(</span><span class="n">l2</span><span class="p">))</span> <span class="c"># Prints 2</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>As can be seen, <code>cons()</code> is the constructor for this pair type. Give it two values, and it will create a pair of those two values. <code>head()</code> and <code>tail()</code> are the basic operators that let us access values inside these pairs; they return the left and right element of the pair, respectively. Also notice that we can create pairs of pairs. The last half of the example creates a pair composed of <code>0</code> and <code>(1,2)</code>. Why is this significant? Well, we&#8217;ve just made a linked list! Linked lists are simply pairs of pairs. The list <code>[1,2,3,4]</code> can, for example, be represented as <code>cons(1,cons(2,cons(3,cons(4,None))))</code>. What&#8217;s <code>None</code> doing at the end of the list? You can think of it like the <code>NULL</code> pointer at the end of a linked list in C. If a function were traversing the list, <code>None</code> would signify to the function that it has reached the end. Mathematically, you can think of a linked list as an inductively defined data structure, where <code>None</code> is the base case. <code>None</code> is referred to as the <em>empty list</em>.</p>
+
+<p>Now for the interesting part. How do these functions work? First let&#8217;s look at the <code>cons()</code> function:</p>
+
+<figure class='code'><figcaption><span>cons()</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c"># Create a pair from l and r</span>
+</span><span class='line'><span class="k">def</span> <span class="nf">cons</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">return</span> <span class="k">lambda</span> <span class="n">get</span><span class="p">:</span> <span class="n">get</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This takes in two parameters (<code>l</code> and <code>r</code>) and returns a function.<sup>1</sup> This returned function takes yet another function, which it applies to <code>l</code> and <code>r</code> and returns the result. So, if we call <code>cons(1,2)</code>, we are returned a function, which takes a function and applies that function to the arguments <code>1</code> and <code>2</code>. If, for example, I called <code>cons(1,2)(lambda x, y: x+y)</code> I&#8217;d get <code>3</code>, because the addition function would be applied to <code>1</code> and <code>2</code>.</p>
+
+<p>Now suppose that we didn&#8217;t want to add <code>l</code> and <code>r</code>. Instead, we wanted to pull either <code>l</code> or <code>r</code> out of a pair that was already constructed. In other words, given <code>list = cons(1,2)</code>, how could we pull the <code>1</code> or <code>2</code> out of the function stored in <code>list</code>? Well, all we need to do is pass it a function that returns only the left or right parameter. So, <code>cons(1,2)(lambda l, r: l)</code> would give us back <code>1</code>, and <code>cons(1,2)(lambda l,r: r)</code> would give us back <code>2</code>. This is almost exactly what the <code>head()</code> and <code>tail()</code> functions are doing! They take in a function (presumably produced by the <code>cons()</code> function), and apply either <code>lambda l,r: l</code> or <code>lambda l,r: r</code>. Just to cement this all together, below I step through the evaluation for the example <code>head(cons(1,2))</code>.</p>
+
+<figure class='code'><figcaption><span>Evaluation Steps for head(cons(1,2,))</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">head</span><span class="p">(</span><span class="n">cons</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
+</span><span class='line'><span class="o">-&gt;</span> <span class="n">head</span><span class="p">(</span><span class="k">lambda</span> <span class="n">get</span><span class="p">:</span> <span class="n">get</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+</span><span class='line'><span class="o">-&gt;</span> <span class="p">(</span><span class="k">lambda</span> <span class="n">get</span><span class="p">:</span> <span class="n">get</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))(</span><span class="k">lambda</span> <span class="n">l</span><span class="p">,</span><span class="n">r</span><span class="p">:</span> <span class="n">l</span><span class="p">)</span>
+</span><span class='line'><span class="o">-&gt;</span> <span class="p">(</span><span class="k">lambda</span> <span class="n">l</span><span class="p">,</span><span class="n">r</span><span class="p">:</span> <span class="n">l</span><span class="p">)(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+</span><span class='line'><span class="o">-&gt;</span> <span class="mi">1</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>And here is a bit of code that uses these new functions to add the elements of a list:</p>
+
+<figure class='code'><figcaption><span>Sum Function</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">sum_list</span><span class="p">(</span><span class="n">l</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">head</span><span class="p">(</span><span class="n">l</span><span class="p">)</span> <span class="k">if</span> <span class="n">tail</span><span class="p">(</span><span class="n">l</span><span class="p">)</span> <span class="o">==</span> <span class="bp">None</span> <span class="k">else</span> <span class="n">head</span><span class="p">(</span><span class="n">l</span><span class="p">)</span> <span class="o">+</span> <span class="n">sum_list</span><span class="p">(</span><span class="n">tail</span><span class="p">(</span><span class="n">l</span><span class="p">))</span>
+</span><span class='line'><span class="n">sum_list</span><span class="p">(</span><span class="n">cons</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">cons</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="n">cons</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="bp">None</span><span class="p">))))</span> <span class="c"># Returns 6</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>In the end, this might strike you as nothing more than a useless programming trick. In a sense that&#8217;s right. I&#8217;d never use this in my own code. What makes this technique so valuable is that it actually fits into the broader context of lambda calculus, which is a mathematical abstraction of computation. In the language of lambda calculus, you&#8217;re given only a very basic set of tools. Essentially all you have are simple one parameter functions (it doesn&#8217;t even have integers!). Incredibly, it turns out that that&#8217;s all you need for a Turing complete language. It&#8217;s possible to build integers, conditionals, loops, arithmetic operations, and (as you&#8217;ve seen here) data structures out of these simple building blocks. As a next step, and to see this for yourself, it might be fun to take a minute and see how the code presented here could be modified to give you binary trees, or even graphs. After that, you could check out this incredible article on writing the infamous <a href="http://www.codinghorror.com/blog/2007/02/why-cant-programmers-program.html">FizzBuzz</a> exercise <a href="http://experthuman.com/programming-with-nothing">in Ruby using only functions</a>.</p>
+
+<h3>Notes</h3>
+
+<ol>
+<li>Technically, this is really a closure, which is a function with some of its variables already set. In the terminology of the PL world, it&#8217;s a function bundled with its environment (the set of variables in its outer scope).</li>
+</ol>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Super Bowl Probabilities: The Coin Toss]]></title>
@@ -1963,62 +2066,6 @@ done
 </code></pre>
 
 <p>It&#8217;s pretty simple. Every 15 minutes it scrapes the webpage <a href="http://doesbuyvmhavestock.com/">doesbuyvmhavestock.com</a> and sends me an email if it contains the word &#8216;yes&#8217;. Obviously, the success of your own script depends on how well it can parse the webpage. As you can see, my parsing routine (the <code>grep</code> on line 5) is pretty primitive.</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Backing Up a Directory's Permissions]]></title>
-    <link href="http://usrsb.in/blog/blog/2011/03/17/backing-up-a-directorys-permissions/"/>
-    <updated>2011-03-17T10:39:00-06:00</updated>
-    <id>http://usrsb.in/blog/blog/2011/03/17/backing-up-a-directorys-permissions</id>
-    <content type="html"><![CDATA[<p>We&#8217;ve all done it before, and if it hasn&#8217;t happened to you yet, it&#8217;s only a matter of time. You&#8217;re attempting to set the permissions on a directory and and you&#8217;re doing something along the lines of <code>sudo chmod -R 660 ./foobar</code>. You execute the command only to realize that you&#8217;re in the wrong directory or you&#8217;ve mistyped the directory&#8217;s name, and now your permissions are totally clobbered. If you&#8217;ve kept good backups, this is annoying, but not devastating. Either you could completely restore the files, or perhaps you could write a script which would copy the old file permissions back over. An easier alternative would be to plan ahead and backup the file permissions before disaster strikes. Here&#8217;s a script that will do that for you:</p>
-
-<pre><code>#!/bin/bash
-
-#Check that we've been passed a directory.
-if [ ! -d "$1" ]; then
-   echo "$1 is not a directory. Exiting."
-   exit 1
-fi
-
-#Check if we've been passed a relative or absolute
-#path. If it's relative, store $PWD in $DIR. We'll need
-#this later to build the absolute path.
-echo "$1" | grep -q '^/'
-if [ $? == 0 ]; then
-   DIR='' 
-else
-   DIR="$PWD/"
-fi
-
-#Generate the header comments for the script.
-echo "#!/bin/bash"
-echo "#"
-echo "#This script will restore permissions under $DIR$1"
-echo "#to how they were on `date`"
-echo "#"
-
-#Loop through the given directory's tree and 
-#echo the commands to restore the permissions and owner.
-find "$1" -print0 | while read -d $'\0' i
-do
-   echo chmod `stat -c %a "$i"` \"$DIR$i\"
-   echo chown `stat -c "%U:%G" "$i"` \"$DIR$i\"
-done
-</code></pre>
-
-<p>What this script does is generate another script, which, when run, will restore a directory&#8217;s permissions, owner, and group (and also the permissions, owner, and group of any files and directories under it). Suppose you drop this script into a file called <code>backup.sh</code> and you want to backup the permissions of a directory called <code>/home/you/mystuff</code>. Here&#8217;s how you&#8217;d do it:</p>
-
-<pre><code>./backup.sh /home/you/mystuff &gt; mystuff-backup.sh
-</code></pre>
-
-<p>Now when you execute <code>mystuff-backup.sh</code>, all of <code>/home/you/mystuff</code>&#8217;s permissions will be restored. Easy.</p>
-
-<p>There is one security caveat you should keep in mind. The resultant script will contain the names of all the files and subdirectories in the directory tree. The upshot is that anyone who has read access to the script will be able to see this information. If this is a problem, you should adjust the script&#8217;s permissions accordingly.</p>
-
-<p>The script itself is pretty straight forward. On line 4, we tell a relative path from an absolute path by seeing if it&#8217;s prefixed with a forward slash. If it is, then it&#8217;s absolute. If it isn&#8217;t, then it&#8217;s relative. We&#8217;ll need this information later to build the absolute path to all the files. The next step is to loop through the files, which is a bit tricky. On line 28, we need to pipe the output of <code>find</code> to a <code>while read</code> because the more intuitive <code>for</code> loop construct doesn&#8217;t handle spaces and newlines in filenames properly (of course, anyone who puts newlines in a filename needs to be thrown into the <a href="http://www.starwars.com/databank/creature/sarlacc/">sarlacc</a>). In fact, you may just want to memorize that line, as it&#8217;s a common problem with a far from obvious solution. Finally, on line 30 and 31, we read the file&#8217;s permission and owners with <code>stat</code>, which is a handy command that, among other things, outputs file information in a user definable format.</p>
-
-<p>So there you have it. <a href="http://media.usrsb.in/dir-perm/backupperm.sh">Download the script here.</a> Now go forth and make this a cron job.</p>
 ]]></content>
   </entry>
   

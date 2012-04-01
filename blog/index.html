@@ -9,7 +9,7 @@
   <meta name="author" content="Alex Beal">
 
   
-  <meta name="description" content="Browsing through my Twitter stream, I came across a blog post discussing an allegedly 3.8-sigma event: Apparently the last 14 Super Bowl coin tosses &hellip;">
+  <meta name="description" content="Here&#8217;s a puzzle I&#8217;ve adapted from exercise 2.4 of SICP. Suppose you are programming in a language that only supports function application &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -80,6 +80,136 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/blog/2012/04/01/building-data-structures-from-functions/">Building Data Structures From Functions</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-04-01T09:00:00-06:00" pubdate data-updated="true">Apr 1<span>st</span>, 2012</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Here&#8217;s a puzzle I&#8217;ve adapted from <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-14.html#%_sec_2.1.3">exercise 2.4</a> of SICP.</p>
+
+<blockquote><p>Suppose you are programming in a language that only supports function application. That is, defining functions and applying arguments to these functions are the only things this language supports. Using only these building blocks, could you construct a linked list?</p></blockquote>
+
+<p>Surprisingly, the answer is yes, and the exercise linked to above provides a partial solution. Below, I&#8217;ve translated that solution into Python, and completed the exercise:</p>
+
+<figure class='code'><figcaption><span>Solution in Python</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c"># Create a pair from l and r</span>
+</span><span class='line'><span class="k">def</span> <span class="nf">cons</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">return</span> <span class="k">lambda</span> <span class="n">get</span><span class="p">:</span> <span class="n">get</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
+</span><span class='line'><span class="c"># Given a pair, return the head (left) value.</span>
+</span><span class='line'><span class="k">def</span> <span class="nf">head</span><span class="p">(</span><span class="n">pair</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">pair</span><span class="p">(</span><span class="k">lambda</span> <span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">:</span> <span class="n">l</span><span class="p">)</span>
+</span><span class='line'><span class="c"># Give a pair, return the tail (right) value.</span>
+</span><span class='line'><span class="k">def</span> <span class="nf">tail</span><span class="p">(</span><span class="n">pair</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">pair</span><span class="p">(</span><span class="k">lambda</span> <span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">:</span> <span class="n">r</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>First, let&#8217;s examine how these functions can be used, and then I&#8217;ll explain how they work. Consider the snippet below:</p>
+
+<figure class='code'><figcaption><span>Usage Example</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">l1</span> <span class="o">=</span> <span class="n">cons</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+</span><span class='line'><span class="k">print</span> <span class="n">head</span><span class="p">(</span><span class="n">l1</span><span class="p">)</span>       <span class="c"># Prints 1</span>
+</span><span class='line'><span class="k">print</span> <span class="n">tail</span><span class="p">(</span><span class="n">l1</span><span class="p">)</span>       <span class="c"># Prints 2</span>
+</span><span class='line'><span class="n">l2</span> <span class="o">=</span> <span class="n">cons</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">l1</span><span class="p">)</span>
+</span><span class='line'><span class="k">print</span> <span class="n">head</span><span class="p">(</span><span class="n">l2</span><span class="p">)</span>       <span class="c"># Prints 0</span>
+</span><span class='line'><span class="k">print</span> <span class="n">head</span><span class="p">(</span><span class="n">tail</span><span class="p">(</span><span class="n">l2</span><span class="p">))</span> <span class="c"># Prints 1</span>
+</span><span class='line'><span class="k">print</span> <span class="n">tail</span><span class="p">(</span><span class="n">tail</span><span class="p">(</span><span class="n">l2</span><span class="p">))</span> <span class="c"># Prints 2</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>As can be seen, <code>cons()</code> is the constructor for this pair type. Give it two values, and it will create a pair of those two values. <code>head()</code> and <code>tail()</code> are the basic operators that let us access values inside these pairs; they return the left and right element of the pair, respectively. Also notice that we can create pairs of pairs. The last half of the example creates a pair composed of <code>0</code> and <code>(1,2)</code>. Why is this significant? Well, we&#8217;ve just made a linked list! Linked lists are simply pairs of pairs. The list <code>[1,2,3,4]</code> can, for example, be represented as <code>cons(1,cons(2,cons(3,cons(4,None))))</code>. What&#8217;s <code>None</code> doing at the end of the list? You can think of it like the <code>NULL</code> pointer at the end of a linked list in C. If a function were traversing the list, <code>None</code> would signify to the function that it has reached the end. Mathematically, you can think of a linked list as an inductively defined data structure, where <code>None</code> is the base case. <code>None</code> is referred to as the <em>empty list</em>.</p>
+
+<p>Now for the interesting part. How do these functions work? First let&#8217;s look at the <code>cons()</code> function:</p>
+
+<figure class='code'><figcaption><span>cons()</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c"># Create a pair from l and r</span>
+</span><span class='line'><span class="k">def</span> <span class="nf">cons</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">return</span> <span class="k">lambda</span> <span class="n">get</span><span class="p">:</span> <span class="n">get</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This takes in two parameters (<code>l</code> and <code>r</code>) and returns a function.<sup>1</sup> This returned function takes yet another function, which it applies to <code>l</code> and <code>r</code> and returns the result. So, if we call <code>cons(1,2)</code>, we are returned a function, which takes a function and applies that function to the arguments <code>1</code> and <code>2</code>. If, for example, I called <code>cons(1,2)(lambda x, y: x+y)</code> I&#8217;d get <code>3</code>, because the addition function would be applied to <code>1</code> and <code>2</code>.</p>
+
+<p>Now suppose that we didn&#8217;t want to add <code>l</code> and <code>r</code>. Instead, we wanted to pull either <code>l</code> or <code>r</code> out of a pair that was already constructed. In other words, given <code>list = cons(1,2)</code>, how could we pull the <code>1</code> or <code>2</code> out of the function stored in <code>list</code>? Well, all we need to do is pass it a function that returns only the left or right parameter. So, <code>cons(1,2)(lambda l, r: l)</code> would give us back <code>1</code>, and <code>cons(1,2)(lambda l,r: r)</code> would give us back <code>2</code>. This is almost exactly what the <code>head()</code> and <code>tail()</code> functions are doing! They take in a function (presumably produced by the <code>cons()</code> function), and apply either <code>lambda l,r: l</code> or <code>lambda l,r: r</code>. Just to cement this all together, below I step through the evaluation for the example <code>head(cons(1,2))</code>.</p>
+
+<figure class='code'><figcaption><span>Evaluation Steps for head(cons(1,2,))</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">head</span><span class="p">(</span><span class="n">cons</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
+</span><span class='line'><span class="o">-&gt;</span> <span class="n">head</span><span class="p">(</span><span class="k">lambda</span> <span class="n">get</span><span class="p">:</span> <span class="n">get</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+</span><span class='line'><span class="o">-&gt;</span> <span class="p">(</span><span class="k">lambda</span> <span class="n">get</span><span class="p">:</span> <span class="n">get</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))(</span><span class="k">lambda</span> <span class="n">l</span><span class="p">,</span><span class="n">r</span><span class="p">:</span> <span class="n">l</span><span class="p">)</span>
+</span><span class='line'><span class="o">-&gt;</span> <span class="p">(</span><span class="k">lambda</span> <span class="n">l</span><span class="p">,</span><span class="n">r</span><span class="p">:</span> <span class="n">l</span><span class="p">)(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+</span><span class='line'><span class="o">-&gt;</span> <span class="mi">1</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>And here is a bit of code that uses these new functions to add the elements of a list:</p>
+
+<figure class='code'><figcaption><span>Sum Function</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">sum_list</span><span class="p">(</span><span class="n">l</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">head</span><span class="p">(</span><span class="n">l</span><span class="p">)</span> <span class="k">if</span> <span class="n">tail</span><span class="p">(</span><span class="n">l</span><span class="p">)</span> <span class="o">==</span> <span class="bp">None</span> <span class="k">else</span> <span class="n">head</span><span class="p">(</span><span class="n">l</span><span class="p">)</span> <span class="o">+</span> <span class="n">sum_list</span><span class="p">(</span><span class="n">tail</span><span class="p">(</span><span class="n">l</span><span class="p">))</span>
+</span><span class='line'><span class="n">sum_list</span><span class="p">(</span><span class="n">cons</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">cons</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="n">cons</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="bp">None</span><span class="p">))))</span> <span class="c"># Returns 6</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>In the end, this might strike you as nothing more than a useless programming trick. In a sense that&#8217;s right. I&#8217;d never use this in my own code. What makes this technique so valuable is that it actually fits into the broader context of lambda calculus, which is a mathematical abstraction of computation. In the language of lambda calculus, you&#8217;re given only a very basic set of tools. Essentially all you have are simple one parameter functions (it doesn&#8217;t even have integers!). Incredibly, it turns out that that&#8217;s all you need for a Turing complete language. It&#8217;s possible to build integers, conditionals, loops, arithmetic operations, and (as you&#8217;ve seen here) data structures out of these simple building blocks. As a next step, and to see this for yourself, it might be fun to take a minute and see how the code presented here could be modified to give you binary trees, or even graphs. After that, you could check out this incredible article on writing the infamous <a href="http://www.codinghorror.com/blog/2007/02/why-cant-programmers-program.html">FizzBuzz</a> exercise <a href="http://experthuman.com/programming-with-nothing">in Ruby using only functions</a>.</p>
+
+<h3>Notes</h3>
+
+<ol>
+<li>Technically, this is really a closure, which is a function with some of its variables already set. In the terminology of the PL world, it&#8217;s a function bundled with its environment (the set of variables in its outer scope).</li>
+</ol>
+
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1606,118 +1736,6 @@ So, the problem is that we have 8 coins, and one of them is a bad coin that weig
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/blog/2011/08/15/a-database-engine-in-16-lines/">A Database Engine in 16 Lines</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2011-08-15T13:36:00-06:00" pubdate data-updated="true">Aug 15<span>th</span>, 2011</time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>Recently I&#8217;ve been playing around with a neat command line utility called netcat. It makes it incredibly easy to add networking functionality to your scripts. What it does is allow you to open a port on your machine and listen for incoming connections. Should a connection occur, anything the remote machine sends is dumped to stdout, and anything written to stdin is sent out to the remote machine. As a demo, I decided to write a database engine with it, and I managed to do it in 16 lines.</p>
-
-<pre><code>#!/bin/bash
-
-PORT=1234
-DATA_FILE="/full/path/to/data"
-
-listen () {
-    TIMEOUT=10
-    echo "$2" | nc -l -p $1 -w $TIMEOUT -q 0 
-}
-
-while :; do
-    ANSWER_PORT=$((RANDOM % 1000 + 1028))
-    QUERY="$(echo $ANSWER_PORT | nc -l -p $PORT -q 2)"
-    ANSWER="$(grep "^$QUERY," "$DATA_FILE" | sed "s/ $QUERY, //")"
-    listen "$ANSWER_PORT" "$ANSWER" &amp;
-done
-</code></pre>
-
-<p>The database itself is simply a text file full of key-value pairs. So, a remote machine can send over a key, and the database responds with that key&#8217;s corresponding value. If, for example, the database was full of names (keys) and phone numbers (values), a remote machine could send over someone&#8217;s name, and the database would respond with that person&#8217;s phone number. Not bad for 16 lines.</p>
-
-<p>Before I step through the code, I&#8217;ll explain its overall functionality. When first executed, the script opens up port 1234 and listens. When a remote machine wants to query it, the remote machine connects to port 1234 and sends over its query (a key). The script receives this and, over the same connection, sends back a random number between 1028 and 2028. Suppose the random number is 1050. The database will then open up port 1050, and when the remote machine connect to that port, the database will send its answer over that connection (the value corresponding to the key), and the transaction is finished. Let&#8217;s look at the code now.</p>
-
-<h2>Analysis</h2>
-
-<p>The script starts off with two variables. The first is the port that the script listens on for incoming queries. The second points to the text file containing the key-value pairs. The file would look something like this:</p>
-
-<pre><code>alex beal, 555-555-5555
-bob, 111-111-1111
-joe, 222-222-2222
-</code></pre>
-
-<p>Where, &#8220;alex beal&#8221;, &#8220;bob&#8221;, and &#8220;joe&#8221; are the keys, and the values corresponding to those keys are listed after the comma. Let&#8217;s skip over the listen function for now and examine the while loop below it.</p>
-
-<pre><code>while :; do
-    ANSWER_PORT=$((RANDOM % 1000 + 1028))
-    QUERY="$(echo $ANSWER_PORT | nc -l -p $PORT -q 2)"
-    ANSWER="$(grep "^$QUERY," "$DATA_FILE" | sed "s/^$QUERY, //")" 
-    listen "$ANSWER_PORT" "$ANSWER" &amp;
-done
-</code></pre>
-
-<p>The first line is a while loop that continues forever until the script receives an interrupt. The second two lines get a random number between 1028 and 2028 and store it to <code>$ANSWER_PORT</code>. That value is piped into the netcat instance on the third line, which listens for connections (<code>-l</code>) on port 1234 (<code>-p $PORT</code>). Once a connection is established, and the random port number is sent, the remote host has 2 seconds to send over a query (<code>-q 2</code>), which gets stored to <code>$QUERY</code>. This means that after the first two lines have executed, the query is received, and the random answer port is sent.</p>
-
-<p>The next lines search through the database file for the key-value pair. Searching the database is as simple as <code>grep</code>-ing the data file for the line beginning with the key, and stripping that key from the output with sed.</p>
-
-<p>Finally we call the <code>listen</code> function defined above. This is passed the port that the client must connect to to receive the answer (<code>$ANSWER_PORT</code>), and the answer itself (<code>$ANSWER</code>).</p>
-
-<pre><code>listen () {
-    TIMEOUT=10
-    echo "$2" | nc -l -p $1 -w $TIMEOUT -q 0 
-}
-</code></pre>
-
-<p>The answer, which is the second argument (<code>$2</code>), is piped into netcat (<code>nc</code>). The flags tell it to listen (<code>-l</code>) on the port passed to it as the first argument (<code>-p $1</code>). The netcat instance will stop listening after <code>$TIMEOUT</code> seconds, and after the answer is sent, it will close immediately (<code>-q 0</code>). As you can see, the listen function is called as a background process, so the loop can continue back to the top, allowing other requests to be handled while the answer is sent to the client in the background.</p>
-
-<h2>The Client&#8217;s Script</h2>
-
-<p>You can query it remotely with this script:</p>
-
-<pre><code>#!/bin/bash
-ANSWERPORT=$(echo "$2" | nc $1 1234)
-sleep 1s
-nc $1 $ANSWERPORT
-</code></pre>
-
-<p>The first line both receives the answer port, and sends over the query. The script then sleeps for 1 second, while the database handles the request. Finally, it connects a second time to retrieve its answer. The script is used as follows:</p>
-
-<pre><code>query.sh REMOTE_IP QUERY_STRING
-</code></pre>
-
-<h2>Conclusion</h2>
-
-<p>Although this was a fun exercise, the script itself isn&#8217;t very practical. It&#8217;s slow (at least compared to MySQL), and probably insecure, but there might be a use for it on a private network with trusted users. The take away points here are the different netcat constructs that you could apply to your own programs, such as sending and receiving at the same time, and setting up a client-server model. Definitely let me know in the comments if you end up making something cool!</p>
-
-<p><a href="http://media.usrsb.in/db/db-scripts.zip">Download the scripts.</a></p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/blog/page/2/">&larr; Older</a>
@@ -1733,6 +1751,10 @@ nc $1 $ANSWERPORT
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/blog/2012/04/01/building-data-structures-from-functions/">Building Data Structures from Functions</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/blog/2012/02/05/super-bowl-probabilities/">Super Bowl Probabilities: The Coin Toss</a>
       </li>
     
@@ -1746,10 +1768,6 @@ nc $1 $ANSWERPORT
     
       <li class="post">
         <a href="/blog/blog/2012/01/11/picking-random-items-from-a-file/">Picking Random Items From a File</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/blog/2012/01/03/a-program-analysis-for-tail-call-optimization/">A Program Analysis For Tail Call Optimization</a>
       </li>
     
   </ul>
