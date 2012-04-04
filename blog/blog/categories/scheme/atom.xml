@@ -4,7 +4,7 @@
   <title><![CDATA[Category: scheme | /usr/sbin/blog]]></title>
   <link href="http://usrsb.in/blog/blog/categories/scheme/atom.xml" rel="self"/>
   <link href="http://usrsb.in/blog/"/>
-  <updated>2012-04-01T08:57:01-06:00</updated>
+  <updated>2012-04-04T14:48:18-06:00</updated>
   <id>http://usrsb.in/blog/</id>
   <author>
     <name><![CDATA[Alex Beal]]></name>
@@ -33,7 +33,7 @@
 
 <p>The last situation is much more difficult to calculate, and similar questions are often the cause for much surprise. For example, if you toss a coin 20 times, do you think it's likely or unlikely that you'll get a string of 5 heads in a row? It seems like this should be unlikely. After all, the probability of tossing a coin 5 times, and ending up with heads every time is quite small: (1/2)<sup>5</sup> = 1/32  (approx. 3%). Believe it or not, the actual probability is around 25%.<sup>2</sup></p>
 
-<p>How are these probabilities found? One solution is a rather nasty recursive formula. You might recognize this as a dynamic programming problem.</p>
+<p>How are these probabilities found? One solution is a rather nasty recursive formula.</p>
 
 <blockquote><p>  A similar recursion can be given to calculate the probability that in <em>n</em> fair coin tosses a run of <em>r</em> heads or <em>r</em> tails occurs. In this case, we say that the tossing process is in state <em>(i, k)</em> when there are <em>k</em> tosses still to go and the last <em>i</em> tosses all showed the same outcome but so far no run of <em>r</em> heads or <em>r</em> tails has occurred. The probability <em>v<sub>k</sub>(i)</em> is defined as</p>
 
