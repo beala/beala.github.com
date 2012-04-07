@@ -9,7 +9,7 @@
   <meta name="author" content="Alex Beal">
 
   
-  <meta name="description" content="We&#8217;ve all done it before, and if it hasn&#8217;t happened to you yet, it&#8217;s only a matter of time. You&#8217;re attempting to set the &hellip;">
+  <meta name="description" content="Here&#8217;s a handy way to send emails from the command line: echo 'message' | mail -s 'subject' 'email_address' If you know the recipient&#8217;s &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -80,6 +80,74 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/blog/2011/03/24/sending-emails-and-texts-from-the-command-line/">Sending Emails and Texts From the Command Line</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-03-24T16:39:00-06:00" pubdate data-updated="true">Mar 24<span>th</span>, 2011</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Here&#8217;s a handy way to send emails from the command line:</p>
+
+<pre><code>echo 'message' | mail -s 'subject' 'email_address'
+</code></pre>
+
+<p>If you know the recipient&#8217;s carrier, you can also use it to send text messages from the command line. For example, if the recipient&#8217;s number is 111-111-1111 and she&#8217;s on Verizon, you can send her a text message using the following command:</p>
+
+<pre><code>echo 'Sent from my terminal!' | 
+    mail -s 'Linux is fun' '1111111111@vtext.com'
+</code></pre>
+
+<p>Once again, the trick here is knowing the domain name of the carrier&#8217;s <a href="http://en.wikipedia.org/wiki/SMS_Gateway">Email-to-SMS Gateway</a>. In the case of Verizon, it&#8217;s @vtext.com. Wikipedia has a handy list of other gateways <a href="http://en.wikipedia.org/wiki/List_of_SMS_gateways">here</a>. Another trick is to send yourself an email from the phone, and the phone&#8217;s SMS gateway will be revealed in the &#8216;from&#8217; field.</p>
+
+<p>You can use this to create all sorts of fun shell scripts. For example, here&#8217;s one I wrote recently that tells me whether or not the VPS provider BuyVM has any VPSs in stock:</p>
+
+<pre><code>#!/bin/bash -
+
+echo 'Is BuyVM in stock?'
+while :; do
+        wget -O - -q http://doesbuyvmhavestock.com/ | grep -i yes
+        if [ $? == 0 ]; then
+                echo 'Well, what are you waiting for?' | 
+                    mail -s "BuyVM is in stock" "you@example.com"
+                echo 'Yes!'
+                exit 0
+        else
+            echo 'No'
+            sleep 15m
+        fi
+done
+</code></pre>
+
+<p>It&#8217;s pretty simple. Every 15 minutes it scrapes the webpage <a href="http://doesbuyvmhavestock.com/">doesbuyvmhavestock.com</a> and sends me an email if it contains the word &#8216;yes&#8217;. Obviously, the success of your own script depends on how well it can parse the webpage. As you can see, my parsing routine (the <code>grep</code> on line 5) is pretty primitive.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -242,6 +310,10 @@ done
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/blog/2012/04/07/look-ma-no-loops/">Look, Ma! No Loops: Reversing Word Order</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/blog/2012/04/01/building-data-structures-from-functions/">Building Data Structures from Functions</a>
       </li>
     
@@ -255,10 +327,6 @@ done
     
       <li class="post">
         <a href="/blog/blog/2012/01/14/picking-random-items-take-2/">Picking Random Items: Take Two (Hacking Python&#8217;s Generators)</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/blog/2012/01/11/picking-random-items-from-a-file/">Picking Random Items From a File</a>
       </li>
     
   </ul>

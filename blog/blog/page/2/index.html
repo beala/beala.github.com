@@ -9,7 +9,7 @@
   <meta name="author" content="Alex Beal">
 
   
-  <meta name="description" content="Recently I&#8217;ve been playing around with a neat command line utility called netcat. It makes it incredibly easy to add networking functionality &hellip;">
+  <meta name="description" content="Today I have a puzzle for you from James Hein&#8217;s textbook, Discrete Structures, Logic, and Computability. It&#8217;s a question about finding a &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -80,6 +80,63 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/blog/2011/08/17/a-search-algorithm-puzzle-finding-a-bad-coin/">A Search Algorithm Puzzle: Finding a Bad Coin</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-08-17T13:30:00-06:00" pubdate data-updated="true">Aug 17<span>th</span>, 2011</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Today I have a puzzle for you from James Hein&#8217;s textbook, <a href="http://www.amazon.com/Discrete-Structures-Logic-Computability-James/dp/0763772062">Discrete Structures, Logic, and Computability</a>. It&#8217;s a question about finding a &#8220;bad coin&#8221; and goes as follows:</p>
+
+<blockquote><p>Suppose we are asked to use a pan balance to find the heavy coin among eight coins with the assumption that they all look alike and the other seven all have the same weight. (p. 287)
+So, the problem is that we have 8 coins, and one of them is a bad coin that weighs more than the others. With only a pan balance, what&#8217;s the most efficient way to find the bad coin?</p></blockquote>
+
+<p>The simplest solution is to just weigh the coins in pairs. Grab a pair of coins and put one coin on each side of the balance. If one is heavier, you&#8217;ve found the bad coin and you can stop. If they weigh the same, move on to the next pair. At most, this will take 4 trials, but is this optimal? No. As James Hein points out, we can do better.</p>
+
+<p>The better solution is to put 4 of the coins on one side of the balance, and the other 4 coins on the other side of the balance. One side must be heavier than the other, because one side must contain the heavier coin. If the left side is heavier, then we discard the lighter coins on the right side. We then split the remaining coins into 2 groups of 2, and repeat the procedure by weighing one group against the other. The heavier of the two pairs then gets split and weighed. The coin that is heavier is the bad coin. This is a sure way to find the bad coin in 3 steps.</p>
+
+<p>Programmers will recognize this algorithm as a binary search, which can be represented by the following decision tree from page 287 of Hein&#8217;s book:</p>
+
+<p><img src="http://media.usrsb.in/bad-coin/dectree.png" alt="Binary Search Tree" /></p>
+
+<p>First we weigh 1 through 4 against 5 through 8. If 1 through 4 is heavier, then we weigh 1 and 2 against 3 and 4 and so on until we reach the bottom of the tree. It&#8217;s a neat solution that has lots of uses. The obvious application for this is searching through lots of data, but an especially cool use is the <a href="https://secure.wikimedia.org/wikipedia/en/wiki/Huffman_coding">Huffman coding algorithm</a>. A variation on Huffman coding is how zip archives are compressed.</p>
+
+<p>But wait a minute. We can do one better by allowing some decision points (nodes) on the tree to have three connections rather than two, making it a ternary tree. See the revised, and optimal, decision tree below (Hein, p. 288):</p>
+
+<p><img src="http://media.usrsb.in/bad-coin/ternary.png" alt="Optimal Decision Tree" /></p>
+
+<p>For this revised procedure, we begin by weighing 1 through 3 and 4 through 6. If those groups have equal weight, then we go down the middle branch and see that the bad coin must be 7 or 8. We follow a similar procedure if, after the first weighing, 1 through 3 is heavier. We go down the left branch and test 1 and 2. If those weigh the same, then the bad coin must be coin 3. Pretty clever.</p>
+
+<p>Next post I&#8217;ll attempt some mathematical analysis on the algorithms, and see what we can say about how many steps it takes to sort through n coins. In the meantime, check out this <a href="https://secure.wikimedia.org/wikipedia/en/wiki/Binary_search_algorithm#Computer_use">interesting tidbit from Wikipedia&#8217;s Binary Search article</a>. Despite its ubiquity and seeming simplicity, it&#8217;s apparently quite difficult to implement!</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -954,74 +1011,6 @@ done
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/blog/2011/03/24/sending-emails-and-texts-from-the-command-line/">Sending Emails and Texts From the Command Line</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2011-03-24T16:39:00-06:00" pubdate data-updated="true">Mar 24<span>th</span>, 2011</time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>Here&#8217;s a handy way to send emails from the command line:</p>
-
-<pre><code>echo 'message' | mail -s 'subject' 'email_address'
-</code></pre>
-
-<p>If you know the recipient&#8217;s carrier, you can also use it to send text messages from the command line. For example, if the recipient&#8217;s number is 111-111-1111 and she&#8217;s on Verizon, you can send her a text message using the following command:</p>
-
-<pre><code>echo 'Sent from my terminal!' | 
-    mail -s 'Linux is fun' '1111111111@vtext.com'
-</code></pre>
-
-<p>Once again, the trick here is knowing the domain name of the carrier&#8217;s <a href="http://en.wikipedia.org/wiki/SMS_Gateway">Email-to-SMS Gateway</a>. In the case of Verizon, it&#8217;s @vtext.com. Wikipedia has a handy list of other gateways <a href="http://en.wikipedia.org/wiki/List_of_SMS_gateways">here</a>. Another trick is to send yourself an email from the phone, and the phone&#8217;s SMS gateway will be revealed in the &#8216;from&#8217; field.</p>
-
-<p>You can use this to create all sorts of fun shell scripts. For example, here&#8217;s one I wrote recently that tells me whether or not the VPS provider BuyVM has any VPSs in stock:</p>
-
-<pre><code>#!/bin/bash -
-
-echo 'Is BuyVM in stock?'
-while :; do
-        wget -O - -q http://doesbuyvmhavestock.com/ | grep -i yes
-        if [ $? == 0 ]; then
-                echo 'Well, what are you waiting for?' | 
-                    mail -s "BuyVM is in stock" "you@example.com"
-                echo 'Yes!'
-                exit 0
-        else
-            echo 'No'
-            sleep 15m
-        fi
-done
-</code></pre>
-
-<p>It&#8217;s pretty simple. Every 15 minutes it scrapes the webpage <a href="http://doesbuyvmhavestock.com/">doesbuyvmhavestock.com</a> and sends me an email if it contains the word &#8216;yes&#8217;. Obviously, the success of your own script depends on how well it can parse the webpage. As you can see, my parsing routine (the <code>grep</code> on line 5) is pretty primitive.</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/blog/page/3/">&larr; Older</a>
@@ -1039,6 +1028,10 @@ done
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/blog/2012/04/07/look-ma-no-loops/">Look, Ma! No Loops: Reversing Word Order</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/blog/2012/04/01/building-data-structures-from-functions/">Building Data Structures from Functions</a>
       </li>
     
@@ -1052,10 +1045,6 @@ done
     
       <li class="post">
         <a href="/blog/blog/2012/01/14/picking-random-items-take-2/">Picking Random Items: Take Two (Hacking Python&#8217;s Generators)</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/blog/2012/01/11/picking-random-items-from-a-file/">Picking Random Items From a File</a>
       </li>
     
   </ul>
