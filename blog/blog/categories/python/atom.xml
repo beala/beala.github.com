@@ -4,7 +4,7 @@
   <title><![CDATA[Category: python | /usr/sbin/blog]]></title>
   <link href="http://usrsb.in/blog/blog/categories/python/atom.xml" rel="self"/>
   <link href="http://usrsb.in/blog/"/>
-  <updated>2012-04-27T09:04:15-06:00</updated>
+  <updated>2012-05-05T13:43:03-06:00</updated>
   <id>http://usrsb.in/blog/</id>
   <author>
     <name><![CDATA[Alex Beal]]></name>
@@ -12,6 +12,28 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Permutations: An Interview Question]]></title>
+    <link href="http://usrsb.in/blog/blog/2012/05/05/permutations-an-interview-question/"/>
+    <updated>2012-05-05T13:41:00-06:00</updated>
+    <id>http://usrsb.in/blog/blog/2012/05/05/permutations-an-interview-question</id>
+    <content type="html"><![CDATA[<p>Here I go over a coding question I was recently asked during an interview.</p>
+
+<iframe width="853" height="480" src="http://www.youtube.com/embed/wIPcruaQ3Sg" frameborder="0" allowfullscreen></iframe>
+
+
+<p>You can find the source here: <a href="https://gist.github.com/2604992">https://gist.github.com/2604992</a></p>
+
+<h3>Notes</h3>
+
+<ol>
+<li>In some languages, prepending to a list is faster than appending. In Python it doesn't matter.</li>
+<li>The weird characters in the Vim session are whitespace characters. <code>$</code> is a newline character.</li>
+</ol>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Look, Ma! No Loops: Reversing Word Order]]></title>
@@ -400,97 +422,6 @@ print rand_words
 
 <ol>
 <li>You could even use the built-in function <code>max()</code> if you only need one word.</li>
-</ol>
-
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Picking Random Items From a File]]></title>
-    <link href="http://usrsb.in/blog/blog/2012/01/11/picking-random-items-from-a-file/"/>
-    <updated>2012-01-11T10:29:00-07:00</updated>
-    <id>http://usrsb.in/blog/blog/2012/01/11/picking-random-items-from-a-file</id>
-    <content type="html"><![CDATA[<p>Here's a deceptively simple programming puzzle: Develop an algorithm for randomly selecting <em>n</em> words from a dictionary file. This is essentially the puzzle I had to solve in order to write my <a href="https://github.com/beala/xkcd-password">xkcd-style password generator</a>, which implements the <a href="http://xkcd.com/936/">xkcd password spec</a>.<sup>1</sup></p>
-
-<p>The simplest solution is to parse the dictionary into individual words (easy to do in Python) and put those words into a list. Selecting four random words is then as easy as selecting four random items from the list. This is fast, easy to implement, and simple to understand, but it is also very memory inefficient. I have to load 50,000+ words into memory in order to select four of them.<sup>2</sup> Can we do better? Yes.</p>
-
-<h2>A Memory Efficient Algorithm</h2>
-
-<p>The key insight into developing a better algorithm is realizing that it should be possible to select the words as the dictionary file is being parsed, rather than loading the entire thing into memory. The difficulty is making sure that each word has an equal chance of being chosen, and that at least <em>n</em> words are chosen. If, for example, we simply give each word a 1 in 10 chance of being chosen, we'll end up with way more words than we need (assuming <em>n</em> is small). If we give each a 1 in 50,000 chance, there's the possibility that we won't choose enough words. Bryce Boe has <a href="http://www.bryceboe.com/2009/03/23/random-lines-from-a-file/">a clever solution</a> to this problem where he chooses exactly <em>n</em> words, but the proof that it works is non-trivial, and he doesn't provide it. This is why I came up with my algorithm.</p>
-
-<p>In order to explain my algorithm, it's best to think of it in terms of rolling dice. Consider the following procedure for randomly selecting 4 dice from 10.</p>
-
-<ol>
-<li>Roll all 10 dice.</li>
-<li>Select the 4 with the highest values.
-
-<ol>
-<li>If, suppose, 5 of the dice all end up with a value of 6, randomly choose 4 from those 5 (perhaps by repeating the procedure with those 5).</li>
-<li>If, suppose 2 dice get a value of 6, and 3 get a value of 5, select the 2 with the value of 6, and then randomly select 2 of the 3 with a value of 5.</li>
-</ol>
-</li>
-</ol>
-
-
-<p>How can we adapt this procedure to select random words from a file, rather than dice? Here's how: as we're parsing the dictionary file, we give each word a random value, and then select the <em>n</em> words with the highest values. The issue is, the naive implementation of this procedure doesn't really solve our memory problem. If every word gets a random value, don't we now have to store every word in memory, along with its value? The key here is to observe that only the words with the <em>n</em> highest values need to be kept in memory, and all the others can be immediately discarded. Think about this in terms of the dice example. I want to select 1 die from 10:</p>
-
-<ol>
-<li>I roll the first die. I get a value of 1. I keep this die.</li>
-<li>I roll the second. I get a value of 3. I keep this die, and discard the other.</li>
-<li>I roll the third. I get a value of 3. I keep both dice.</li>
-<li>Fourth: I get a value of 6. I keep this die and discard the other 2.</li>
-</ol>
-
-
-<p>By the end of the procedure, I might end up with 3 dice that all got a value of 6. I would then randomly select 1 from those 3.</p>
-
-<p>How can we adapt this procedure for selecting random words? We use a priority queue:</p>
-
-<ol>
-<li>Read a word from the dictionary.</li>
-<li>Give it a random value.</li>
-<li>Insert the value-word pair (as a tuple) into the priority queue.</li>
-<li>If the queue has more than <em>n</em> items, pop an item.</li>
-<li>Repeat until every word has been read.</li>
-</ol>
-
-
-<p>Remember that popping from a priority queue removes the item with the lowest value. So, we insert a word, and if we have too many words, we pop the one with the lowest value. At the end of this procedure there will be exactly <em>n</em> words in the queue. These are our <em>n</em> random words. Neat.</p>
-
-<p>There is one issue, though. What if two words have the same random value? Well, one solution is to keep both words, and then break the tie at the end like we did in the dice example, but that breaks the elegance of the priority queue implementation. Another is to break ties randomly as soon as they occur, and discard the losing word, but I'm not sure how to do this in a statistically safe way. The easiest solution is to just pray that collisions don't occur. In Python, each call to <code>random()</code> produces 53-bits of precision, so it's very unlikely that two values will collide. If 53-bits isn't enough (yeah right), you can use multiple random numbers. So, rather than a tuple of <code>(value, word)</code>, you can use <code>(value_1, value_2, value_3, word)</code>.<sup>3</sup> Python's priority queue implementation will automatically know how to sort that.</p>
-
-<p>Without further ado, here's the proof of concept:</p>
-
-<p>``` python</p>
-
-<h1>!/usr/bin/python -O</h1>
-
-<p>import random
-import heapq</p>
-
-<p>DICT_PATH = "/usr/share/dict/words"
-WORD_COUNT = 4</p>
-
-<p>dict_file = open(DICT_PATH)
-wordq = []
-for line in dict_file:</p>
-
-<pre><code>word = line.strip()
-rand_val = random.random()
-heapq.heappush(wordq, (rand_val, word) )
-if len(wordq) &gt; WORD_COUNT:
-    heapq.heappop(wordq)
-</code></pre>
-
-<p>print wordq
-```</p>
-
-<h2>Endnotes</h2>
-
-<ol>
-<li>Summary: a good password is composed of four random words.</li>
-<li>A slight improvement on this would be to store only the word's position in the file, rather than the word itself. Then the word could be retrieved by seeking to that position. <a href="http://www.bryceboe.com/2009/03/23/random-lines-from-a-file">http://www.bryceboe.com/2009/03/23/random-lines-from-a-file</a></li>
-<li><del>If you're only using one random value, and your dictionary file has 50,000 words, the chance of a collision is 50,000/2<sup>53</sup> , which is roughly 3 in 562 trillion. I'll take those odds.</del> Whoops! This is actually a version of the <a href="http://en.wikipedia.org/wiki/Birthday_problem">birthday problem</a>. The actual probability of a collision is: 1.39e-7. Still quite good.</li>
 </ol>
 
 ]]></content>

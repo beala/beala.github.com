@@ -9,7 +9,7 @@
   <meta name="author" content="Alex Beal">
 
   
-  <meta name="description" content="Here&#8217;s a handy way to send emails from the command line: echo 'message' | mail -s 'subject' 'email_address' If you know the recipient&#8217;s &hellip;">
+  <meta name="description" content="So you&#8217;ve written a script that creates all sorts of temporary files, and launches dozens of processes in the background, and, as is, the &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -79,6 +79,118 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/blog/2011/04/02/using-trap-to-catch-ctrl-plus-cs-and-control-how-your-script-exits/">Using &#8216;Trap&#8217; to Catch &#8216;Ctrl + C&#8217;s and Control How Your Script Exits</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-04-02T16:00:00-06:00" pubdate data-updated="true">Apr 2<span>nd</span>, 2011</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>So you&#8217;ve written a script that creates all sorts of temporary files, and launches dozens of processes in the background, and, as is, the script runs indefinitely. The only way to quit is Ctrl + C, but once you fire off this hotkey combo, you&#8217;re left with a mess of background processes and temp files. There are lots of reasons why your script might do this. For example, I&#8217;m currently writing a download manager that sends its wget processes to the background, and creates various temporary status files. It runs indefinitely because it polls a queue file, which contains the URLs of the files it&#8217;s instructed to download. So, given all that, how is it that I get my script to clean up after itself once I deal it the fatal Ctrl + C blow (or more technically, a &#8220;signal interrupt&#8221; or &#8220;SIGINT&#8221; for short)? The trick here is to use the <code>trap</code> command along with some basic process manipulation. Here&#8217;s the syntax:</p>
+
+<pre><code>trap 'command' signal_to_trap
+</code></pre>
+
+<p>The above bit of code will cause the <em>command</em> (or string of commands between the quotes) to execute if the script is issued a <em>signal_to_trap</em>. As is implied by the syntax, you can trap more than one type of signal. To catch the Ctrl + C combo, you usually want to trap a SIGINT, which is done as follows:</p>
+
+<pre><code>trap 'echo "Exiting"; exit 0' INT
+</code></pre>
+
+<p>That bit of code will cause your script to print the message &#8220;Exiting&#8221; and exit with status 0 once Ctrl + C is pressed (or gets issued a SIGINT some other way). One important caveat is <strong>always remember the exit command.</strong> For example, the following code will cause your program to print &#8220;Exiting&#8221; and then continue, effectively ignoring the SIGINT. What NOT to do if you want your program to actually quit:</p>
+
+<pre><code>trap 'echo "Exiting"' INT
+</code></pre>
+
+<p>Of course, that construct isn&#8217;t without its uses. Perhaps you want your script to immediately run some routine if Ctrl + C is entered, but you don&#8217;t want it to quit. The above bit of code would be the way to do it, but that strikes me as a confusing break from convention. Most people expect Ctrl + C to stop the currently running process. A better way to do this would be to use a USR signal. Just substitute <code>INT</code> for <code>USR1</code> or <code>USR2</code>, and send the <code>USR</code> signal to the script using the kill command: <code>kill -USR1 pid</code>. In any case, back to the topic at hand: exiting a script cleanly.</p>
+
+<h2>&#8216;Trapping&#8217; and Cleaning Up After Yourself</h2>
+
+<p>The way I use &#8216;trap&#8217; is something along these lines:</p>
+
+<pre><code>exit_routine () {
+    # TODO: Clean up stuff.
+}
+trap 'exit_routine' INT # Intercept SIGINT and call exit_routine
+</code></pre>
+
+<p>If it&#8217;s short enough, you can, of course, cram your entire exit routine between the single quotes, but if it&#8217;s nontrivial it&#8217;s best to pull it out into its own function. Also remember that BASH executes a script&#8217;s commands in the order it sees them, so this must be placed somewhere near the beginning of the script to set the <code>trap</code> early on. (Perhaps that&#8217;s obvious, but I&#8217;d be the first to admit that that&#8217;s just the sort of pitfall I&#8217;d waste an hour puzzling over.) Also remember that the function must be declared before the <code>trap</code> statement (or at least before the script receives a SIGINT and tries to call <code>exit_routine</code>).</p>
+
+<h2>Cleaning Up Stuff (Processes)</h2>
+
+<p>Now that we&#8217;ve declared the exit routine and set the trap, we need to do some actual housekeeping. I do this by keeping track of all the background processes&#8217; PIDs and temporary files&#8217; filenames in an array. Consider the following code:</p>
+
+<pre><code>for i in $(seq 3); do
+    wget "$URL[$i]" &amp; 
+    PIDS[$i]=$!
+done
+</code></pre>
+
+<p>Three <code>wget</code> instances are launched and sent to the background with the <code>&amp;</code> operator. Their PIDs are accessed with the <code>$!</code> variable and stored to <code>$PIDS</code>. We can now kill off those processes with the following bit of code:</p>
+
+<pre><code>exit_routine () {
+    kill ${PIDS[*]}
+    echo "Script exiting."
+    exit 0
+}
+trap 'exit_routine' INT
+</code></pre>
+
+<p>Whenever Ctrl + C is pressed, the SIGINT is trapped and <code>exit_routine</code> is called. <code>kill</code> is then given all the PIDs, which are accessed using <code>${PIDS[*]}</code>. This kills the wget processes, an exit message is printed, and the script is exited. The neat thing about the <code>${ARRAY[*]}</code> way of accessing all an array&#8217;s elements is that empty elements won&#8217;t be returned. So if I do:</p>
+
+<pre><code>PIDS[5]="5"
+PIDS[10]="10"
+echo ${PIDS[*]}
+</code></pre>
+
+<p>Then only &#8220;5 10&#8221; is printed.</p>
+
+<h2>Dealing with Temp Files</h2>
+
+<p>Erasing temp files is a bit more tricky. The possibility of white space characters in a file&#8217;s name makes <code>rm ${FILES[*]}</code> troublesome. Enclosing the array in double quotes doesn&#8217;t help either. Instead, we need to step through the array as follows:</p>
+
+<pre><code>for i in $(seq 3); do
+    rm "${FILES[$i]}"
+done
+</code></pre>
+
+<p>If we want to ignore the empty elements of <code>$FILES</code> like <code>${PIDS[*]}</code> automatically did for the PIDs, then we can test if an element is empty using an if statement. Alternatively, you can impress your friends with some BASH-fu and take advantage of BASH&#8217;s short circuit functionality:</p>
+
+<pre><code>for i in $(seq 3); do
+    [ "${FILES[$i]}" != "" ] &amp;&amp; rm "${FILES[$i]}"
+done
+</code></pre>
+
+<p>If <code>${FILES[$i]}</code> is empty, the statement short circuits, and does nothing. If it contains something, the <code>rm</code> command is executed.</p>
+
+<p>So, that&#8217;s how it&#8217;s done. Now you have no excuse for leaving garbage behind (if only BASH had some way of automagically collecting this so called garbage!), and, as always, if you have any tips regarding this, please share your BASH-fu with us in the comments!</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -309,6 +421,10 @@ done
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/blog/2012/05/05/permutations-an-interview-question/">Permutations: An Interview Question</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/blog/2012/04/07/look-ma-no-loops/">Look, Ma! No Loops: Reversing Word Order</a>
       </li>
     
@@ -322,10 +438,6 @@ done
     
       <li class="post">
         <a href="/blog/blog/2012/01/28/implementing-a-logic-evaluator-without-if-expressions/">Implementing a Logic Evaluator Without if-expressions or Boolean Operators</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/blog/2012/01/14/picking-random-items-take-2/">Picking Random Items: Take Two (Hacking Python&#8217;s Generators)</a>
       </li>
     
   </ul>
