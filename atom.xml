@@ -1,0 +1,2203 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title><![CDATA[/usr/sbin/blog]]></title>
+  <link href="http://blog.usrsb.in/atom.xml" rel="self"/>
+  <link href="http://blog.usrsb.in/"/>
+  <updated>2012-05-11T13:43:47-06:00</updated>
+  <id>http://blog.usrsb.in/</id>
+  <author>
+    <name><![CDATA[Alex Beal]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+    <entry>
+      
+
+
+
+
+<title type="html"><![CDATA[Permutations: An Interview Question]]></title>
+<link href="http://blog.usrsb.in/blog/2012/05/05/permutations-an-interview-question/"/>
+<updated>2012-05-05T13:41:00-06:00</updated>
+<id>http://blog.usrsb.in/blog/2012/05/05/permutations-an-interview-question</id>
+
+      <content type="html"><![CDATA[<p>Here I go over a coding question I was recently asked during an interview.</p>
+
+<iframe width="853" height="480" src="http://www.youtube.com/embed/wIPcruaQ3Sg" frameborder="0" allowfullscreen></iframe>
+
+
+<p>You can find the source here: <a href="https://gist.github.com/2604992">https://gist.github.com/2604992</a></p>
+
+<h3>Notes</h3>
+
+<ol>
+<li>In some languages, prepending to a list is faster than appending. In Python it doesn&#8217;t matter.</li>
+<li>The weird characters in the Vim session are whitespace characters. <code>$</code> is a newline character.</li>
+</ol>
+
+<p><a rel="bookmark" href="http://blog.usrsb.in/blog/2012/05/05/permutations-an-interview-question/">&infin; Permalink</a></p>]]></content>
+    </entry>
+  
+    <entry>
+      
+
+
+
+
+<title type="html"><![CDATA[Look, Ma! No Loops: Reversing Word Order]]></title>
+<link href="http://blog.usrsb.in/blog/2012/04/07/look-ma-no-loops/"/>
+<updated>2012-04-07T17:08:00-06:00</updated>
+<id>http://blog.usrsb.in/blog/2012/04/07/look-ma-no-loops</id>
+
+      <content type="html"><![CDATA[<p>Here&#8217;s a classic interview question:</p>
+
+<blockquote><p>Write a function that takes a string and reverses its word order. So, &#8220;Reverse this string&#8221; results in &#8220;string this Reverse&#8221;.</p></blockquote>
+
+<p>Notice that the task isn&#8217;t to reverse the string, but rather to reverse the order of the string&#8217;s words. So the first word becomes the last. The second word becomes the second to last, and so on.</p>
+
+<p>Whenever I come across puzzles like this, I shudder when I start to think about the nested loops and pointer arithmetic. Unfortunately, that describes the classic solution pretty well. The common wisdom is that first you should reverse the entire string. Then you should go back and reverse each word. So:</p>
+
+<ol>
+<li>&#8220;Reverse this&#8221;</li>
+<li>&#8220;siht esreveR&#8221;</li>
+<li>&#8220;this Reverse&#8221;</li>
+</ol>
+
+
+<p>The first step isn&#8217;t bad, but reversing each word will require at least one nested loop, and some careful thinking about how to deal with the spaces. Instead, let&#8217;s think through a functional solution that doesn&#8217;t involve any loops. It will necessarily be recursive, so the first step will be to come up with each of the cases we&#8217;ll encouter as we walk the string.</p>
+
+<ul>
+<li>Recursive Case 1: We&#8217;re in the midst of a word. Add the current letter to the end of some word accumulator.</li>
+<li>Recursive Case 2: We&#8217;re at the end of a word (a space). Add the current word accumulator to the beginning of some string accumulator, then clear the word accumulator.</li>
+<li>Base Case: The string is empty. Return the word accumulator prepended to the string accumulator.</li>
+</ul>
+
+
+<p>So, there are two accumulators. One grabs the letters of each word as we walk the string and keeps the letters <em>in order</em> (the word accumulator). Then, once an entire word has been read into the word accumulator, it&#8217;s prepended to the string accumulator. Prepending, reverses the word order. Once it&#8217;s prepended, the word accumulator is cleared in preparation for the next word. Let&#8217;s translate this case by case.</p>
+
+<p>The base case is the easiest. Let&#8217;s start there:</p>
+
+<figure class='code'><figcaption><span>Base Case</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">word_acc</span> <span class="o">+</span> <span class="n">str_acc</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Start by testing if the input string, <code>s</code>, is empty. If it is, then we&#8217;ve reached the end of the string, so we return the contents of the <code>word_acc</code>, prepended to the <code>str_acc</code>. <code>word_acc</code> contains the last word in the string, and we&#8217;re prepending it to the rest of the string that has already been reversed.</p>
+
+<p>Now let&#8217;s deal with the second recursive case:</p>
+
+<figure class='code'><figcaption><span>2nd Recursive Case</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">elif</span> <span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s">&quot; &quot;</span><span class="p">:</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">helper</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="s">&quot;&quot;</span><span class="p">,</span> <span class="s">&quot; &quot;</span> <span class="o">+</span> <span class="n">word_acc</span> <span class="o">+</span> <span class="n">str_acc</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>If we&#8217;ve gotten this far, the input string must have some length, so we check if the first character is a space. If it is, we&#8217;ve reached the end of a word, so we need to prepend <code>str_acc</code> with the word that&#8217;s just been read in (<code>word_acc</code>). We then clear out the <code>word_acc</code> in preparation for the next word, and recursively call the function with the rest of the input string, <code>s</code>. The recursive call is to <code>helper</code> because this will be nested inside a convenience wrapper that only takes one argument.</p>
+
+<p>Finally, the last case:</p>
+
+<figure class='code'><figcaption><span>1st Recursive Case</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">else</span><span class="p">:</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">helper</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">word_acc</span> <span class="o">+</span> <span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">str_acc</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>If we&#8217;ve gotten this far, we&#8217;re in the midst of a word (the string isn&#8217;t empty, and the current character isn&#8217;t a space). In this case, we add the current character onto the <code>word_acc</code> and then recurse with the rest of the string. Remember, the <code>word_acc</code> is building up each word character by character as we walk the input string.</p>
+
+<p>Finally, we can simply throw these cases into a function, and it should just work. Ahh, the magic of recursion.</p>
+
+<figure class='code'><figcaption><span>Reversing Word Order</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">rev_words</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+</span><span class='line'>    <span class="sd">&#39;&#39;&#39;Returns the string `s` with its words in the reverse order.</span>
+</span><span class='line'><span class="sd">       Example: rev_words(&quot;Reverse this!&quot;) #&quot;this! Reverse&quot;</span>
+</span><span class='line'><span class="sd">    &#39;&#39;&#39;</span>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">helper</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">word_acc</span><span class="p">,</span> <span class="n">str_acc</span><span class="p">):</span>
+</span><span class='line'>        <span class="c"># Base case: Return word accumulator plus whatever words</span>
+</span><span class='line'>        <span class="c"># you have in the string acc</span>
+</span><span class='line'>        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+</span><span class='line'>            <span class="k">return</span> <span class="n">word_acc</span> <span class="o">+</span> <span class="n">str_acc</span>
+</span><span class='line'>        <span class="c"># This is the end of a word. Clear `word_acc`, and start with</span>
+</span><span class='line'>        <span class="c"># the next word.</span>
+</span><span class='line'>        <span class="k">elif</span> <span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s">&quot; &quot;</span><span class="p">:</span>
+</span><span class='line'>            <span class="k">return</span> <span class="n">helper</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="s">&quot;&quot;</span><span class="p">,</span> <span class="s">&quot; &quot;</span> <span class="o">+</span> <span class="n">word_acc</span> <span class="o">+</span> <span class="n">str_acc</span><span class="p">)</span>
+</span><span class='line'>        <span class="c"># In the middle of a word. Add the letter to `word_acc`, and continue</span>
+</span><span class='line'>        <span class="k">else</span><span class="p">:</span>
+</span><span class='line'>            <span class="k">return</span> <span class="n">helper</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">word_acc</span> <span class="o">+</span> <span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">str_acc</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">helper</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="s">&quot;&quot;</span><span class="p">,</span> <span class="s">&quot;&quot;</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>As much as I like this solution, it&#8217;s not without its drawbacks. The most significant is that Python&#8217;s string methods are very slow. Each concatenation causes both strings to be copied, and at least one concat is happening for each character in the string. Possible solutions include turning the string into a list of characters (list methods are much faster), or using a language that better supports the functional paradigm.<sup>1</sup> But really, if speed is your highest priority, the imperative solution of swapping characters in place is your best bet, warts and all.</p>
+
+<p>If you&#8217;d like to play with this code yourself, I&#8217;ve posted <a href="https://gist.github.com/2331327">a gist here</a>, along with some tests.</p>
+
+<h3>Notes</h3>
+
+<ol>
+<li>If Python had a constant time prepend function (&#8216;cons&#8217; in the functional world), I suspect a better solution would be possible.</li>
+</ol>
+
+<p><a rel="bookmark" href="http://blog.usrsb.in/blog/2012/04/07/look-ma-no-loops/">&infin; Permalink</a></p>]]></content>
+    </entry>
+  
+    <entry>
+      
+
+
+
+
+<title type="html"><![CDATA[Building Data Structures from Functions]]></title>
+<link href="http://blog.usrsb.in/blog/2012/04/01/building-data-structures-from-functions/"/>
+<updated>2012-04-01T09:00:00-06:00</updated>
+<id>http://blog.usrsb.in/blog/2012/04/01/building-data-structures-from-functions</id>
+
+      <content type="html"><![CDATA[<p>Here&#8217;s a puzzle I&#8217;ve adapted from <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-14.html#%_sec_2.1.3">exercise 2.4</a> of SICP.</p>
+
+<blockquote><p>Suppose you are programming in a language that only supports function application. That is, defining functions and applying arguments to these functions are the only things this language supports. Using only these building blocks, could you construct a linked list?</p></blockquote>
+
+<p>Surprisingly, the answer is yes, and the exercise linked to above provides a partial solution. Below, I&#8217;ve translated that solution into Python, and completed the exercise:</p>
+
+<figure class='code'><figcaption><span>Solution in Python</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c"># Create a pair from l and r</span>
+</span><span class='line'><span class="k">def</span> <span class="nf">cons</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">return</span> <span class="k">lambda</span> <span class="n">get</span><span class="p">:</span> <span class="n">get</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
+</span><span class='line'><span class="c"># Given a pair, return the head (left) value.</span>
+</span><span class='line'><span class="k">def</span> <span class="nf">head</span><span class="p">(</span><span class="n">pair</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">pair</span><span class="p">(</span><span class="k">lambda</span> <span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">:</span> <span class="n">l</span><span class="p">)</span>
+</span><span class='line'><span class="c"># Give a pair, return the tail (right) value.</span>
+</span><span class='line'><span class="k">def</span> <span class="nf">tail</span><span class="p">(</span><span class="n">pair</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">pair</span><span class="p">(</span><span class="k">lambda</span> <span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">:</span> <span class="n">r</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>First, let&#8217;s examine how these functions can be used, and then I&#8217;ll explain how they work. Consider the snippet below:</p>
+
+<figure class='code'><figcaption><span>Usage Example</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">l1</span> <span class="o">=</span> <span class="n">cons</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+</span><span class='line'><span class="k">print</span> <span class="n">head</span><span class="p">(</span><span class="n">l1</span><span class="p">)</span>       <span class="c"># Prints 1</span>
+</span><span class='line'><span class="k">print</span> <span class="n">tail</span><span class="p">(</span><span class="n">l1</span><span class="p">)</span>       <span class="c"># Prints 2</span>
+</span><span class='line'><span class="n">l2</span> <span class="o">=</span> <span class="n">cons</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">l1</span><span class="p">)</span>
+</span><span class='line'><span class="k">print</span> <span class="n">head</span><span class="p">(</span><span class="n">l2</span><span class="p">)</span>       <span class="c"># Prints 0</span>
+</span><span class='line'><span class="k">print</span> <span class="n">head</span><span class="p">(</span><span class="n">tail</span><span class="p">(</span><span class="n">l2</span><span class="p">))</span> <span class="c"># Prints 1</span>
+</span><span class='line'><span class="k">print</span> <span class="n">tail</span><span class="p">(</span><span class="n">tail</span><span class="p">(</span><span class="n">l2</span><span class="p">))</span> <span class="c"># Prints 2</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>As can be seen, <code>cons()</code> is the constructor for this pair type. Give it two values, and it will create a pair of those two values. <code>head()</code> and <code>tail()</code> are the basic operators that let us access values inside these pairs; they return the left and right element of the pair, respectively. Also notice that we can create pairs of pairs. The last half of the example creates a pair composed of <code>0</code> and <code>(1,2)</code>. Why is this significant? Well, we&#8217;ve just made a linked list! Linked lists are simply pairs of pairs. The list <code>[1,2,3,4]</code> can, for example, be represented as <code>cons(1,cons(2,cons(3,cons(4,None))))</code>. What&#8217;s <code>None</code> doing at the end of the list? You can think of it like the <code>NULL</code> pointer at the end of a linked list in C. If a function were traversing the list, <code>None</code> would signify to the function that it has reached the end. Mathematically, you can think of a linked list as an inductively defined data structure, where <code>None</code> is the base case. <code>None</code> is referred to as the <em>empty list</em>.</p>
+
+<p>Now for the interesting part. How do these functions work? First let&#8217;s look at the <code>cons()</code> function:</p>
+
+<figure class='code'><figcaption><span>cons()</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c"># Create a pair from l and r</span>
+</span><span class='line'><span class="k">def</span> <span class="nf">cons</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">return</span> <span class="k">lambda</span> <span class="n">get</span><span class="p">:</span> <span class="n">get</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This takes in two parameters (<code>l</code> and <code>r</code>) and returns a function.<sup>1</sup> This returned function takes yet another function, which it applies to <code>l</code> and <code>r</code> and returns the result. So, if we call <code>cons(1,2)</code>, we are returned a function, which takes a function and applies that function to the arguments <code>1</code> and <code>2</code>. If, for example, I called <code>cons(1,2)(lambda x, y: x+y)</code> I&#8217;d get <code>3</code>, because the addition function would be applied to <code>1</code> and <code>2</code>.</p>
+
+<p>Now suppose that we didn&#8217;t want to add <code>l</code> and <code>r</code>. Instead, we wanted to pull either <code>l</code> or <code>r</code> out of a pair that was already constructed. In other words, given <code>list = cons(1,2)</code>, how could we pull the <code>1</code> or <code>2</code> out of the function stored in <code>list</code>? Well, all we need to do is pass it a function that returns only the left or right parameter. So, <code>cons(1,2)(lambda l, r: l)</code> would give us back <code>1</code>, and <code>cons(1,2)(lambda l,r: r)</code> would give us back <code>2</code>. This is almost exactly what the <code>head()</code> and <code>tail()</code> functions are doing! They take in a function (presumably produced by the <code>cons()</code> function), and apply either <code>lambda l,r: l</code> or <code>lambda l,r: r</code>. Just to cement this all together, below I step through the evaluation for the example <code>head(cons(1,2))</code>.</p>
+
+<figure class='code'><figcaption><span>Evaluation Steps for head(cons(1,2,))</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">head</span><span class="p">(</span><span class="n">cons</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
+</span><span class='line'><span class="o">-&gt;</span> <span class="n">head</span><span class="p">(</span><span class="k">lambda</span> <span class="n">get</span><span class="p">:</span> <span class="n">get</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+</span><span class='line'><span class="o">-&gt;</span> <span class="p">(</span><span class="k">lambda</span> <span class="n">get</span><span class="p">:</span> <span class="n">get</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))(</span><span class="k">lambda</span> <span class="n">l</span><span class="p">,</span><span class="n">r</span><span class="p">:</span> <span class="n">l</span><span class="p">)</span>
+</span><span class='line'><span class="o">-&gt;</span> <span class="p">(</span><span class="k">lambda</span> <span class="n">l</span><span class="p">,</span><span class="n">r</span><span class="p">:</span> <span class="n">l</span><span class="p">)(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+</span><span class='line'><span class="o">-&gt;</span> <span class="mi">1</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>And here is a bit of code that uses these new functions to add the elements of a list:</p>
+
+<figure class='code'><figcaption><span>Sum Function</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">sum_list</span><span class="p">(</span><span class="n">l</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">head</span><span class="p">(</span><span class="n">l</span><span class="p">)</span> <span class="k">if</span> <span class="n">tail</span><span class="p">(</span><span class="n">l</span><span class="p">)</span> <span class="o">==</span> <span class="bp">None</span> <span class="k">else</span> <span class="n">head</span><span class="p">(</span><span class="n">l</span><span class="p">)</span> <span class="o">+</span> <span class="n">sum_list</span><span class="p">(</span><span class="n">tail</span><span class="p">(</span><span class="n">l</span><span class="p">))</span>
+</span><span class='line'><span class="n">sum_list</span><span class="p">(</span><span class="n">cons</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">cons</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="n">cons</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="bp">None</span><span class="p">))))</span> <span class="c"># Returns 6</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>In the end, this might strike you as nothing more than a useless programming trick. In a sense that&#8217;s right. I&#8217;d never use this in my own code. What makes this technique so valuable is that it actually fits into the broader context of lambda calculus, which is a mathematical abstraction of computation. In the language of lambda calculus, you&#8217;re given only a very basic set of tools. Essentially all you have are simple one parameter functions (it doesn&#8217;t even have integers!). Incredibly, it turns out that that&#8217;s all you need for a Turing complete language. It&#8217;s possible to build integers, conditionals, loops, arithmetic operations, and (as you&#8217;ve seen here) data structures out of these simple building blocks. As a next step, and to see this for yourself, it might be fun to take a minute and see how the code presented here could be modified to give you binary trees, or even graphs. After that, you could check out this incredible article on writing the infamous <a href="http://www.codinghorror.com/blog/2007/02/why-cant-programmers-program.html">FizzBuzz</a> exercise <a href="http://experthuman.com/programming-with-nothing">in Ruby using only functions</a>.</p>
+
+<h3>Notes</h3>
+
+<ol>
+<li>Technically, this is really a closure, which is a function with some of its variables already set. In the terminology of the PL world, it&#8217;s a function bundled with its environment (the set of variables in its outer scope).</li>
+</ol>
+
+<p><a rel="bookmark" href="http://blog.usrsb.in/blog/2012/04/01/building-data-structures-from-functions/">&infin; Permalink</a></p>]]></content>
+    </entry>
+  
+    <entry>
+      
+
+
+
+
+<title type="html"><![CDATA[Super Bowl Probabilities: The Coin Toss]]></title>
+<link href="http://blog.usrsb.in/blog/2012/02/05/super-bowl-probabilities/"/>
+<updated>2012-02-05T09:53:00-07:00</updated>
+<id>http://blog.usrsb.in/blog/2012/02/05/super-bowl-probabilities</id>
+
+      <content type="html"><![CDATA[<p>Browsing through my Twitter stream, I came across a blog post discussing an allegedly 3.8-sigma event: <a href="http://blogs.discovermagazine.com/cosmicvariance/2012/02/04/a-3-8-sigma-anomaly/">Apparently the last 14 Super Bowl coin tosses have been won by the NFC</a>. What are the chances of this? The blog linked to above claims a probability of (1/2)<sup>13</sup>. Another <a href="http://www.outsidethebeltway.com/super-bowl-coin-flip/">blog</a> claims (1/2)<sup>14</sup>. Which is correct? Before I get into the mathematics, I&#8217;ll try to disentangle three different questions:</p>
+
+<ol>
+<li>Out of 14 tosses, what&#8217;s the probability that they all come up heads?</li>
+<li>Out of 14 tosses, what&#8217;s the probability that one team wins all of them?</li>
+<li>Out of 45 tosses (one for each Super Bowl), what&#8217;s the probability that one team wins a string of 14 of them?<sup>1</sup></li>
+</ol>
+
+
+<p><strong>(1/2)<sup>14</sup></strong> is the correct answer to question (1). There&#8217;s a 1 in 2 chance of getting heads. The probability of getting heads 14 times out of 14 tosses is therefore (1/2)<sup>14</sup>.</p>
+
+<p><strong>(1/2)<sup>13</sup></strong> is the correct answer to question (2). If you call a coin in the air, there&#8217;s 1 in 2 chance you&#8217;ll win the toss. Out of 14 tosses, the chance that <em>either</em> the NFC will win the toss 14 times <em>or</em> the AFC will win the toss 14 times is: (1/2)<sup>14</sup> + (1/2)<sup>14</sup> = (1/2)<sup>13</sup>.</p>
+
+<p>The last situation is much more difficult to calculate, and similar questions are often the cause for much surprise. For example, if you toss a coin 20 times, do you think it&#8217;s likely or unlikely that you&#8217;ll get a string of 5 heads in a row? It seems like this should be unlikely. After all, the probability of tossing a coin 5 times, and ending up with heads every time is quite small: (1/2)<sup>5</sup> = 1/32  (approx. 3%). Believe it or not, the actual probability is around 25%.<sup>2</sup></p>
+
+<p>How are these probabilities found? One solution is a rather nasty recursive formula.</p>
+
+<blockquote><p>  A similar recursion can be given to calculate the probability that in <em>n</em> fair coin tosses a run of <em>r</em> heads or <em>r</em> tails occurs. In this case, we say that the tossing process is in state <em>(i, k)</em> when there are <em>k</em> tosses still to go and the last <em>i</em> tosses all showed the same outcome but so far no run of <em>r</em> heads or <em>r</em> tails has occurred. The probability <em>v<sub>k</sub>(i)</em> is defined as</p>
+
+<p>  v<sub>k</sub>(i) = the probability of getting a run of <em>r</em> heads or <em>r</em> tails during <em>n</em> tosses when the current state of the tossing process is <em>(i, k)</em>.</p>
+
+<p>The probability <em>v<sub>n-1</sub>(1)</em> is being sought (why?). Verify for yourself that the following recursion applies for k = 1,2,&#8230;,<em>n</em>.</p>
+
+<p>  v<sub>k</sub> = 0.5*v<sub>k-1</sub>(i + 1) + 0.5*v<sub>k-1</sub>(1) for i =,&#8230;,r - 1.</p>
+
+<p>The boundary conditions are <em>v<sub>0</sub>(i) = 0</em> for <em>1 &lt;= i &lt;= r -1</em> and <em>v<sub>j</sub>(r) = 1</em> for <em>0 &lt;= j &lt;= n - 1</em>.<sup>3</sup></p></blockquote>
+
+<p>I&#8217;m actually not sure why we&#8217;re looking for <em>v<sub>n-1</sub>(1)</em> as opposed to <em>v<sub>n</sub>(0)</em>. I tested it for a few values, and those expressions seem to be equal.<sup>4</sup> In any case, the formula is dense, but you can see the logic behind it. If you&#8217;re in the midst of a streak of heads, and your next flip comes up heads, your state is now <em>(i+1, k-1)</em>. That is, your streak has increased, but your tosses to go has decreased. This explains the first half of the formula: <em>0.5*v<sub>k-1</sub>(i + 1)</em>. The other case is that you&#8217;re in the midst of a streak of heads, but then you get a tail, so your state becomes <em>(1, k-1)</em>. That is, you now have a streak of 1 tail, and your total number of tosses to go decrements by one. This explains the last half of the equation. The equation then branches out like a tree, solving for each possibility along the way. Here&#8217;s a bit of Scheme that implements this:</p>
+
+<figure class='code'><figcaption><span>An Exact Solution in Scheme</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='scheme'><span class='line'><span class="p">(</span><span class="k">define </span><span class="p">(</span><span class="nf">coin-streak</span> <span class="nv">n</span> <span class="nv">r</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">(</span><span class="k">define </span><span class="p">(</span><span class="nf">cs-helper</span> <span class="nv">k</span> <span class="nv">i</span><span class="p">)</span>
+</span><span class='line'>      <span class="p">(</span><span class="k">cond </span><span class="p">((</span><span class="k">and </span><span class="p">(</span><span class="nb">&lt;= </span><span class="mi">1</span> <span class="nv">i</span><span class="p">)</span> <span class="p">(</span><span class="nb">&lt;= </span><span class="nv">i</span> <span class="p">(</span><span class="nb">- </span><span class="nv">r</span> <span class="mi">1</span><span class="p">))</span> <span class="p">(</span><span class="nb">= </span><span class="nv">k</span> <span class="mi">0</span><span class="p">))</span> <span class="mi">0</span><span class="p">)</span>
+</span><span class='line'>            <span class="p">((</span><span class="k">and </span><span class="p">(</span><span class="nb">&lt;= </span><span class="mi">0</span> <span class="nv">k</span><span class="p">)</span> <span class="p">(</span><span class="nb">&lt;= </span><span class="nv">k</span> <span class="p">(</span><span class="nb">- </span><span class="nv">n</span> <span class="mi">1</span><span class="p">))</span> <span class="p">(</span><span class="nb">= </span><span class="nv">i</span> <span class="nv">r</span><span class="p">))</span> <span class="mi">1</span><span class="p">)</span>
+</span><span class='line'>            <span class="p">(</span><span class="k">else </span><span class="p">(</span><span class="nf">+</span>
+</span><span class='line'>                   <span class="p">(</span><span class="nb">* </span><span class="p">(</span><span class="nb">/ </span><span class="mi">1</span> <span class="mi">2</span><span class="p">)</span> <span class="p">(</span><span class="nf">ct-string</span> <span class="nv">r</span> <span class="nv">n</span> <span class="p">(</span><span class="nb">- </span><span class="nv">k</span> <span class="mi">1</span><span class="p">)</span> <span class="p">(</span><span class="nb">+ </span><span class="nv">i</span> <span class="mi">1</span><span class="p">)))</span>
+</span><span class='line'>                   <span class="p">(</span><span class="nb">* </span><span class="p">(</span><span class="nb">/ </span><span class="mi">1</span> <span class="mi">2</span><span class="p">)</span> <span class="p">(</span><span class="nf">ct-string</span> <span class="nv">r</span> <span class="nv">n</span> <span class="p">(</span><span class="nb">- </span><span class="nv">k</span> <span class="mi">1</span><span class="p">)</span> <span class="mi">1</span> <span class="p">))))</span>
+</span><span class='line'>            <span class="p">))</span>
+</span><span class='line'>    <span class="p">(</span><span class="nf">cs-helper</span> <span class="p">(</span><span class="nb">- </span><span class="nv">n</span> <span class="mi">1</span><span class="p">)</span> <span class="mi">1</span><span class="p">))</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Notice that this problem quickly becomes intractable for large values of <em>n</em>. Each call branches into two different calls, giving an exponential growth (props to the first person who posts a tail recursive memoization). This is why I prefer solving this by simulation. What we need to do is simulate 45 coin flips, and check if we&#8217;ve encountered a string of 14 heads or 14 tails. Do this, say, 100,000 times and see how often this event occurs.</p>
+
+<figure class='code'><figcaption><span>ctsim.py: An Approximation by Simulation in Python</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c">#!/usr/bin/python -O</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="nn">random</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">sys</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">STREAK_LEN</span>  <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+</span><span class='line'><span class="n">TOSSES</span>      <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+</span><span class='line'><span class="n">TRIALS</span>      <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">def</span> <span class="nf">simulation</span><span class="p">(</span><span class="n">trials</span><span class="p">,</span> <span class="n">tosses</span><span class="p">,</span> <span class="n">streak</span><span class="p">):</span>
+</span><span class='line'>    <span class="sd">&#39;&#39;&#39; Simulates *trials* trials of *tosses* tosses and returns the</span>
+</span><span class='line'><span class="sd">        fraction of trials that contained at least one streak</span>
+</span><span class='line'><span class="sd">        of *streak* or higher.</span>
+</span><span class='line'><span class="sd">    &#39;&#39;&#39;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">run_trial</span><span class="p">():</span>
+</span><span class='line'>        <span class="sd">&#39;&#39;&#39; Flips a coin *tosses* times and returns True if a streak of</span>
+</span><span class='line'><span class="sd">            *streak* length is encountered.</span>
+</span><span class='line'><span class="sd">        &#39;&#39;&#39;</span>
+</span><span class='line'>        <span class="n">cur_streak</span> <span class="o">=</span> <span class="mi">1</span>      <span class="c"># Length of the current streak.</span>
+</span><span class='line'>        <span class="n">prev_outcome</span> <span class="o">=</span> <span class="bp">None</span> <span class="c"># Outcome of a previous toss.</span>
+</span><span class='line'>        <span class="c"># Simulate the tosses.</span>
+</span><span class='line'>        <span class="k">for</span> <span class="n">toss</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">tosses</span><span class="p">):</span>
+</span><span class='line'>            <span class="n">outcome</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+</span><span class='line'>            <span class="c"># If the last toss is the same as the current toss,</span>
+</span><span class='line'>            <span class="c"># increment the length of the current streak.</span>
+</span><span class='line'>            <span class="k">if</span> <span class="n">outcome</span> <span class="o">==</span> <span class="n">prev_outcome</span><span class="p">:</span>
+</span><span class='line'>                <span class="n">cur_streak</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span class='line'>            <span class="k">else</span><span class="p">:</span>
+</span><span class='line'>                <span class="n">cur_streak</span> <span class="o">=</span> <span class="mi">1</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="c"># If the current streak is equal to the target</span>
+</span><span class='line'>            <span class="c"># length, return True</span>
+</span><span class='line'>            <span class="k">if</span> <span class="n">cur_streak</span> <span class="o">==</span> <span class="n">streak</span><span class="p">:</span>
+</span><span class='line'>                <span class="k">return</span> <span class="bp">True</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="n">prev_outcome</span> <span class="o">=</span> <span class="n">outcome</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="k">return</span> <span class="bp">False</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">streak_count</span> <span class="o">=</span> <span class="mi">0</span>
+</span><span class='line'>    <span class="c"># Simulate all the trials, and keep track of how many had</span>
+</span><span class='line'>    <span class="c"># a streak.</span>
+</span><span class='line'>    <span class="k">for</span> <span class="n">trial</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">trials</span><span class="p">):</span>
+</span><span class='line'>        <span class="n">had_a_streak</span> <span class="o">=</span> <span class="n">run_trial</span><span class="p">()</span>
+</span><span class='line'>        <span class="k">if</span> <span class="n">had_a_streak</span><span class="p">:</span>
+</span><span class='line'>            <span class="n">streak_count</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="n">streak_count</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">trials</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&quot;__main__&quot;</span><span class="p">:</span>
+</span><span class='line'>    <span class="k">print</span> <span class="n">simulation</span><span class="p">(</span><span class="n">TRIALS</span><span class="p">,</span> <span class="n">TOSSES</span><span class="p">,</span> <span class="n">STREAK_LEN</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<p>We can now simulate the Super Bowl situation by looking for a streak of 14 wins out of 45 tosses with 100,000 simulations.</p>
+
+<figure class='code'><figcaption><span>ctsim.py Usage</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>% ./ctsim.py 14 45 100000
+</span><span class='line'>0.00202
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>So, the probability of this happening is <strong>0.00202</strong> or around <strong>0.2%</strong>. This is still tiny, but not as small as (1/2)<sup>13</sup> (approx. 0.00012 or 0.012%).</p>
+
+<h2>Notes:</h2>
+
+<ol>
+<li>Even this is slightly ambiguous. The exact question that we&#8217;ll be looking at is: What is the probability that one team will have at least one winning streak of at least 14 tosses.</li>
+<li>Tijms, H. (2010). Understanding probability: Chance rules in everyday life. (2 ed.). Cambridge, UK: Cambridge University Press.</li>
+<li>Ibid.</li>
+<li>Perhaps the equation <em>v<sub>n</sub>(0)</em> is technically undefined. That is, <em>i</em> cannot equal 0 because you must have a streak of at least 1 head or 1 tail. Nevertheless, it looks like the formula still works for this technically undefined state.</li>
+</ol>
+
+<p><a rel="bookmark" href="http://blog.usrsb.in/blog/2012/02/05/super-bowl-probabilities/">&infin; Permalink</a></p>]]></content>
+    </entry>
+  
+    <entry>
+      
+
+
+
+
+<title type="html"><![CDATA[Implementing a Logic Evaluator Without if-expressions or Boolean Operators]]></title>
+<link href="http://blog.usrsb.in/blog/2012/01/28/implementing-a-logic-evaluator-without-if-expressions/"/>
+<updated>2012-01-28T10:19:00-07:00</updated>
+<id>http://blog.usrsb.in/blog/2012/01/28/implementing-a-logic-evaluator-without-if-expressions</id>
+
+      <content type="html"><![CDATA[<p>I&#8217;ve slowly been making my way through <a href="http://www.scala-lang.org/sites/default/files/linuxsoft_archives/docu/files/ScalaOverview.pdf">An Overview of the Scala Programming Language</a> [PDF], and was struck by this interesting implementation of Booleans:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="k">abstract</span> <span class="k">class</span> <span class="nc">Bool</span> <span class="o">{</span>
+</span><span class='line'>  <span class="k">def</span> <span class="o">&amp;&amp;</span> <span class="o">(</span><span class="n">x</span><span class="k">:</span> <span class="o">=&gt;</span> <span class="nc">Bool</span><span class="o">)</span><span class="k">:</span> <span class="kt">Bool</span>
+</span><span class='line'>  <span class="k">def</span> <span class="o">||</span> <span class="o">(</span><span class="n">x</span><span class="k">:</span> <span class="o">=&gt;</span> <span class="nc">Bool</span><span class="o">)</span><span class="k">:</span> <span class="kt">Bool</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'><span class="k">object</span> <span class="nc">False</span> <span class="k">extends</span> <span class="nc">Bool</span> <span class="o">{</span>
+</span><span class='line'>  <span class="k">def</span> <span class="o">&amp;&amp;</span> <span class="o">(</span><span class="n">x</span><span class="k">:</span> <span class="o">=&gt;</span> <span class="nc">Bool</span><span class="o">)</span><span class="k">:</span> <span class="kt">Bool</span> <span class="o">=</span> <span class="k">this</span>
+</span><span class='line'>  <span class="k">def</span> <span class="o">||</span> <span class="o">(</span><span class="n">x</span><span class="k">:</span> <span class="o">=&gt;</span> <span class="nc">Bool</span><span class="o">)</span><span class="k">:</span> <span class="kt">Bool</span> <span class="o">=</span> <span class="n">x</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'><span class="k">object</span> <span class="nc">True</span> <span class="k">extends</span> <span class="nc">Bool</span> <span class="o">{</span>
+</span><span class='line'>  <span class="k">def</span> <span class="o">&amp;&amp;</span> <span class="o">(</span><span class="n">x</span><span class="k">:</span> <span class="o">=&gt;</span> <span class="nc">Bool</span><span class="o">)</span><span class="k">:</span> <span class="kt">Bool</span> <span class="o">=</span> <span class="n">x</span>
+</span><span class='line'>  <span class="k">def</span> <span class="o">||</span> <span class="o">(</span><span class="n">x</span><span class="k">:</span> <span class="o">=&gt;</span> <span class="nc">Bool</span><span class="o">)</span><span class="k">:</span> <span class="kt">Bool</span> <span class="o">=</span> <span class="k">this</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>If you&#8217;re not a Scala programmer, don&#8217;t let the syntax trip you up. It&#8217;s pretty straightforward. <code>True</code> and <code>False</code> are singleton objects that inherit from the <code>abstract class Bool</code>. Each object implements the <code>&amp;&amp;</code> (and) and <code>||</code> (or) operators. As you&#8217;d expect, they each take a <code>Bool</code> as an argument and return a <code>Bool</code>. When you execute:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="nc">True</span> <span class="o">&amp;&amp;</span> <span class="nc">False</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>It applies <code>True</code>&#8217;s <code>&amp;&amp;</code> method to <code>False</code>, and correctly returns <code>x</code>, which is, in this case, <code>False</code>.</p>
+
+<p>What&#8217;s so interesting about this is the absence of any if-expressions or built-in boolean operators. To illustrate, a less clever, but more obvious implementation would be as follows:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="k">def</span> <span class="n">and</span><span class="o">(</span><span class="n">x</span><span class="k">:</span> <span class="kt">Boolean</span><span class="o">,</span> <span class="n">y</span><span class="k">:</span> <span class="kt">Boolean</span><span class="o">)</span><span class="k">:</span> <span class="kt">Boolean</span> <span class="o">=</span> <span class="o">{</span>
+</span><span class='line'>  <span class="k">if</span><span class="o">(</span><span class="n">x</span><span class="o">)</span>
+</span><span class='line'>      <span class="k">if</span><span class="o">(</span><span class="n">y</span><span class="o">)</span>
+</span><span class='line'>          <span class="kc">true</span>
+</span><span class='line'>      <span class="k">else</span>
+</span><span class='line'>          <span class="kc">false</span>
+</span><span class='line'>  <span class="k">else</span>
+</span><span class='line'>      <span class="kc">false</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>So, if <code>x</code> and <code>y</code> are both <code>true</code>, return <code>true   </code>, otherwise return <code>false</code> (Scala returns the value of the last executed expression). It works, but doesn&#8217;t win any style points. The nested if-expressions are especially ugly.<sup>1<sup></p>
+
+<p>So, this is a neat way of cutting down on if-expressions. Can it be extended to the other operations? Yes:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="k">object</span> <span class="nc">True</span> <span class="k">extends</span> <span class="nc">Bool</span> <span class="o">{</span>
+</span><span class='line'>  <span class="k">def</span> <span class="o">&amp;&amp;</span> <span class="o">(</span><span class="n">x</span><span class="k">:</span> <span class="o">=&gt;</span> <span class="nc">Bool</span><span class="o">)</span><span class="k">:</span> <span class="kt">Bool</span> <span class="o">=</span> <span class="n">x</span>
+</span><span class='line'>  <span class="k">def</span> <span class="o">||</span> <span class="o">(</span><span class="n">x</span><span class="k">:</span> <span class="o">=&gt;</span> <span class="nc">Bool</span><span class="o">)</span><span class="k">:</span> <span class="kt">Bool</span> <span class="o">=</span> <span class="k">this</span>
+</span><span class='line'>  <span class="k">def</span> <span class="n">unary_!</span> <span class="k">:</span> <span class="kt">Bool</span> <span class="o">=</span> <span class="nc">False</span>
+</span><span class='line'>  <span class="k">def</span> <span class="n">xor</span> <span class="o">(</span><span class="n">x</span><span class="k">:</span> <span class="o">=&gt;</span> <span class="nc">Bool</span><span class="o">)</span><span class="k">:</span> <span class="kt">Bool</span> <span class="o">=</span> <span class="o">!</span><span class="n">x</span>
+</span><span class='line'>  <span class="k">def</span> <span class="n">if_</span> <span class="o">(</span><span class="n">x</span><span class="k">:</span> <span class="o">=&gt;</span> <span class="nc">Bool</span><span class="o">)</span><span class="k">:</span> <span class="kt">Bool</span> <span class="o">=</span> <span class="k">this</span>
+</span><span class='line'>  <span class="k">def</span> <span class="n">iff</span><span class="o">(</span><span class="n">x</span><span class="k">:</span> <span class="o">=&gt;</span> <span class="nc">Bool</span><span class="o">)</span><span class="k">:</span> <span class="kt">Bool</span> <span class="o">=</span> <span class="n">x</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">object</span> <span class="nc">False</span> <span class="k">extends</span> <span class="nc">Bool</span> <span class="o">{</span>
+</span><span class='line'>  <span class="k">def</span> <span class="o">&amp;&amp;</span> <span class="o">(</span><span class="n">x</span><span class="k">:</span> <span class="o">=&gt;</span> <span class="nc">Bool</span><span class="o">)</span><span class="k">:</span> <span class="kt">Bool</span> <span class="o">=</span> <span class="k">this</span>
+</span><span class='line'>  <span class="k">def</span> <span class="o">||</span> <span class="o">(</span><span class="n">x</span><span class="k">:</span> <span class="o">=&gt;</span> <span class="nc">Bool</span><span class="o">)</span><span class="k">:</span> <span class="kt">Bool</span> <span class="o">=</span> <span class="n">x</span>
+</span><span class='line'>  <span class="k">def</span> <span class="n">unary_!</span> <span class="k">:</span> <span class="kt">Bool</span> <span class="o">=</span> <span class="nc">True</span>
+</span><span class='line'>  <span class="k">def</span> <span class="n">xor</span> <span class="o">(</span><span class="n">x</span><span class="k">:</span> <span class="o">=&gt;</span> <span class="nc">Bool</span><span class="o">)</span><span class="k">:</span> <span class="kt">Bool</span> <span class="o">=</span> <span class="n">x</span>
+</span><span class='line'>  <span class="k">def</span> <span class="n">if_</span> <span class="o">(</span><span class="n">x</span><span class="k">:</span> <span class="o">=&gt;</span> <span class="nc">Bool</span><span class="o">)</span><span class="k">:</span> <span class="kt">Bool</span> <span class="o">=</span> <span class="o">!</span><span class="k">this</span>
+</span><span class='line'>  <span class="k">def</span> <span class="n">iff</span><span class="o">(</span><span class="n">x</span><span class="k">:</span> <span class="o">=&gt;</span> <span class="nc">Bool</span><span class="o">)</span><span class="k">:</span> <span class="kt">Bool</span> <span class="o">=</span> <span class="o">!</span><span class="n">x</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>One thing I like about this implementation is the pleasing symmetry between <code>True</code>&#8217;s methods and <code>False</code>&#8217;s methods. The <code>unary_!</code> (not) method is trivially opposite. <code>True</code> returns <code>False</code> and vice versa, but the symmetry continues throughout <code>xor</code>, <code>if_</code>, and <code>iff</code>. For example, <code>False</code>&#8217;s <code>xor</code> returns its parameter, while <code>True</code>&#8217;s <code>xor</code> returns the opposite of its parameter. <code>False xor True</code> returns <code>True</code>, whereas <code>True xor True</code> returns <code>False</code>. I&#8217;ll leave verifying the rest of these rules as an exercise to the reader.<sup>2</sup></p>
+
+<p>It&#8217;s also interesting to compare this to the <a href="http://en.wikipedia.org/wiki/State_pattern">State Pattern</a>, where a state machine is simulated through the use of objects that implement a common interface. Each state is an object, and transitioning between states is as easy as switching between the different objects. Without this pattern, the alternative would be a complex set of if-expressions dictating what you&#8217;re allowed to do in a certain state, and which states you can switch to given your current state. The State Pattern essentially hides all this behind polymorphism, similar to what&#8217;s happening in the logic evaluator.</p>
+
+<h2>Notes</h2>
+
+<ol>
+<li>You can cut it down to one if-expression if you&#8217;re on your toes.</li>
+<li>Note that <code>if_</code> is backwards. <code>True if_ False</code> is the same as <code>False -&gt; True</code>, because that&#8217;s closer to the English.</li>
+</ol>
+
+<p><a rel="bookmark" href="http://blog.usrsb.in/blog/2012/01/28/implementing-a-logic-evaluator-without-if-expressions/">&infin; Permalink</a></p>]]></content>
+    </entry>
+  
+    <entry>
+      
+
+
+
+
+<title type="html"><![CDATA[Picking Random Items: Take Two (Hacking Python's Generators)]]></title>
+<link href="http://blog.usrsb.in/blog/2012/01/14/picking-random-items-take-2/"/>
+<updated>2012-01-14T10:29:00-07:00</updated>
+<id>http://blog.usrsb.in/blog/2012/01/14/picking-random-items-take-2</id>
+
+      <content type="html"><![CDATA[<p>Earlier today I had my mind blown by David Beazley&#8217;s <a href="http://www.dabeaz.com/generators/">presentation on the power of Python&#8217;s generators</a>, and it inspired me to write this highly Pythonic version of <a href="http://blog.usrsb.in/blog/2012/01/11/picking-random-items-from-a-file/">the random word selector</a>, made almost entirely of generators:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">import</span> <span class="nn">heapq</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">random</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">lines</span>       <span class="o">=</span> <span class="p">(</span><span class="n">line</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">open</span><span class="p">(</span><span class="s">&quot;/usr/share/dict/words&quot;</span><span class="p">))</span>
+</span><span class='line'><span class="n">word_pairs</span>  <span class="o">=</span> <span class="p">((</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(),</span> <span class="n">word</span><span class="p">)</span> <span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">)</span>
+</span><span class='line'><span class="n">rand_pairs</span>  <span class="o">=</span> <span class="n">heapq</span><span class="o">.</span><span class="n">nlargest</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="n">word_pairs</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">rand_words</span>  <span class="o">=</span> <span class="p">[</span><span class="n">word</span> <span class="k">for</span> <span class="n">rand</span><span class="p">,</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">rand_pairs</span><span class="p">]</span>
+</span><span class='line'><span class="k">print</span> <span class="n">rand_words</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>How does this work? First recall that a generator is an object that returns the next item in a sequence every time its <code>next()</code> method is called. There&#8217;s an example of this on line 4 where a generator named <code>lines</code> is created, which returns the next line of the file every time <code>lines.next()</code> is called. What&#8217;s so handy about a generator is that it can be automatically consumed by a <code>for</code> loop. That is, put a generator in a <code>for</code> loop, and the loop will automatically call the generator&#8217;s <code>next()</code> method on every iteration. There&#8217;s an example of this on line 5 where another generator is created that uses a <code>for</code> loop to consume the <code>lines</code> generator. This outputs a tuple containing a random number and the line returned by <code>lines.next()</code>. So, the result is that each time <code>word_pairs.next()</code> is called, you get the next line of the file paired with a random value (e.g., <code>(0.12345, 'fire\n')</code>). Finally, we use <code>heapq.nlargest(n, iter)</code> to grab the <code>n</code> largest elements from <code>iter</code>. In this case, it repeatedly calls <code>word_pairs.next()</code> and outputs a list of the 4 words with the highest random values.<sup>1</sup> These are our 4 random words. This is all done in around 3 lines (excluding <code>import</code>s and <code>print</code>ing). Wowza.</p>
+
+<p>As Beazley points out, one advantage of this technique is that it resembles the way simple commands are chained together in the shell to create a pipeline. And, just like in the shell, the pipeline is highly modular, so different filters and stages can be easily inserted at different points. Below, I&#8217;ve added two stages to the pipeline that strip the words of their newline characters, and skip words that aren&#8217;t exactly 13 characters long:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">import</span> <span class="nn">heapq</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">random</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">def</span> <span class="nf">isValid</span><span class="p">(</span><span class="n">word</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">word</span><span class="p">)</span> <span class="o">==</span> <span class="mi">13</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">lines</span>       <span class="o">=</span> <span class="p">(</span><span class="n">line</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">open</span><span class="p">(</span><span class="s">&quot;/usr/share/dict/words&quot;</span><span class="p">))</span>
+</span><span class='line'><span class="n">words</span>       <span class="o">=</span> <span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">)</span>
+</span><span class='line'><span class="n">valid_words</span> <span class="o">=</span> <span class="p">(</span><span class="n">word</span> <span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">words</span> <span class="k">if</span> <span class="n">isValid</span><span class="p">(</span><span class="n">word</span><span class="p">))</span>
+</span><span class='line'><span class="n">word_pairs</span>  <span class="o">=</span> <span class="p">((</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(),</span> <span class="n">word</span><span class="p">)</span> <span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">valid_words</span><span class="p">)</span>
+</span><span class='line'><span class="n">rand_pairs</span>  <span class="o">=</span> <span class="n">heapq</span><span class="o">.</span><span class="n">nlargest</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="n">word_pairs</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">rand_words</span>  <span class="o">=</span> <span class="p">[</span><span class="n">word</span> <span class="k">for</span> <span class="n">rand</span><span class="p">,</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">rand_pairs</span><span class="p">]</span>
+</span><span class='line'><span class="k">print</span> <span class="n">rand_words</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The <code>words</code> generator calls <code>strip()</code> on each <code>line</code> which removes the newline character. The <code>valid_words</code> generator only returns words that pass the <code>isValid</code> test. In this case, <code>isValid</code> returns <code>True</code> only if the word is exactly 13 characters long. The end result is 4 random words that are 13 characters long.</p>
+
+<p>One other advantage is that each generator creates its output only when requested. This translates into minimal memory use. The dictionary file being consumed might be gigabytes in size, but only one word will be loaded into memory at a time (excluding buffering done by the <code>file</code> class, etc). It&#8217;s definitely a neat way of parsing large files.</p>
+
+<p>If you enjoyed this, definitely check out <a href="http://www.dabeaz.com/generators/">Beazley&#8217;s presentation</a>, and venture further down the rabbit hole.</p>
+
+<h2>Notes</h2>
+
+<ol>
+<li>You could even use the built-in function <code>max()</code> if you only need one word.</li>
+</ol>
+
+<p><a rel="bookmark" href="http://blog.usrsb.in/blog/2012/01/14/picking-random-items-take-2/">&infin; Permalink</a></p>]]></content>
+    </entry>
+  
+    <entry>
+      
+
+
+
+
+<title type="html"><![CDATA[Picking Random Items From a File]]></title>
+<link href="http://blog.usrsb.in/blog/2012/01/11/picking-random-items-from-a-file/"/>
+<updated>2012-01-11T10:29:00-07:00</updated>
+<id>http://blog.usrsb.in/blog/2012/01/11/picking-random-items-from-a-file</id>
+
+      <content type="html"><![CDATA[<p>Here&#8217;s a deceptively simple programming puzzle: Develop an algorithm for randomly selecting <em>n</em> words from a dictionary file. This is essentially the puzzle I had to solve in order to write my <a href="https://github.com/beala/xkcd-password">xkcd-style password generator</a>, which implements the <a href="http://xkcd.com/936/">xkcd password spec</a>.<sup>1</sup></p>
+
+<p>The simplest solution is to parse the dictionary into individual words (easy to do in Python) and put those words into a list. Selecting four random words is then as easy as selecting four random items from the list. This is fast, easy to implement, and simple to understand, but it is also very memory inefficient. I have to load 50,000+ words into memory in order to select four of them.<sup>2</sup> Can we do better? Yes.</p>
+
+<h2>A Memory Efficient Algorithm</h2>
+
+<p>The key insight into developing a better algorithm is realizing that it should be possible to select the words as the dictionary file is being parsed, rather than loading the entire thing into memory. The difficulty is making sure that each word has an equal chance of being chosen, and that at least <em>n</em> words are chosen. If, for example, we simply give each word a 1 in 10 chance of being chosen, we&#8217;ll end up with way more words than we need (assuming <em>n</em> is small). If we give each a 1 in 50,000 chance, there&#8217;s the possibility that we won&#8217;t choose enough words. Bryce Boe has <a href="http://www.bryceboe.com/2009/03/23/random-lines-from-a-file/">a clever solution</a> to this problem where he chooses exactly <em>n</em> words, but the proof that it works is non-trivial, and he doesn&#8217;t provide it. This is why I came up with my algorithm.</p>
+
+<p>In order to explain my algorithm, it&#8217;s best to think of it in terms of rolling dice. Consider the following procedure for randomly selecting 4 dice from 10.</p>
+
+<ol>
+<li>Roll all 10 dice.</li>
+<li>Select the 4 with the highest values.
+
+<ol>
+<li>If, suppose, 5 of the dice all end up with a value of 6, randomly choose 4 from those 5 (perhaps by repeating the procedure with those 5).</li>
+<li>If, suppose 2 dice get a value of 6, and 3 get a value of 5, select the 2 with the value of 6, and then randomly select 2 of the 3 with a value of 5.</li>
+</ol>
+</li>
+</ol>
+
+
+<p>How can we adapt this procedure to select random words from a file, rather than dice? Here&#8217;s how: as we&#8217;re parsing the dictionary file, we give each word a random value, and then select the <em>n</em> words with the highest values. The issue is, the naive implementation of this procedure doesn&#8217;t really solve our memory problem. If every word gets a random value, don&#8217;t we now have to store every word in memory, along with its value? The key here is to observe that only the words with the <em>n</em> highest values need to be kept in memory, and all the others can be immediately discarded. Think about this in terms of the dice example. I want to select 1 die from 10:</p>
+
+<ol>
+<li>I roll the first die. I get a value of 1. I keep this die.</li>
+<li>I roll the second. I get a value of 3. I keep this die, and discard the other.</li>
+<li>I roll the third. I get a value of 3. I keep both dice.</li>
+<li>Fourth: I get a value of 6. I keep this die and discard the other 2.</li>
+</ol>
+
+
+<p>By the end of the procedure, I might end up with 3 dice that all got a value of 6. I would then randomly select 1 from those 3.</p>
+
+<p>How can we adapt this procedure for selecting random words? We use a priority queue:</p>
+
+<ol>
+<li>Read a word from the dictionary.</li>
+<li>Give it a random value.</li>
+<li>Insert the value-word pair (as a tuple) into the priority queue.</li>
+<li>If the queue has more than <em>n</em> items, pop an item.</li>
+<li>Repeat until every word has been read.</li>
+</ol>
+
+
+<p>Remember that popping from a priority queue removes the item with the lowest value. So, we insert a word, and if we have too many words, we pop the one with the lowest value. At the end of this procedure there will be exactly <em>n</em> words in the queue. These are our <em>n</em> random words. Neat.</p>
+
+<p>There is one issue, though. What if two words have the same random value? Well, one solution is to keep both words, and then break the tie at the end like we did in the dice example, but that breaks the elegance of the priority queue implementation. Another is to break ties randomly as soon as they occur, and discard the losing word, but I&#8217;m not sure how to do this in a statistically safe way. The easiest solution is to just pray that collisions don&#8217;t occur. In Python, each call to <code>random()</code> produces 53-bits of precision, so it&#8217;s very unlikely that two values will collide. If 53-bits isn&#8217;t enough (yeah right), you can use multiple random numbers. So, rather than a tuple of <code>(value, word)</code>, you can use <code>(value_1, value_2, value_3, word)</code>.<sup>3</sup> Python&#8217;s priority queue implementation will automatically know how to sort that.</p>
+
+<p>Without further ado, here&#8217;s the proof of concept:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c">#!/usr/bin/python -O</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="nn">random</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">heapq</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">DICT_PATH</span> <span class="o">=</span> <span class="s">&quot;/usr/share/dict/words&quot;</span>
+</span><span class='line'><span class="n">WORD_COUNT</span> <span class="o">=</span> <span class="mi">4</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">dict_file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">DICT_PATH</span><span class="p">)</span>
+</span><span class='line'><span class="n">wordq</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span class='line'><span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">dict_file</span><span class="p">:</span>
+</span><span class='line'>    <span class="n">word</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+</span><span class='line'>    <span class="n">rand_val</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span>
+</span><span class='line'>    <span class="n">heapq</span><span class="o">.</span><span class="n">heappush</span><span class="p">(</span><span class="n">wordq</span><span class="p">,</span> <span class="p">(</span><span class="n">rand_val</span><span class="p">,</span> <span class="n">word</span><span class="p">)</span> <span class="p">)</span>
+</span><span class='line'>    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">wordq</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">WORD_COUNT</span><span class="p">:</span>
+</span><span class='line'>        <span class="n">heapq</span><span class="o">.</span><span class="n">heappop</span><span class="p">(</span><span class="n">wordq</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">print</span> <span class="n">wordq</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>Endnotes</h2>
+
+<ol>
+<li>Summary: a good password is composed of four random words.</li>
+<li>A slight improvement on this would be to store only the word&#8217;s position in the file, rather than the word itself. Then the word could be retrieved by seeking to that position. <a href="http://www.bryceboe.com/2009/03/23/random-lines-from-a-file">http://www.bryceboe.com/2009/03/23/random-lines-from-a-file</a></li>
+<li><del>If you&#8217;re only using one random value, and your dictionary file has 50,000 words, the chance of a collision is 50,000/2<sup>53</sup> , which is roughly 3 in 562 trillion. I&#8217;ll take those odds.</del> Whoops! This is actually a version of the <a href="http://en.wikipedia.org/wiki/Birthday_problem">birthday problem</a>. The actual probability of a collision is: 1.39e-7. Still quite good.</li>
+</ol>
+
+<p><a rel="bookmark" href="http://blog.usrsb.in/blog/2012/01/11/picking-random-items-from-a-file/">&infin; Permalink</a></p>]]></content>
+    </entry>
+  
+    <entry>
+      
+
+
+
+
+<title type="html"><![CDATA[A Program Analysis For Tail Call Optimization]]></title>
+<link href="http://blog.usrsb.in/blog/2012/01/03/a-program-analysis-for-tail-call-optimization/"/>
+<updated>2012-01-03T12:08:00-07:00</updated>
+<id>http://blog.usrsb.in/blog/2012/01/03/a-program-analysis-for-tail-call-optimization</id>
+
+      <content type="html"><![CDATA[<p>In this post I will outline a method <a href="http://jwepman.com">Josh Wepman</a> and I have developed for detecting tail calls in programs constructed from a subset of Python. Its original purpose was a Python to x86 compiler we worked on together for a compiler construction course at CU.<sup>1</sup> The approach probably isn&#8217;t new, but it is straightforward and understandable, and might help other novice compiler writers understand a fundamental optimization.</p>
+
+<h2>1. What is a tail call?</h2>
+
+<p>A tail call occurs when a function (the caller) calls another function (the callee) and then immediately returns the callee&#8217;s value. Here is a simple example where <code>f()</code> is the caller, and <code>g()</code> is the callee:</p>
+
+<figure class='code'><figcaption><span>Example 1.1</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">f</span><span class="p">():</span>
+</span><span class='line'>  <span class="k">return</span> <span class="n">g</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>So, a function call is in <em>tail call position</em> when its return value is immediately returned. In the above example, it is <code>g()</code> that is in tail call position. Contrast this with the following example, where <code>g()</code> is not in tail call position:</p>
+
+<figure class='code'><figcaption><span>Example 1.2</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">f</span><span class="p">():</span>
+</span><span class='line'>  <span class="k">return</span> <span class="n">g</span><span class="p">()</span> <span class="o">*</span> <span class="mi">2</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Here, <code>g()</code> falls within the return statement of <code>f()</code>, but is not in tail call position because <code>g()</code>&#8217;s return value is used in the multiplication before it is returned by <code>f()</code>.<sup>2</sup></p>
+
+<p>Also consider the following example where <code>g()</code> is not in tail call position, but could easily be transformed into a program that is:</p>
+
+<figure class='code'><figcaption><span>Example 1.3</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">f</span><span class="p">():</span>
+</span><span class='line'>  <span class="n">x</span> <span class="o">=</span> <span class="n">g</span><span class="p">()</span>
+</span><span class='line'>  <span class="n">y</span> <span class="o">=</span> <span class="n">x</span>
+</span><span class='line'>  <span class="k">return</span> <span class="n">y</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Since the only thing that happens to <code>g()</code>&#8217;s value is that it is copied and then returned, the assignments could be removed, and <code>g()</code>&#8217;s value could be immediately returned without modifying the semantics of the program. Also notice that <code>x</code> and <code>y</code> are local variables, so it&#8217;s guaranteed that their values are not used elsewhere in the program, and so they can be safely removed. The semantically equivalent tail calling program would look like the original example (1.1):</p>
+
+<figure class='code'><figcaption><span>Example 1.1</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">f</span><span class="p">():</span>
+</span><span class='line'>  <span class="k">return</span> <span class="n">g</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>2. Why bother detecting them?</h2>
+
+<p>Why are tail calls interesting? I want this post to be mainly about the analysis, so I won&#8217;t delve too deeply into the mechanics of the machine code, but essentially tail calls allow for a compiler optimization where the callee can hand its return value straight to the caller of the caller. This will make more sense when you consider this extended version of example 1.1:</p>
+
+<figure class='code'><figcaption><span>Example 2.1</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">g</span><span class="p">():</span>
+</span><span class='line'>  <span class="k">return</span> <span class="mi">1</span>
+</span><span class='line'>  
+</span><span class='line'><span class="k">def</span> <span class="nf">f</span><span class="p">():</span>
+</span><span class='line'>  <span class="k">return</span> <span class="n">g</span><span class="p">()</span>
+</span><span class='line'>  
+</span><span class='line'><span class="k">print</span> <span class="n">f</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Here, <code>g()</code> will return 1 to <code>f()</code> and <code>f()</code> will return 1 to <code>print</code>, but, since all <code>f()</code> does is immediately return <code>g()</code>&#8217;s value to <code>print</code>, why not skip that step entirely? That is, why not simply have <code>g()</code> give its return value directly to <code>print</code>? That&#8217;s how tail call optimization works. In the optimized version, <code>g()</code> returns its value directly to <code>print</code> rather than forcing <code>f()</code> to be the middleman. This is implemented on the machine code level by having the call to <code>g()</code> reuse <code>f()</code>&#8217;s stack frame. The result is that when <code>g()</code> returns, it hands its value directly to <code>print</code>.<sup>3</sup> The advantage is that since each call doesn&#8217;t result in the allocation of a new stack frame, the compiled code will be slightly faster, and the recursion depth will be practically unlimited (or at least not limited by the size of the call stack).</p>
+
+<p>Notice, though, that the actual optimization occurs at the machine code level, in the instruction selection phase of the compiler, which isn&#8217;t the subject of this post. Instead, the subject is detecting when this optimization can be performed, and, additionally, transforming programs into ones that are eligible for this optimization. More on that in the next section.</p>
+
+<h2>3. Goals of the Analysis</h2>
+
+<p>One of the design goals of the analysis is for it to detect both of the situations outlined in section 1. That is, it should:</p>
+
+<ol>
+<li>Detect obvious cases of tail calls, where a function call is directly nested within a <code>return</code> statement and</li>
+<li>Detect less obvious cases where a program isn&#8217;t tail calling, but could be transformed into one that is.</li>
+</ol>
+
+
+<p>To elaborate on the second goal, <em>we want to detect instances where a return value is assigned to a variable, copied through a series of assignments, and then immediately returned without any intervening code.</em> This situation occurs in example 1.3, and is the reason it could be transformed into a tail calling program. Here is another example:</p>
+
+<figure class='code'><figcaption><span>Example 3.1</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">f</span><span class="p">():</span>
+</span><span class='line'>  <span class="k">if</span> <span class="nb">input</span><span class="p">():</span>
+</span><span class='line'>      <span class="n">x</span> <span class="o">=</span> <span class="n">g</span><span class="p">()</span>
+</span><span class='line'>  <span class="k">else</span><span class="p">:</span>
+</span><span class='line'>      <span class="n">x</span> <span class="o">=</span> <span class="mi">1</span>
+</span><span class='line'>  <span class="k">return</span> <span class="n">x</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>If <code>input()</code> evaluates to true, then the value of <code>g()</code> gets assigned to <code>x</code>, and is immediately returned. Transforming this into a semantically equivalent tail calling program is as simple as pushing the <code>return</code> statement up into the <code>if</code> branch:</p>
+
+<figure class='code'><figcaption><span>Example 3.2</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">f</span><span class="p">():</span>
+</span><span class='line'>  <span class="k">if</span> <span class="nb">input</span><span class="p">():</span>
+</span><span class='line'>      <span class="k">return</span> <span class="n">g</span><span class="p">()</span>
+</span><span class='line'>  <span class="k">else</span><span class="p">:</span>
+</span><span class='line'>      <span class="n">x</span> <span class="o">=</span> <span class="mi">1</span>
+</span><span class='line'>  <span class="k">return</span> <span class="n">x</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now <code>g()</code> is in tail call position, but the semantics of the program haven&#8217;t changed.</p>
+
+<p>Contrast that with this example that can&#8217;t be optimized (at least not by this analysis):</p>
+
+<figure class='code'><figcaption><span>Example 3.3</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">f</span><span class="p">():</span>
+</span><span class='line'>  <span class="n">x</span> <span class="o">=</span> <span class="n">g</span><span class="p">()</span>
+</span><span class='line'>  <span class="k">print</span> <span class="s">&quot;About to return&quot;</span>
+</span><span class='line'>  <span class="k">return</span> <span class="n">x</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This example doesn&#8217;t meet the last requirement that the copied return value is &#8220;immediately returned without any intervening code.&#8221; Since our transformation pushes the <code>return</code> statement up to the function call to <code>g()</code>, we get the following program:</p>
+
+<figure class='code'><figcaption><span>Example 3.4</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">f</span><span class="p">():</span>
+</span><span class='line'>  <span class="k">return</span> <span class="n">g</span><span class="p">()</span>
+</span><span class='line'>  <span class="k">print</span> <span class="s">&quot;About to return&quot;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now the <code>print</code> statement is never reached. A more nuanced analysis might handle a case like this, but ours won&#8217;t.</p>
+
+<h2>4. Complications: The naive analysis, dispatch code, and flattening.</h2>
+
+<p>Now that we understand the parameters of the analysis&#8211;what we will detect, and what we won&#8217;t&#8211;how do we implement it? The first requirement is to detect obvious cases where function calls are nested within <code>return</code> statements. This seems simple. Just traverse the AST<sup>4</sup> and look for that precise situation: where function calls are nested within <code>return</code> statements. The trouble with this technique, and the reason that I call it the &#8220;naive analysis,&#8221; is that, through the course of compilation, every function call gets turned into a set of nested <code>if</code> statements. Returning to example 1.1:</p>
+
+<figure class='code'><figcaption><span>Example 1.1</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">f</span><span class="p">():</span>
+</span><span class='line'>  <span class="k">return</span> <span class="n">g</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This might get transformed into something like:</p>
+
+<figure class='code'><figcaption><span>Example 4.1</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">f</span><span class="p">():</span>
+</span><span class='line'>  <span class="k">if</span> <span class="o">...</span><span class="p">:</span>
+</span><span class='line'>      <span class="n">tmp0</span> <span class="o">=</span> <span class="n">g</span><span class="p">()</span>
+</span><span class='line'>  <span class="k">else</span><span class="p">:</span>
+</span><span class='line'>      <span class="k">if</span> <span class="o">...</span><span class="p">:</span>
+</span><span class='line'>          <span class="n">tmp1</span> <span class="o">=</span> <span class="n">h</span><span class="p">()</span>
+</span><span class='line'>      <span class="k">else</span><span class="p">:</span>
+</span><span class='line'>          <span class="n">tmp1</span> <span class="o">=</span> <span class="n">throw_error</span><span class="p">()</span>
+</span><span class='line'>      <span class="n">tmp0</span> <span class="o">=</span> <span class="n">tmp1</span>
+</span><span class='line'>  <span class="k">return</span> <span class="n">tmp0</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Why the additional complexity? Remember that Python is a dynamic language. One consequence of this is that at compile time, the compiler doesn&#8217;t know the type of each variable. Is <code>g</code> an <code>int</code>? A <code>float</code>? A class? In many cases, the program needs this information. In the example above, <code>g()</code> will compile to different code if <code>g</code> is the name of a class, versus if <code>g</code> is the name of a function. Because this can&#8217;t always be detected at compile time, the executable must be able to detect the types of variables, and be ready for every case.<sup>5</sup> Returning to the example, the first <code>if</code> might be testing if <code>g</code> is the name of a class. If it is, instead of calling a function named <code>g</code>, it needs to execute <code>g</code>&#8217;s <code>__init__()</code> method. If <code>g</code> isn&#8217;t a class, then it needs to make sure <code>g</code> is a function. If it isn&#8217;t, then the program needs to throw a runtime error. This is one reason why dynamic languages can be slow.</p>
+
+<p>In any case, what matters to us is how this affects our analysis, but thankfully it doesn&#8217;t. Although our compiler has effectively eliminated instances of &#8220;obvious&#8221; tail calls, the example above is still eligible for transformation into a program that contains tail calls. Since the return values of the function calls are assigned to temporary variables, then returned, the transformation is the same as in the simpler examples: push the <code>return</code> statement up to the function calls:</p>
+
+<figure class='code'><figcaption><span>Example 4.2</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">f</span><span class="p">():</span>
+</span><span class='line'>  <span class="k">if</span> <span class="o">...</span><span class="p">:</span>
+</span><span class='line'>      <span class="k">return</span> <span class="n">g</span><span class="p">()</span>
+</span><span class='line'>  <span class="k">else</span><span class="p">:</span>
+</span><span class='line'>      <span class="k">if</span> <span class="o">...</span><span class="p">:</span>
+</span><span class='line'>          <span class="k">return</span> <span class="n">h</span><span class="p">()</span>
+</span><span class='line'>      <span class="k">else</span><span class="p">:</span>
+</span><span class='line'>          <span class="k">return</span> <span class="n">throw_error</span><span class="p">()</span>
+</span><span class='line'>      <span class="n">tmp0</span> <span class="o">=</span> <span class="n">tmp1</span>
+</span><span class='line'>  <span class="k">return</span> <span class="n">tmp0</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The <code>return</code> statements have now been pushed up into the branches of the <code>if</code> statement, and <code>g()</code>, <code>h()</code>, and <code>throw_error()</code> are now in tail call position. Nice. Notice that this transformation leaves behind <em>dead code</em>. The assignment <code>tmp0 = tmp1</code> and <code>return tmp0</code> are considered &#8220;dead&#8221; because they will never be reached. Many compilers have a separate phase that removes the dead code that gets created from optimizations like this, but that&#8217;s beyond the scope of this article.<sup>6</sup></p>
+
+<p>Aside from the addition of dispatch code, there&#8217;s another important transformation to the code before it reaches the analysis phase. Happily, this transformation actually make detecting tail calls easier. This transformation is called <em>flattening</em>, which means that deeply nested expressions get broken down into simpler statements. Consider this:</p>
+
+<figure class='code'><figcaption><span>Example 4.3</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">x</span> <span class="o">=</span> <span class="nb">input</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">g</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>That would get flattened into:</p>
+
+<figure class='code'><figcaption><span>Example 4.4</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">tmp0</span> <span class="o">=</span> <span class="nb">input</span><span class="p">()</span>
+</span><span class='line'><span class="n">tmp1</span> <span class="o">=</span> <span class="n">tmp0</span> <span class="o">+</span> <span class="mi">1</span>
+</span><span class='line'><span class="n">tmp2</span> <span class="o">=</span> <span class="n">g</span><span class="p">()</span>
+</span><span class='line'><span class="n">tmp3</span> <span class="o">=</span> <span class="n">tmp1</span> <span class="o">+</span> <span class="n">tmp2</span>
+</span><span class='line'><span class="n">x</span> <span class="o">=</span> <span class="n">tmp3</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Notice that the semantics of the program haven&#8217;t changed, but the nested expression <code>input() + 1 + g()</code> gets broken down, or flattened, into a simple series of assignments.<sup>7</sup> Although this appears to add additional complexity, it actually reduces the number of possible cases our analysis will encounter, and shrinks the depth of the AST. Notice that the examples above have already been flattened.</p>
+
+<p>So now that we have a fuller description of what we&#8217;re up against, what does the not-so-naive analysis look like?</p>
+
+<h2>5. The Not-So-Naive Analysis</h2>
+
+<p>The not-so-naive analysis is a <em>flow sensitive static analysis</em>. The analysis follows the control flow of the program and, at each program point, records information about the contents of the variables based on certain rules. A <em>program point</em> is roughly every place in a program where the state of the program could change. In a flattened program, this roughly corresponds to the point before and after every line or statement of code. In the example below, each program point is numbered. The numbers correspond to the order in which each program point will be visited:</p>
+
+<figure class='code'><figcaption><span>Example 5.1</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="p">{</span><span class="mi">0</span><span class="p">}</span>
+</span><span class='line'><span class="n">tmp0</span> <span class="o">=</span> <span class="nb">input</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span><span class="mi">1</span><span class="p">}</span>
+</span><span class='line'><span class="k">if</span> <span class="n">tmp0</span><span class="p">:</span>
+</span><span class='line'>  <span class="p">{</span><span class="mi">2</span><span class="p">}</span>
+</span><span class='line'>  <span class="n">tmp1</span> <span class="o">=</span> <span class="n">f</span><span class="p">()</span>
+</span><span class='line'>  <span class="p">{</span><span class="mi">3</span><span class="p">}</span>
+</span><span class='line'><span class="k">else</span><span class="p">:</span>
+</span><span class='line'>  <span class="p">{</span><span class="mi">4</span><span class="p">}</span>
+</span><span class='line'>  <span class="n">tmp1</span> <span class="o">=</span> <span class="n">g</span><span class="p">()</span>
+</span><span class='line'>  <span class="p">{</span><span class="mi">5</span><span class="p">}</span>
+</span><span class='line'><span class="p">{</span><span class="mi">6</span><span class="p">}</span>
+</span><span class='line'><span class="k">return</span> <span class="n">tmp1</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>So, there is a program point before and after each assignment, and a program point before and after the entire <code>if</code> statement. The order in which the two branches of the <code>if</code> statement are visited doesn&#8217;t matter, but both branches should be visited before leaving the <code>if</code> statement.</p>
+
+<p>Stepping through the program in this order is easy. Each line of code is an item in a list. Traverse the list in order. If you get to an <code>if</code> statement, do a postorder traversal. First visit the <code>if</code> branch and then the <code>else</code>. Once the value of these branches is determined, the value after the entire <code>if</code> statement can be determined. In other words, in order to determine the value at program point 6, the values at 3 and 5 must be evaluated first.</p>
+
+<p>What do I mean by &#8220;the value at program point 6?&#8221; As hinted at above, each program point is associated with a set of variables. Roughly, this set corresponds to the set of variables that contain return values. The specifics of how variables get added and removed from the set is the subject of a set of rules. Formally, each rule is a function that takes in the set at a program point (usually the one above the current statement) and the statement itself, and outputs a new set that corresponds to the program point after that statement. So, for example, the value at program point 5 is determined by looking at program point 4 and the statement on line 10 (<code>tmp1 = g()</code>). Because that statement stores a return value to <code>tmp1</code>, <code>tmp1</code> gets added to the set at point 5. This is one of the rules. Below are the rules in full. As a shorthand, the program point before a statement is called R<sub>before</sub> and the point after is called R<sub>after</sub>.</p>
+
+<ol>
+<li>If the statement is an assignment between variable <code>v</code> and a function call (<code>v = g()</code>), then <em>R<sub>after</sub> = {v}</em>.</li>
+<li>If the statement is an assignment from variable <code>t</code> to variable <code>v</code> (<code>v = t</code>), and <code>t</code> is in R<sub>before</sub>, then <em>R<sub>after</sub> = {v}</em>.</li>
+<li>At the start of a program, the beginning of a new code block (e.g. the beginning of a branch in an <code>if</code> statement), or the beginning and end of a new scope <em>R<sub>before</sub> = {}</em>.</li>
+<li>If the statement is an <code>if</code> statement, then <em>R<sub>after</sub> = R<sub>after-if</sub> ∪ R<sub>after-else</sub></em>. In other words, it is the union of the R<sub>after</sub>s of each branch.</li>
+<li>If the statement is a <code>return</code> statement, and variable <code>v</code> is being returned (<code>return v</code>), and <code>v</code> is in R<sub>before</sub>, then the <code>return</code> statement can be pushed up to wherever <code>v</code>&#8217;s value was originally created. In other words, there&#8217;s some function call above that can be put into tail call position (the function that created the value held by <code>v</code>).</li>
+<li>In all other cases, <em>R<sub>after</sub> = {}</em>.</li>
+</ol>
+
+
+<p>Some of these rules are intuitive. Some aren&#8217;t. I&#8217;ll go through them one by one and explain them. Keep in mind the goal of the analysis: we&#8217;re trying to detect when return values are copied through a series of assignments and then returned without any intervening code.</p>
+
+<p>This makes the first rule the most intuitive. If a variable gets assigned a return value, add that variable to the set. This would be the first step in detecting something like example 1.3, reproduced below with the sets at each program point. Notice rule 1 in action on lines 4 and 5:</p>
+
+<figure class='code'><figcaption><span>Example 1.3/5.2</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="p">{}</span>
+</span><span class='line'><span class="k">def</span> <span class="nf">f</span><span class="p">():</span>
+</span><span class='line'>  <span class="p">{}</span>
+</span><span class='line'>  <span class="n">x</span> <span class="o">=</span> <span class="n">g</span><span class="p">()</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">x</span><span class="p">}</span>
+</span><span class='line'>  <span class="n">y</span> <span class="o">=</span> <span class="n">x</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">y</span><span class="p">}</span>
+</span><span class='line'>  <span class="k">return</span> <span class="n">y</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The second rule keeps track of return values that get copied between variables, and is the reason the set contains <code>y</code> after the 6<sup>th</sup> line. The value of <code>x</code> gets copied to <code>y</code>, and <code>x</code> happens to be in R<sub>before</sub>, so, by rule 2, <code>y</code> is now in R<sub>after</sub>.</p>
+
+<p>The third rules initializes the analysis, and starts the program with an empty set. This rule should also be applied to new code blocks. The two branches of an <code>if</code> statement should begin with empty sets as shown below in a new example:</p>
+
+<figure class='code'><figcaption><span>Example 5.3</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="p">{}</span>
+</span><span class='line'><span class="n">y</span> <span class="o">=</span> <span class="n">g</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span><span class="n">y</span><span class="p">}</span>
+</span><span class='line'><span class="k">if</span> <span class="nb">input</span><span class="p">():</span>
+</span><span class='line'>  <span class="p">{}</span>
+</span><span class='line'>  <span class="n">y</span> <span class="o">=</span> <span class="n">f</span><span class="p">()</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">y</span><span class="p">}</span>
+</span><span class='line'><span class="k">else</span><span class="p">:</span>
+</span><span class='line'>  <span class="p">{}</span>
+</span><span class='line'>  <span class="n">y</span> <span class="o">=</span> <span class="n">h</span><span class="p">()</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">y</span><span class="p">}</span>
+</span><span class='line'>  <span class="k">print</span> <span class="s">&quot;Called h()&quot;</span>
+</span><span class='line'>  <span class="p">{}</span>
+</span><span class='line'><span class="p">{</span><span class="n">y</span><span class="p">}</span>
+</span><span class='line'><span class="k">return</span> <span class="n">y</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Although <code>y</code> is in the set before the <code>if</code> statement, both branches of the <code>if</code> statement begin with an empty set.</p>
+
+<p>Example 5.3 also demonstrates rule four. The set after an <code>if</code> statement contains the union of the two branches, in this case just <code>y</code>.</p>
+
+<p>The fifth rule comes into play on line 15. <code>y</code> is returned, and it also happens to be in R<sub>before</sub>. This means that the function call that gave <code>y</code> its value can be put in tail call position. This is done by pushing the <code>return</code> statement up to the call to <code>f()</code> on line 6:</p>
+
+<figure class='code'><figcaption><span>Example 5.4</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="p">{}</span>
+</span><span class='line'><span class="n">x</span> <span class="o">=</span> <span class="n">g</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span><span class="n">x</span><span class="p">}</span>
+</span><span class='line'><span class="k">if</span> <span class="nb">input</span><span class="p">():</span>
+</span><span class='line'>  <span class="p">{}</span>
+</span><span class='line'>  <span class="k">return</span> <span class="n">f</span><span class="p">()</span> <span class="c"># Optimized to tail call position.</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">y</span><span class="p">}</span>
+</span><span class='line'><span class="k">else</span><span class="p">:</span>
+</span><span class='line'>  <span class="p">{}</span>
+</span><span class='line'>  <span class="n">y</span> <span class="o">=</span> <span class="n">h</span><span class="p">()</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">y</span><span class="p">}</span>
+</span><span class='line'>  <span class="k">print</span> <span class="s">&quot;Called h()&quot;</span>
+</span><span class='line'>  <span class="p">{}</span>
+</span><span class='line'><span class="p">{</span><span class="n">y</span><span class="p">}</span>
+</span><span class='line'><span class="k">return</span> <span class="n">y</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The program has now been transformed into a tail calling program. The analysis has detected that a return value was assigned to a variable, and then returned without any intervening code. Notice, though, that the call to <code>h()</code> on line 10 wasn&#8217;t optimized. It was almost eligible for transformation, but the intervening <code>print</code> statement on line 12 trigged the last rule, and, correctly, prevented the <code>return</code> statement from being pushed up to the call  to <code>h()</code>. This is the purpose of the last rule&#8211;to prevent intervening code from becoming dead code.</p>
+
+<p>There is one last bit of housekeeping. In order for rule 5 to be executed, it needs to know where a variable&#8217;s value was originally created. Consider, once again, example 1.3:</p>
+
+<figure class='code'><figcaption><span>Example 1.3/5.2</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="p">{}</span>
+</span><span class='line'><span class="k">def</span> <span class="nf">f</span><span class="p">():</span>
+</span><span class='line'>  <span class="p">{}</span>
+</span><span class='line'>  <span class="n">x</span> <span class="o">=</span> <span class="n">g</span><span class="p">()</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">x</span><span class="p">}</span>
+</span><span class='line'>  <span class="n">y</span> <span class="o">=</span> <span class="n">x</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">y</span><span class="p">}</span>
+</span><span class='line'>  <span class="k">return</span> <span class="n">y</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The analysis will detect that <code>y</code> is being returned, and recognize that <code>y</code> is in R<sub>before</sub>. This will trigger rule 5, and the analysis will need to know where <code>y</code>&#8217;s value was originally created. How will it determine this? The algorithm is simple:</p>
+
+<ol>
+<li>When <code>g()</code> is first assigned to <code>x</code> and <code>x</code> gets added to R<sub>after</sub>, the analysis will record that <code>x</code> is associated with that line (or AST node).</li>
+<li>When <code>x</code> gets copied to <code>y</code>, the analysis looks up whichever node/line <code>x</code> was associated with, and then records that <code>y</code> is associated with that same node/line.</li>
+<li>When the analysis gets to the last line, it knows that <code>y</code> is associated with line 4 (<code>x = g()</code>), and knows that it can push the <code>return</code> statement up to that position.</li>
+</ol>
+
+
+<p>We are left with the optimized version:</p>
+
+<figure class='code'><figcaption><span>Example 5.5</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">f</span><span class="p">():</span>
+</span><span class='line'>  <span class="k">return</span> <span class="n">g</span><span class="p">()</span>
+</span><span class='line'>  <span class="c"># Dead code</span>
+</span><span class='line'>  <span class="n">y</span> <span class="o">=</span> <span class="n">x</span>
+</span><span class='line'>  <span class="k">return</span> <span class="n">y</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>6. Conclusion</h2>
+
+<p>Congratulations if you&#8217;ve gotten this far. We&#8217;ve covered a lot of ground. I&#8217;ve touched on several parts of the compiler, and described, in detail, a program analysis for detecting tail calls. Notice, though, that this analysis only covers a very small subset of Python. The rules assume that all <code>if</code> statements also have an <code>else</code> branch. How could this be fixed? I also haven&#8217;t addressed other control flow structures. Adding a rule for <code>while</code> loops would be an important addition. All of these issues would be good exercises to think about, and will, perhaps be the subjects of followup posts.</p>
+
+<h2>Footnotes</h2>
+
+<ol>
+<li>I&#8217;m currently in the early stages of forking the project, which I&#8217;ve redubbed <a href="http://github.com/beala/bullfrog">bullfrog</a>.</li>
+<li><a href="http://en.wikipedia.org/wiki/Tail_call#Syntactic_form">http://en.wikipedia.org/wiki/Tail_call#Syntactic_form</a></li>
+<li><a href="http://en.wikipedia.org/wiki/Tail_call#In_assembler">http://en.wikipedia.org/wiki/Tail_call#In_assembler</a></li>
+<li>AST: Abstract Syntax Tree. A tree representation of the structure (syntax) of a program. <a href="http://en.wikipedia.org/wiki/Abstract_syntax_tree">Wiki</a>.</li>
+<li>This is one reason dynamic languages can be slow, but most compilers perform additional optimizations to cut down on so called &#8220;dispatch code&#8221; by detecting variables types at compile time. This is possible when, for example, an integer is explicitly assigned to a variable: <code>x = 1</code>. In that case, it&#8217;s guaranteed that <code>x</code> contains an integer.</li>
+<li>Dead code elimination. (2011, October 20). In Wikipedia, The Free Encyclopedia. Retrieved 16:56, December 24, 2011, from <a href="http://en.wikipedia.org/w/index.php?title=Dead_code_elimination&amp;oldid=456578651">http://en.wikipedia.org/w/index.php?title=Dead_code_elimination&amp;oldid=456578651</a></li>
+<li>At first blush, this doesn&#8217;t look nested, but it is: <code>x = (((input()) + 1) + g())</code>. The infix notation is deceptive, but, as demonstrated by the parenthesized version, there are actually 2 levels of addition that roughly correspond to the structure of the flattened code.</li>
+</ol>
+
+<p><a rel="bookmark" href="http://blog.usrsb.in/blog/2012/01/03/a-program-analysis-for-tail-call-optimization/">&infin; Permalink</a></p>]]></content>
+    </entry>
+  
+    <entry>
+      
+
+
+
+
+<title type="html"><![CDATA[Implementing Switches With Dictionaries (Python)]]></title>
+<link href="http://blog.usrsb.in/blog/2011/12/29/implementing-switches-with-dictionaries/"/>
+<updated>2011-12-29T10:55:00-07:00</updated>
+<id>http://blog.usrsb.in/blog/2011/12/29/implementing-switches-with-dictionaries</id>
+
+      <content type="html"><![CDATA[<p>One thing I like about Python is that it lets you do just about anything. Classes can be modified at runtime, lists can contain a mix of types, and functions are first-class. The built in dictionaries are especially powerful. They are fast, and can hash and contain just about any immutable datatype, including functions. This allows for a novel use: fast <code>switch</code> statements. Consider the following bit of C, which adds, subtracts, or multiplies two numbers based on the value of <code>op</code>:</p>
+
+<figure class='code'><figcaption><span>A C Calculator</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="k">switch</span><span class="p">(</span><span class="n">op</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">case</span> <span class="sc">&#39;+&#39;</span>:
+</span><span class='line'>      <span class="n">c</span> <span class="o">=</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">;</span>
+</span><span class='line'>      <span class="k">break</span><span class="p">;</span>
+</span><span class='line'>  <span class="k">case</span> <span class="sc">&#39;-&#39;</span>:
+</span><span class='line'>      <span class="n">c</span> <span class="o">=</span> <span class="n">a</span> <span class="o">-</span> <span class="n">b</span><span class="p">;</span>
+</span><span class='line'>      <span class="k">break</span><span class="p">;</span>
+</span><span class='line'>  <span class="nl">default:</span>
+</span><span class='line'>      <span class="n">c</span> <span class="o">=</span> <span class="n">a</span> <span class="o">*</span> <span class="n">b</span><span class="p">;</span>
+</span><span class='line'>      <span class="k">break</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This behavior could be duplicated in Python using an <code>if ... elif ... elif ...</code> sequence,<sup>1</sup> or we could use the following dictionary:</p>
+
+<figure class='code'><figcaption><span>A Python Calculator</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">add</span><span class="p">():</span>
+</span><span class='line'>  <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span>
+</span><span class='line'><span class="k">def</span> <span class="nf">sub</span><span class="p">():</span>
+</span><span class='line'>  <span class="k">return</span> <span class="n">a</span> <span class="o">-</span> <span class="n">b</span>
+</span><span class='line'><span class="k">def</span> <span class="nf">mult</span><span class="p">():</span>
+</span><span class='line'>  <span class="k">return</span> <span class="n">a</span> <span class="o">*</span> <span class="n">b</span>
+</span><span class='line'>  
+</span><span class='line'><span class="n">switch_substitute</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class='line'>  <span class="s">&#39;+&#39;</span> <span class="p">:</span> <span class="n">add</span><span class="p">,</span>
+</span><span class='line'>  <span class="s">&#39;-&#39;</span> <span class="p">:</span> <span class="n">sub</span> <span class="p">}</span>
+</span><span class='line'>  
+</span><span class='line'><span class="n">c</span> <span class="o">=</span> <span class="n">switch_substitute</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">mult</span><span class="p">)()</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>There, the three operations are wrapped in functions, and added as values to the dictionary. The <code>get()</code> method looks for the function associated with the value of <code>op</code> and returns the <code>mult</code> function if the key is not in the dictionary, mimicking the action of the <code>default</code> case.<sup>2</sup> Once one of the functions is retrieved, it&#8217;s immediately called, and the appropriate value gets assigned to <code>c</code>.</p>
+
+<p>The advantage of this method is that it&#8217;s fast. Dictionaries are implemented as hash tables, so the lookup happens in constant time.<sup>3</sup> <code>elif</code>s and <code>switch</code>es probably take linear time, but would depend on the implementation.</p>
+
+<p>It&#8217;s also worth thinking about how something similar could be built using a class and Python&#8217;s <a href="http://docs.python.org/library/functions.html#getattr">getattr</a> function.</p>
+
+<h2>Footnotes:</h2>
+
+<ol>
+<li><a href="http://docs.python.org/tutorial/controlflow.html#if-statements">http://docs.python.org/tutorial/controlflow.html#if-statements</a></li>
+<li><a href="http://docs.python.org/library/stdtypes.html#dict.get">http://docs.python.org/library/stdtypes.html#dict.get</a></li>
+<li><a href="http://docs.python.org/library/stdtypes.html#mapping-types-dict">http://docs.python.org/library/stdtypes.html#mapping-types-dict</a></li>
+</ol>
+
+<p><a rel="bookmark" href="http://blog.usrsb.in/blog/2011/12/29/implementing-switches-with-dictionaries/">&infin; Permalink</a></p>]]></content>
+    </entry>
+  
+    <entry>
+      
+
+
+
+
+<title type="html"><![CDATA[A Zero-Knowledge File Exchange]]></title>
+<link href="http://blog.usrsb.in/blog/2011/12/16/a-zero-knowledge-file-exchange/"/>
+<updated>2011-12-16T13:14:00-07:00</updated>
+<id>http://blog.usrsb.in/blog/2011/12/16/a-zero-knowledge-file-exchange</id>
+
+      <content type="html"><![CDATA[<h2>The Problem</h2>
+
+<p>Alice wants to send Bob an encrypted file over the Internet. Alice&#8217;s first attempt is to encrypt the file using 7-zip and send it as an attachment, but quickly realizes that Bob now has no way of decrypting the file. Alice could email the decryption key, but realizes that this is insecure. Why encrypt the file in the first place if she is going to email the key in plaintext? Another solution is to use public key encryption, but contrary to everything we&#8217;ve ever read about Alice and Bob, neither knows how to use GPG. Alex, a dashing computer-scientist-in-training and intrepid narrator of this post, decides to craft a solution. Here is his proposal.</p>
+
+<h2>Goals</h2>
+
+<p>The goal is to create an online service with the following characteristics. It will:</p>
+
+<ol>
+<li>Facilitate file exchanges between users.</li>
+<li>Not require any accounts.</li>
+<li>Not require downloaded software.</li>
+<li>Be zero-knowledge. The web service itself must not have access to the decrypted file.</li>
+</ol>
+
+
+<p>In order to meet requirement (4), the service will need to store only encrypted files. This is easy enough. The service can let Alice encrypt the file in her browser, and then host the file, but then we still have the original problem to deal with. Once Bob retrieves the file, how can he access the decryption key? It seems that we have a chicken-or-the-egg problem. Alice and Bob can&#8217;t communicate securely because they don&#8217;t share a key, and they can&#8217;t share a key because they can&#8217;t communicate securely. If only there were some way for two parties to negotiate an encryption key over an insecure channel. Luckily, computer scientists have anticipated this need and come up with the <a href="https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange">Diffie-Hellman key exchange</a>.</p>
+
+<h2>The Site</h2>
+
+<p>Here&#8217;s a sketch of how the service will look to Alice and Bob. In the next section, I&#8217;ll explain the implementation.</p>
+
+<ol>
+<li>Alice initiates a file exchange by going to the website and entering the following information:
+
+<ul>
+<li>Bob&#8217;s email and cell.</li>
+<li>Her email.</li>
+<li>A secret password of her choosing (Alice&#8217;s secret key).</li>
+</ul>
+</li>
+<li>The site sends the following to Bob:
+
+<ul>
+<li>An email containing a link.</li>
+<li>A text message containing a secret code.</li>
+</ul>
+</li>
+<li>Bob receives the email and link.
+
+<ul>
+<li>He navigates to the link and is prompted for the code he received in the text. He enters it.</li>
+<li>He is granted access to a form, and he enters a secret password of his choosing (Bob&#8217;s secret key). This doesn&#8217;t need to be the same as Alice&#8217;s secret key.</li>
+</ul>
+</li>
+<li>Alice receives an email saying the website is ready for her upload.
+
+<ul>
+<li>She clicks the link, enters her secret password, and selects her file. Her file gets encrypted in the browser and uploaded to the website.</li>
+</ul>
+</li>
+<li>Bob gets an email saying the download is ready with a link to a retrieval webpage.
+
+<ul>
+<li>He clicks the link and enters his secret password.</li>
+<li>It&#8217;s decrypted in the browser, and saved to his hard drive.</li>
+</ul>
+</li>
+</ol>
+
+
+<p>Readers familiar with the D-H key exchange may already see what&#8217;s going on here. The real trick is in steps (3) and (4) where Alice and Bob are both able to generate a shared secret key without the web service having access to it. Bob and Alice can then encrypt files using the shared secret, and no one but them will be able to decrypt the files.</p>
+
+<h2>Implementation Magic</h2>
+
+<p>So, how does this work? This is the same story, but with the implementation details inserted:</p>
+
+<ol>
+<li>Alice initiates a file transfer with Bob, and enters their contact details. The web page uses Javascript or a Java applet to generate the following encryption details:
+
+<ul>
+<li>A shared prime <em>p</em> and a generator number <em>g</em>. This gets sent to the web service for storage.</li>
+<li>Alice enters a secret password of her choosing, and it gets hashed into a large 128+ bit integer using something like SHA-2. This is her private key <em>a</em> (but she only needs to memorize the password).</li>
+<li>In the browser, Alice&#8217;s public key, <em>A</em>, gets calculated. It equals <em>g<sup>a</sup> mod p</em>. This gets sent to the web service for storage.</li>
+</ul>
+</li>
+<li>The web service sends out the email and text.</li>
+<li>Bob gets the email and text.
+
+<ul>
+<li>He enters the secret code from the text into the web page (this will be explained later), and he&#8217;s granted access to the form.</li>
+<li>He enters a secret password of his choosing, which also gets hashed just like Alice&#8217;s. This is his private key, <em>b</em>.</li>
+<li>In the browser, Bob&#8217;s public key, <em>B</em>, gets calculated as <em>g<sup>b</sup> mod p</em>. This gets sent to the web service for storage.</li>
+</ul>
+</li>
+<li>Alice receives an email saying that her file is ready for encryption and upload.
+
+<ul>
+<li>Bob&#8217;s public key is retrieved, and Alice enters her secret password. In browser, the shared secret is calculated as <em>B<sup>a</sup> mod p</em>.</li>
+<li>The file is encrypted using the shared secret.</li>
+</ul>
+</li>
+<li>Bob gets an email saying the file is ready for retrieval.
+
+<ul>
+<li>Alice&#8217;s public key is retrieved, and he enters his secret password. The shared secret is calculated from <em>A<sup>b</sup> mod p</em>.</li>
+<li>In browser, the file is decrypted using the secret key, and the file is saved to disk.</li>
+</ul>
+</li>
+</ol>
+
+
+<p>Although I still find the process incredible, there&#8217;s really nothing new about the above procedure. It&#8217;s simply an implementation of the D-H exchange that hides the details from the users. What&#8217;s so neat is that the web service and anyone monitoring their communications only ever sees Bob&#8217;s public key, Alice&#8217;s public key, the generator and the prime. No one knows Bob&#8217;s secret key (including Alice!), and no one knows Alice&#8217;s (including Bob). Without these secret keys, no one, including the web service, can calculate the shared encryption key. The web service is zero-knowledge. Sort of.</p>
+
+<h2>Stuck In The Middle</h2>
+
+<p>The most glaring vulnerability with the D-H exchange is the possibility of a man-in-the-middle (MITM) attack. This is well documented. If Eve the eavesdropper can intercept and control Bob&#8217;s or Alice&#8217;s email channel, then Eve can sit in the middle and pretend to be both Bob and Alice. Eve can generate two shared secrets, one with Bob and one with Alice. Alice, who thinks Eve is Bob, sends the file to Eve. Eve decrypts it, reads it, then re-encrypts it using the secret she has with Bob (who thinks Eve is Alice), and sends it to Bob. The file is stolen and neither Alice nor Bob know that it happened. This raises two issues:</p>
+
+<ol>
+<li>If the email channel is insecure, Eve could steal the file.</li>
+<li>If the service is evil, then the service can steal the file by doing exactly what Eve did.</li>
+</ol>
+
+
+<p>The first problem is solved by the text message containing the secret text code that Bob receives. In order for Bob to finish the exchange, he needs to enter the secret text code into the web page. Eve can&#8217;t do this unless she&#8217;s hijacked both his email and his phone. So, Eve can&#8217;t be the woman-in-the-middle because she can access Bob&#8217;s web page and pretend to be Bob.</p>
+
+<p>The second one is a tough one. A potential solution is for some in-browser code to generate a hash of the public keys (<em>A</em>, and <em>B</em>). Bob and Alice could then use some out-of-band channel (perhaps over the phone) to compare the hashes. If Eve were in the middle, they&#8217;d both have a copy of Eve&#8217;s key, and the hashes wouldn&#8217;t match. The issue here is that if the site really is evil, it could simply poison the browser code to do something evil, making this whole out-of-band hash thing moot. Really, the problem is that there&#8217;s no such thing as a zero-knowledge web site. There has to be some amount of trust between the users and site. One side note is that the site does have a motivation for being honest. As long as it never sees the secret keys, it can&#8217;t be subpoenaed from anything useful (unless a judge orders it to poison its browser code).</p>
+
+<h2>An Alternative Method</h2>
+
+<p>Here&#8217;s an alternative method that might be simpler. It uses public key encryption:</p>
+
+<ol>
+<li>Alice initiates a file exchange by entering Bob&#8217;s email.</li>
+<li>Bob gets the email, and navigates to a page that generates a key pair.
+
+<ul>
+<li>The public half of the key pair gets uploaded to the web service. He downloads the private half.</li>
+</ul>
+</li>
+<li>Alice gets an email saying the exchange is ready.
+
+<ul>
+<li>She navigates to the site, which automatically retrieves the public key, encrypts the file, and uploads it.</li>
+</ul>
+</li>
+<li>Bob downloads the file and decrypts it using his private key, in-browser.</li>
+</ol>
+
+
+<p>The advantage is that it might be simpler to implement. It&#8217;s really just a way of creating a one-time key pair, and hiding the details from the user. The disadvantage is that Bob has to hold onto a secret key, rather than a passphrase, and the same MITM vulnerability exists (although it could be fixed in a similar way).</p>
+
+<h2>Conclusion</h2>
+
+<p>That&#8217;s my first stab at a solution. Although I had a lot of fun dreaming it up, it&#8217;s not without its disadvantages, and open questions.</p>
+
+<ol>
+<li>The potential for MITM attacks introduces unwanted complexity (especially if you don&#8217;t trust the site). Could this be made more user friendly? Is there another solution?</li>
+<li>The entire process is complex, and would probably scare off the exact people it&#8217;s trying to help. Is there an alternative method that&#8217;s simpler, but still maintains zero-knowledge?</li>
+<li>Is it secure?</li>
+</ol>
+
+
+<p>I&#8217;d love to hear your comments on these points, or anything related.</p>
+
+<p>Also, many thanks for <a href="http://twitter.com/Cinesias">Cinesias</a> for inspiring me to think about this, and having a bit of a brainstorming session. #FollowFriday</p>
+<p><a rel="bookmark" href="http://blog.usrsb.in/blog/2011/12/16/a-zero-knowledge-file-exchange/">&infin; Permalink</a></p>]]></content>
+    </entry>
+  
+    <entry>
+      
+
+
+
+
+<title type="html"><![CDATA[Search Algorithms: Finding a Bad Coin (Part II)]]></title>
+<link href="http://blog.usrsb.in/blog/2011/08/18/search-algorithms-finding-a-bad-coin-part-ii/"/>
+<updated>2011-08-18T13:24:00-06:00</updated>
+<id>http://blog.usrsb.in/blog/2011/08/18/search-algorithms-finding-a-bad-coin-part-ii</id>
+
+      <content type="html"><![CDATA[<p>In the last post, I discussed a problem about finding the bad coin in a set of 8 coins. Here, I&#8217;ll do some mathematical analysis of the different algorithms, and talk about the number of steps it takes to search through n coins using each algorithm.</p>
+
+<h2>The Simplest Algorithm</h2>
+
+<p>The first algorithm was the simplest, and consisted of weighing pairs of coins. We begin analyzing this algorithm by first noticing two things: (1) It could take anywhere between 1 and 4 trials to search through the 8 coins. (2) Each of these scenarios is equally likely. There&#8217;s a 1 in 4 possibility that it will be found on the first trial. Ditto for the second, third, and fourth trial. With these two pieces of information, we can calculate the average number of steps it takes to search through 8 coins. This is done by multiplying each outcome (1, 2, 3, or 4 trials) with its probability (1 in 4) and summing the values. The expected value, or average number of steps for 8 coins, is therefore 2.5.</p>
+
+<p><img src="http://media.usrsb.in/bad-coin/avg-trials.png" alt="average trials" /></p>
+
+<p>Another way of thinking about this goes as follows: Half the time you&#8217;ll find the coin on or before 2 trials, and half the time you&#8217;ll find the coin on or after 3 trials. Therefore, the average number of trials is 2.5.</p>
+
+<p>That&#8217;s simple enough, but can this be generalized? Yes. For n coins, the following sum represents the average number of trials:</p>
+
+<p><img src="http://media.usrsb.in/bad-coin/avgstepssimple.png" alt="average trials general" /></p>
+
+<p>If you&#8217;re skeptical, try out the sum for 8 coins and verify that it produces the same equation as above. The sum simply multiplies each possible outcome (1, 2, 3, or 4 trials) by one over the total number of possible outcomes (1/4). Note that n must be an even number. If it&#8217;s not, then round up to the nearest even number.
+So, what are the takeaway points?</p>
+
+<ol>
+<li>The average number of trials for n coins is proportional to n.</li>
+<li>The number of trials isn&#8217;t fixed. Half the time it will take less than or equal to n/2 trials, and half the time it will take more.</li>
+<li>One out of every n/2 times, it will take only 1 trial.</li>
+</ol>
+
+
+<p>The upshot is that the algorithm isn&#8217;t horrible for a small number of coins, but once n starts to get big, so does the number of steps required. In fact, for 8 coins, this algorithm is slightly better, on average, than the binary search, which always takes exactly 3 steps, but it&#8217;s also slightly worse than the ternary search, which always takes 2 steps. As I&#8217;ll show, this doesn&#8217;t hold when the number of coins gets larger.</p>
+
+<h2>The Binary and Ternary Searches</h2>
+
+<p>Calculating the average number of steps for the binary and ternary search is much easier than for the simple algorithm, because the binary and ternary search always take a fixed number of steps, as shown by the decision tree (this isn&#8217;t true if the tree is unbalanced, or if n isn&#8217;t a power of 2 or 3). We can also see that for a decision tree to search through 8 coins, it must have 8 termination points at the bottom of the tree, called &#8220;leaves.&#8221; The number of steps to complete the search is related to this by 2d≥8 for the binary tree and 3d≥8 for the ternary tree, where d is the number of steps or &#8220;depth&#8221; of the tree (Hein, p. 288). Solving for d we get an expression for the minimum number of steps, where n is the number of coins and b is 2 for a binary tree and 3 for a ternary tree:</p>
+
+<p><img src="http://media.usrsb.in/bad-coin/treesteps.png" alt="Minimum steps to find coin" /></p>
+
+<p>The brackets are the ceiling operator, which rounds the number up, because a tree&#8217;s depth must be an integer.</p>
+
+<p>Hein takes this a step further and proves that the ternary decision tree is the optimal decision tree (p. 288). If there are 8 coins, there must be 8 leaves on the tree. The minimum depth for a tree with 8 leaves is 2. The tree in the last post has a depth of 2, and therefore must be an optimal tree (among others).</p>
+
+<p>The takeaway points here are:</p>
+
+<ol>
+<li>The ternary and binary searches take a fixed number of steps (for a balanced tree where n is a power of 2 or 3)</li>
+<li>The number of steps for n coins is proportional to logb(n).</li>
+<li>The ternary and binary searches scale much better than the simple algorithm. See the table below:</li>
+</ol>
+
+
+<table>
+<tr><td>n</td><td>Simple Algorithm</td><td>Binary</td><td>Ternary</td></tr>
+<tr><td>8</td><td>2.5</td><td>3</td><td>2</td></tr>
+<tr><td>128</td><td>32.5</td><td>7</td><td>5</td></tr>
+<tr><td>1024</td><td>256.5</td><td>10</td><td>7</td></tr>
+<tr><td>1,048,576</td><td>262,144.5</td><td>20</td><td>13</td></tr>
+</table>
+
+
+<p>As Jon Bentley points out in <a href="http://www.amazon.com/Programming-Pearls-2nd-Jon-Bentley/dp/0201657880">Programming Pearls</a> [Amazon.com], because the ternary search scales so much better, there&#8217;s some sufficiently large value of n, at which a pocket calculator running the ternary search will outpace a supercomputer running the simple algorithm.</p>
+<p><a rel="bookmark" href="http://blog.usrsb.in/blog/2011/08/18/search-algorithms-finding-a-bad-coin-part-ii/">&infin; Permalink</a></p>]]></content>
+    </entry>
+  
+    <entry>
+      
+
+
+
+
+<title type="html"><![CDATA[A Search Algorithm Puzzle: Finding a Bad Coin]]></title>
+<link href="http://blog.usrsb.in/blog/2011/08/17/a-search-algorithm-puzzle-finding-a-bad-coin/"/>
+<updated>2011-08-17T13:30:00-06:00</updated>
+<id>http://blog.usrsb.in/blog/2011/08/17/a-search-algorithm-puzzle-finding-a-bad-coin</id>
+
+      <content type="html"><![CDATA[<p>Today I have a puzzle for you from James Hein&#8217;s textbook, <a href="http://www.amazon.com/Discrete-Structures-Logic-Computability-James/dp/0763772062">Discrete Structures, Logic, and Computability</a>. It&#8217;s a question about finding a &#8220;bad coin&#8221; and goes as follows:</p>
+
+<blockquote><p>Suppose we are asked to use a pan balance to find the heavy coin among eight coins with the assumption that they all look alike and the other seven all have the same weight. (p. 287)
+So, the problem is that we have 8 coins, and one of them is a bad coin that weighs more than the others. With only a pan balance, what&#8217;s the most efficient way to find the bad coin?</p></blockquote>
+
+<p>The simplest solution is to just weigh the coins in pairs. Grab a pair of coins and put one coin on each side of the balance. If one is heavier, you&#8217;ve found the bad coin and you can stop. If they weigh the same, move on to the next pair. At most, this will take 4 trials, but is this optimal? No. As James Hein points out, we can do better.</p>
+
+<p>The better solution is to put 4 of the coins on one side of the balance, and the other 4 coins on the other side of the balance. One side must be heavier than the other, because one side must contain the heavier coin. If the left side is heavier, then we discard the lighter coins on the right side. We then split the remaining coins into 2 groups of 2, and repeat the procedure by weighing one group against the other. The heavier of the two pairs then gets split and weighed. The coin that is heavier is the bad coin. This is a sure way to find the bad coin in 3 steps.</p>
+
+<p>Programmers will recognize this algorithm as a binary search, which can be represented by the following decision tree from page 287 of Hein&#8217;s book:</p>
+
+<p><img src="http://media.usrsb.in/bad-coin/dectree.png" alt="Binary Search Tree" /></p>
+
+<p>First we weigh 1 through 4 against 5 through 8. If 1 through 4 is heavier, then we weigh 1 and 2 against 3 and 4 and so on until we reach the bottom of the tree. It&#8217;s a neat solution that has lots of uses. The obvious application for this is searching through lots of data, but an especially cool use is the <a href="https://secure.wikimedia.org/wikipedia/en/wiki/Huffman_coding">Huffman coding algorithm</a>. A variation on Huffman coding is how zip archives are compressed.</p>
+
+<p>But wait a minute. We can do one better by allowing some decision points (nodes) on the tree to have three connections rather than two, making it a ternary tree. See the revised, and optimal, decision tree below (Hein, p. 288):</p>
+
+<p><img src="http://media.usrsb.in/bad-coin/ternary.png" alt="Optimal Decision Tree" /></p>
+
+<p>For this revised procedure, we begin by weighing 1 through 3 and 4 through 6. If those groups have equal weight, then we go down the middle branch and see that the bad coin must be 7 or 8. We follow a similar procedure if, after the first weighing, 1 through 3 is heavier. We go down the left branch and test 1 and 2. If those weigh the same, then the bad coin must be coin 3. Pretty clever.</p>
+
+<p>Next post I&#8217;ll attempt some mathematical analysis on the algorithms, and see what we can say about how many steps it takes to sort through n coins. In the meantime, check out this <a href="https://secure.wikimedia.org/wikipedia/en/wiki/Binary_search_algorithm#Computer_use">interesting tidbit from Wikipedia&#8217;s Binary Search article</a>. Despite its ubiquity and seeming simplicity, it&#8217;s apparently quite difficult to implement!</p>
+<p><a rel="bookmark" href="http://blog.usrsb.in/blog/2011/08/17/a-search-algorithm-puzzle-finding-a-bad-coin/">&infin; Permalink</a></p>]]></content>
+    </entry>
+  
+    <entry>
+      
+
+
+
+
+<title type="html"><![CDATA[A Database Engine in 16 Lines]]></title>
+<link href="http://blog.usrsb.in/blog/2011/08/15/a-database-engine-in-16-lines/"/>
+<updated>2011-08-15T13:36:00-06:00</updated>
+<id>http://blog.usrsb.in/blog/2011/08/15/a-database-engine-in-16-lines</id>
+
+      <content type="html"><![CDATA[<p>Recently I&#8217;ve been playing around with a neat command line utility called netcat. It makes it incredibly easy to add networking functionality to your scripts. What it does is allow you to open a port on your machine and listen for incoming connections. Should a connection occur, anything the remote machine sends is dumped to stdout, and anything written to stdin is sent out to the remote machine. As a demo, I decided to write a database engine with it, and I managed to do it in 16 lines.</p>
+
+<pre><code>#!/bin/bash
+
+PORT=1234
+DATA_FILE="/full/path/to/data"
+
+listen () {
+    TIMEOUT=10
+    echo "$2" | nc -l -p $1 -w $TIMEOUT -q 0 
+}
+
+while :; do
+    ANSWER_PORT=$((RANDOM % 1000 + 1028))
+    QUERY="$(echo $ANSWER_PORT | nc -l -p $PORT -q 2)"
+    ANSWER="$(grep "^$QUERY," "$DATA_FILE" | sed "s/ $QUERY, //")"
+    listen "$ANSWER_PORT" "$ANSWER" &amp;
+done
+</code></pre>
+
+<p>The database itself is simply a text file full of key-value pairs. So, a remote machine can send over a key, and the database responds with that key&#8217;s corresponding value. If, for example, the database was full of names (keys) and phone numbers (values), a remote machine could send over someone&#8217;s name, and the database would respond with that person&#8217;s phone number. Not bad for 16 lines.</p>
+
+<p>Before I step through the code, I&#8217;ll explain its overall functionality. When first executed, the script opens up port 1234 and listens. When a remote machine wants to query it, the remote machine connects to port 1234 and sends over its query (a key). The script receives this and, over the same connection, sends back a random number between 1028 and 2028. Suppose the random number is 1050. The database will then open up port 1050, and when the remote machine connect to that port, the database will send its answer over that connection (the value corresponding to the key), and the transaction is finished. Let&#8217;s look at the code now.</p>
+
+<h2>Analysis</h2>
+
+<p>The script starts off with two variables. The first is the port that the script listens on for incoming queries. The second points to the text file containing the key-value pairs. The file would look something like this:</p>
+
+<pre><code>alex beal, 555-555-5555
+bob, 111-111-1111
+joe, 222-222-2222
+</code></pre>
+
+<p>Where, &#8220;alex beal&#8221;, &#8220;bob&#8221;, and &#8220;joe&#8221; are the keys, and the values corresponding to those keys are listed after the comma. Let&#8217;s skip over the listen function for now and examine the while loop below it.</p>
+
+<pre><code>while :; do
+    ANSWER_PORT=$((RANDOM % 1000 + 1028))
+    QUERY="$(echo $ANSWER_PORT | nc -l -p $PORT -q 2)"
+    ANSWER="$(grep "^$QUERY," "$DATA_FILE" | sed "s/^$QUERY, //")" 
+    listen "$ANSWER_PORT" "$ANSWER" &amp;
+done
+</code></pre>
+
+<p>The first line is a while loop that continues forever until the script receives an interrupt. The second two lines get a random number between 1028 and 2028 and store it to <code>$ANSWER_PORT</code>. That value is piped into the netcat instance on the third line, which listens for connections (<code>-l</code>) on port 1234 (<code>-p $PORT</code>). Once a connection is established, and the random port number is sent, the remote host has 2 seconds to send over a query (<code>-q 2</code>), which gets stored to <code>$QUERY</code>. This means that after the first two lines have executed, the query is received, and the random answer port is sent.</p>
+
+<p>The next lines search through the database file for the key-value pair. Searching the database is as simple as <code>grep</code>-ing the data file for the line beginning with the key, and stripping that key from the output with sed.</p>
+
+<p>Finally we call the <code>listen</code> function defined above. This is passed the port that the client must connect to to receive the answer (<code>$ANSWER_PORT</code>), and the answer itself (<code>$ANSWER</code>).</p>
+
+<pre><code>listen () {
+    TIMEOUT=10
+    echo "$2" | nc -l -p $1 -w $TIMEOUT -q 0 
+}
+</code></pre>
+
+<p>The answer, which is the second argument (<code>$2</code>), is piped into netcat (<code>nc</code>). The flags tell it to listen (<code>-l</code>) on the port passed to it as the first argument (<code>-p $1</code>). The netcat instance will stop listening after <code>$TIMEOUT</code> seconds, and after the answer is sent, it will close immediately (<code>-q 0</code>). As you can see, the listen function is called as a background process, so the loop can continue back to the top, allowing other requests to be handled while the answer is sent to the client in the background.</p>
+
+<h2>The Client&#8217;s Script</h2>
+
+<p>You can query it remotely with this script:</p>
+
+<pre><code>#!/bin/bash
+ANSWERPORT=$(echo "$2" | nc $1 1234)
+sleep 1s
+nc $1 $ANSWERPORT
+</code></pre>
+
+<p>The first line both receives the answer port, and sends over the query. The script then sleeps for 1 second, while the database handles the request. Finally, it connects a second time to retrieve its answer. The script is used as follows:</p>
+
+<pre><code>query.sh REMOTE_IP QUERY_STRING
+</code></pre>
+
+<h2>Conclusion</h2>
+
+<p>Although this was a fun exercise, the script itself isn&#8217;t very practical. It&#8217;s slow (at least compared to MySQL), and probably insecure, but there might be a use for it on a private network with trusted users. The take away points here are the different netcat constructs that you could apply to your own programs, such as sending and receiving at the same time, and setting up a client-server model. Definitely let me know in the comments if you end up making something cool!</p>
+
+<p><a href="http://media.usrsb.in/db/db-scripts.zip">Download the scripts.</a></p>
+<p><a rel="bookmark" href="http://blog.usrsb.in/blog/2011/08/15/a-database-engine-in-16-lines/">&infin; Permalink</a></p>]]></content>
+    </entry>
+  
+    <entry>
+      
+
+
+
+
+<title type="html"><![CDATA[Secure Versioned Remote Backups with Rdiff-Backup]]></title>
+<link href="http://blog.usrsb.in/blog/2011/08/13/secure-versioned-remote-backups-with-rdiff-backup/"/>
+<updated>2011-08-13T14:31:00-06:00</updated>
+<id>http://blog.usrsb.in/blog/2011/08/13/secure-versioned-remote-backups-with-rdiff-backup</id>
+
+      <content type="html"><![CDATA[<p>When putting together a backup solution for this web server, I was looking for a few things:</p>
+
+<ol>
+<li><strong>Simplicity:</strong> The less new software, the better. Rsync is both powerful and complex, and I wanted to avoid it. Other things being equal, simple solutions are also more reliable.</li>
+<li><strong>Security:</strong> I needed to prevent an attacker who gained access to my web server from also gaining access to my backup server. Backing up over an encrypted connection was also a necessity.</li>
+<li><strong>Versioning:</strong> I needed my solution to keep several versions of all my files. A solution that only keeps the most recent version of a file is useless, if that version turns out to be corrupted.</li>
+<li><strong>Incrementing:</strong> An efficient backup solution should only update the files that have changed. This ruled out simply tar-ing and ssh-ing my entire webroot over to my backup server.</li>
+<li><strong>Automation:</strong> This solution should automatically run as a cron job.</li>
+</ol>
+
+
+<p>As you can see, some of these goals conflict. Wanting versioned incremental backups, while also ruling out rsync just made my life harder. Automation and security also butt heads. If my web server can access my backup server without a password, how can I prevent an attacker who&#8217;s taken over my web server from trashing my backups? As I&#8217;ll show, I managed to piece this together with only one new software package: rdiff-backup. This took care of versioning and incrementing in a simpler way than rsync would have. The rest was achieved with tools installed on every web server: ssh and cron.</p>
+
+<h2>Backing up with rdiff-backup</h2>
+
+<p>Let&#8217;s start with rdiff-backup. This is dead simple. On Ubuntu, installing is only an apt-get away. This needs to be done on the web server and backup server:</p>
+
+<pre><code>sudo apt-get install rdiff-backup
+</code></pre>
+
+<p>Backing up to a remote directory over ssh isn&#8217;t much harder:</p>
+
+<pre><code>rdiff-backup /var/www backups@example.com::/var/backups
+</code></pre>
+
+<p>That will backup the local directory <code>/var/www</code> to <code>/var/backups</code> on <code>example.com</code> using the ssh user <code>backups</code>. It&#8217;s that simple. rdiff-backup handles the versioning and incrementing automatically. Also, since it&#8217;s done over ssh, everything is encrypted.
+Restoring is just as easy:</p>
+
+<pre><code>rdiff-backup -r 3D backups@example.com::/var/backups/www /var/www.old
+</code></pre>
+
+<p>That will copy whatever you backed up to <code>/var/backups/www</code> three days prior to <code>/var/www.old</code> on the local machine. Hopefully by now you see why I love this utility. It&#8217;s basically rsync, but stripped down and rebuilt specifically for backups. Best of all, there are no config files or servers to maintain.</p>
+
+<h2>Automation with cron</h2>
+
+<p>So, those are the basics of rdiff-backup. How do we automate this? Here&#8217;s the backup script that I use on this web server:</p>
+
+<pre><code>#!/bin/bash
+
+RDIFF="/usr/bin/rdiff-backup"
+REMOTE="backups@example.com::/home/backups/newest/"
+CONF="/etc/backups"
+
+cat $CONF | while read DIR; do
+        $RDIFF $DIR $REMOTE$(basename $DIR)
+        if [ $? != 0 ]; then
+                echo "Exited with errors. Backup process stopped at $DIR"
+                exit 1;
+        fi
+done
+</code></pre>
+
+<p>What this does is read the paths I&#8217;ve listed in the text file <code>/etc/backups</code>, and backs those up to <code>/home/backups/newest</code> on the machine <code>example.com</code> with the user <code>backups</code>. So if <code>/etc/backups</code> looks like this:</p>
+
+<pre><code>/etc/
+/home/alex/
+/var/www/
+</code></pre>
+
+<p>Then all those directories get backed up to the remote machine. The first time it&#8217;s run, it simply mirrors the directories to the remote machine. Each consecutive execution only copies the changed files over. Versioning is, of course, handled automatically by rdiff-backup.</p>
+
+<p>I wrote the script to be easily customizable. Change <code>$REMOTE</code> to modify which machine, user, and directory the files are backed up to. Change <code>$CONF</code> to modify which file contains all the paths to be backed up. <code>$RDIFF</code> simply points to wherever the rdiff-backup binary is (well, python script, actually). As it&#8217;s currently set, <code>$RDIFF</code> should work on Ubuntu 10.04 machines.</p>
+
+<p>To automate this, simply set it as a cron job on the web server, and run it hourly or daily. Make sure the user running the job has high enough privileges to access the files you want to back up (unless you want to set up some complex permissions, simply running this as root is an unfortunate necessity).</p>
+
+<p>Finally, on the remote machine, you may want some sort of script that manages the backup directory. One idea would be to have the backup directory tar-ed and compressed, then saved somewhere safe. Once that&#8217;s done, the directory could be cleared out, so the next time the backup script runs, a fresh copy of all the files would be copied over. Set this to run once a week and you&#8217;ll have weekly full backups, with nightly (or hourly) incremental backups. The following script will do that for you:</p>
+
+<pre><code>#!/bin/bash
+
+NEW="/home/backups/newest"
+OLD="/home/backups/archive"
+
+# Tar and compress the old files
+(
+    cd `dirname $NEW`
+    tar -zcf "$OLD/`date "+%F-%H%M"`.tar.gz" "`basename "$NEW"`"
+)
+
+# Clear out the backup directory
+if [ $? == 0 ]; then
+    rm -rf "$NEW"
+    mkdir "$NEW"
+else
+    echo "Exited with errors. Nothing was deleted, but the files may not have been rotated."
+    exit 1
+fi
+</code></pre>
+
+<p><code>$NEW</code> is the location of your newest backups. <code>$OLD</code> is where you want the tar-ed and compressed copies stored.</p>
+
+<h2>Security with ssh</h2>
+
+<p>We&#8217;re almost there. Rdiff-backup is installed, and the scripts are automatically backing up and rotating our backup files. The only problem is that every time the script connects to the backup server, it&#8217;s asked for a password (the remote user&#8217;s ssh password). We can&#8217;t be there to type it in, so how do we deal with this? The solution is to create a public/private key pair that the script can log in with. There are lots of places on the web that have detailed instructions on how to do this, but I&#8217;ll run through it quickly.</p>
+
+<p>First we decide which user is running the backup script on our web server. If it&#8217;s root, then we log in as root and run <code>ssh-keygen</code>. When prompted for a password, leave it blank. After this is done, we need to copy the public key located under <code>/root/.ssh/id_rsa.pub</code> to the remote machine. If we&#8217;re logging in as backups on the remote machine, then we copy the public key into the <code>/home/backups/.ssh</code> directory (create the <code>.ssh</code> directory if it doesn&#8217;t already exist) and rename the file <code>authorized_keys</code>. Now when root connects over ssh to the backup server, he won&#8217;t be prompted for a password, and neither will the backup script being run as a root cron job. Ahhh the magic of public key cryptography.</p>
+
+<p>The obvious problem here is that if an attacker gets root on the web server, he has access to the backup server. Lucky for us, ssh has a built in way of restricting a remote user to only one command. We do this by prefixing the public key with <code>command="RESTRICTED_COMMAND"</code>. So, for example, we can restrict a remote user to rdiff-backup by modifying the <code>authorized_keys</code> file to look something like this:</p>
+
+<pre><code>command="rdiff-backup --server --restrict-update-only /home/backups/newest/" ssh-rsa AAB3NzaC1 [...]
+</code></pre>
+
+<p>That allows a remote user to only execute rdiff-backup in server mode. But notice the second flag <code>--restrict-update-only</code>. That restricts the user to the backup directory, and only allows her to update the backups, and not delete or otherwise trash them. Pretty cool. The worst an attacker could do is fill the backup server&#8217;s hard drive by pushing a huge amount of data to it, but since rdiff-backup is versioned, no old versions of the files will be lost.</p>
+
+<p>Also, there are additional options you can prefix to the public key to lock down the server even more. Check out the <code>ssh-keygen</code> man pages, and look under the <code>-O</code> flag.</p>
+
+<h2>Conclusion</h2>
+
+<p>So, that&#8217;s my custom built backup solution. I realize I glazed over a lot of small details, and this isn&#8217;t really a step by step how-to (e.g., I never explained how to set up a cron job). I leave it as an exercise to the reader to put it all together. To help you, I&#8217;ve included the scripts at the bottom of this post. I also check the comments obsessively, so please don&#8217;t hesitate to ask if you have any questions.</p>
+
+<p><a href="http://media.usrsb.in/rdiff-backup/backup.zip">Download the scripts.</a></p>
+<p><a rel="bookmark" href="http://blog.usrsb.in/blog/2011/08/13/secure-versioned-remote-backups-with-rdiff-backup/">&infin; Permalink</a></p>]]></content>
+    </entry>
+  
+    <entry>
+      
+
+
+
+
+<title type="html"><![CDATA[The Surface Area of a Sphere Between Parallel Planes]]></title>
+<link href="http://blog.usrsb.in/blog/2011/08/11/the-surface-area-of-a-sphere-between-parallel-planes/"/>
+<updated>2011-08-11T15:49:00-06:00</updated>
+<id>http://blog.usrsb.in/blog/2011/08/11/the-surface-area-of-a-sphere-between-parallel-planes</id>
+
+      <content type="html"><![CDATA[<p>Here&#8217;s a math problem that surprised me: Imagine a sphere of diameter <em>d</em> intersected by two parallel planes a distance <em>h</em> apart. What do you think the surface area of the section of the sphere between the planes is? You&#8217;re first thought might be that there&#8217;s not enough information. The area will depend upon what part of the sphere the planes intersect. If the planes cut out the middle third of the sphere, that will be a different surface area compared to if the planes cut out the left third or the right third.</p>
+
+<p>That was my first thought, at least, and, as it turns out, it&#8217;s wrong. <strong>The area only depends on the distance between the planes, and the diameter of the sphere. It doesn&#8217;t matter where these planes are in relation to the sphere.</strong> As long as they both intersect the sphere, the surface area will equal <em>πdh</em>, where d is the diameter and <em>h</em> is the distance between the planes. Don&#8217;t believe me? Here&#8217;s the math to prove it:</p>
+
+<p>First we begin with the formula for the surface area of a function rotated around the x axis from <em>a</em> to <em>b</em>. If you want an explanation of this equation, the section of my textbook that covers this is actually <a href="http://www.stewartcalculus.com/data/ESSENTIAL%20CALCULUS/upfiles/topics/ess_at_06_asr_stu.pdf">posted online [PDF]</a> by the publishers (also note that this is problem 32 from that chapter).</p>
+
+<p><img src="http://media.usrsb.in/sa-sphere/1.png" alt="Suface Area Formula" /></p>
+
+<p>Since we are finding the surface area of a sphere, we need the function for a circle, which we will rotate around the x axis, thus producing our sphere. If we can remember back to high school geometry, we&#8217;ll know that the equation for a sphere is <em>x2+y2=r2</em>. We now solve for <em>y</em>, and plug it in for <em>f(x)</em>, and also find the derivative of <em>f(x)</em> and plug it in for <em>f&#8217;(x)</em>:</p>
+
+<p><img src="http://media.usrsb.in/sa-sphere/2.png" alt="title" /></p>
+
+<p>We now simplify the integral:</p>
+
+<p><img src="http://media.usrsb.in/sa-sphere/3.png" alt="title" /></p>
+
+<p><em>f(x)</em> is moved into the square root:</p>
+
+<p><img src="http://media.usrsb.in/sa-sphere/4.png" alt="title" /></p>
+
+<p>We distribute:</p>
+
+<p><img src="http://media.usrsb.in/sa-sphere/5.png" alt="title" /></p>
+
+<p>More simplification:</p>
+
+<p><img src="http://media.usrsb.in/sa-sphere/6.png" alt="title" /></p>
+
+<p><img src="http://media.usrsb.in/sa-sphere/7.png" alt="title" /></p>
+
+<p>We now integrate:</p>
+
+<p><img src="http://media.usrsb.in/sa-sphere/8.png" alt="title" /></p>
+
+<p><img src="http://media.usrsb.in/sa-sphere/9.png" alt="title" /></p>
+
+<p><img src="http://media.usrsb.in/sa-sphere/10.png" alt="title" /></p>
+
+<p><em>b-a</em> is simply the distance between the two planes, which we call <em>h</em>:</p>
+
+<p><img src="http://media.usrsb.in/sa-sphere/11.png" alt="title" /></p>
+
+<p>2r is the diameter of the sphere, which we call d:</p>
+
+<p><img src="http://media.usrsb.in/sa-sphere/12.png" alt="title" /></p>
+
+<p>There you have it. The surface area of a sphere between two parallel planes is equal to <em>πdh</em>. It doesn&#8217;t matter where these planes are in relation to the sphere. All that matters is that both planes intersect the sphere. Cool, huh? No? Ok, fine. Well, I thought it was interesting.</p>
+<p><a rel="bookmark" href="http://blog.usrsb.in/blog/2011/08/11/the-surface-area-of-a-sphere-between-parallel-planes/">&infin; Permalink</a></p>]]></content>
+    </entry>
+  
+    <entry>
+      
+
+
+
+
+<title type="html"><![CDATA[Copying Strings in One Line (C Programming)]]></title>
+<link href="http://blog.usrsb.in/blog/2011/08/06/copying-strings-in-one-line-c-programming/"/>
+<updated>2011-08-06T16:01:00-06:00</updated>
+<id>http://blog.usrsb.in/blog/2011/08/06/copying-strings-in-one-line-c-programming</id>
+
+      <content type="html"><![CDATA[<p>Here&#8217;s a quickie for your Saturday afternoon:</p>
+
+<pre><code>strcpy(s, t)    /* copy t to s; pointer version 3 */
+char *s, *t;
+{
+    while(*s++ = *t++)
+        ;
+}
+</code></pre>
+
+<p>That&#8217;s a classic one from the <a href="http://en.wikipedia.org/wiki/The_c_programming_language">K&amp;R text</a> (page 101). You can tell how old it is by the style of the function declaration. There&#8217;s no return type (so it defaults to <code>int</code>, even though nothing is actually returned), and the types of the arguments are declared on a separate line. Although it&#8217;s far from obvious, what the function does is copy the string <code>t</code> to the string <code>s</code>.</p>
+
+<p>Anyway, as you can see, order of operations is key. Dereferencing precedes assignment, assignment precedes evaluation, and evaluation precedes increment. Here&#8217;s what happens:</p>
+
+<ol>
+<li>The current position of <code>s</code> and <code>t</code> are dereferenced, and the character at that position is fetched.</li>
+<li>That character is copied from <code>t</code> to <code>s</code></li>
+<li>The character just copied gets evaluated. The loop terminates if it&#8217;s the null character, &#8216;\0&#8217;.</li>
+<li>The pointers are incremented to the next character in the string.</li>
+<li>The loop repeats, copying the consecutive characters, including the null character.</li>
+</ol>
+
+
+<p>It&#8217;s definitely a cool academic exercise, but it&#8217;s so obfuscated, that even the order of operations table in the K&amp;R book is of no help. It lists <code>++</code> and <code>*</code> as having the same precedence. To see what&#8217;s going on here, we need to go to the C99 spec:</p>
+
+<blockquote><p>The result of the postfix <code>++</code> operator is the value of the operand. After the result is obtained, the value of the operand is incremented. (page 75)</p></blockquote>
+
+<p>It&#8217;s definitely a bit of black magic. Use this code wisely.</p>
+<p><a rel="bookmark" href="http://blog.usrsb.in/blog/2011/08/06/copying-strings-in-one-line-c-programming/">&infin; Permalink</a></p>]]></content>
+    </entry>
+  
+    <entry>
+      
+
+
+
+
+<title type="html"><![CDATA[1 Minus 1 Equals What? (Fun with sums and limits)]]></title>
+<link href="http://blog.usrsb.in/blog/2011/08/05/1-minus-1-equals-what-fun-with-sums-and-limits/"/>
+<updated>2011-08-05T16:10:00-06:00</updated>
+<id>http://blog.usrsb.in/blog/2011/08/05/1-minus-1-equals-what-fun-with-sums-and-limits</id>
+
+      <content type="html"><![CDATA[<p>Here&#8217;s a cool problem I came across when reviewing for one of my calculus exams:</p>
+
+<p><img src="http://media.usrsb.in/sum-paradox/question.png" alt="The Question" /></p>
+
+<p>You begin with the numbers 0 through 1. Every iteration removes 1/3 from the remaining segments. As stated above, the expression for the total amount removed after m iterations is:</p>
+
+<p><img src="http://media.usrsb.in/sum-paradox/sum.png" alt="title" /></p>
+
+<p>The first iteration removes 1/3. The second removes 1/3 from the remaining two segments. The remaining segments are 1/3 long, and 1/3 of that is 1/9. We do that once for each remaining segment, so 2/9 is removed. And so on.</p>
+
+<p><img src="http://media.usrsb.in/sum-paradox/sum2.png" alt="title" /></p>
+
+<p>What if we iterate an infinite number of times? Then we have a convergent geometric series. Finding the sum is easy:</p>
+
+<p><img src="http://media.usrsb.in/sum-paradox/sol.png" alt="title" /></p>
+
+<p>So, what&#8217;s the total amount or length of numbers removed? 1. That&#8217;s the entire length. It seems like we&#8217;ve removed the entire segment. But wait a minute. If we look at the image of the original question above, we see that after every iteration, there are 2<sup>n+1</sup> segments remaining. When n=0, there are 2 segments. When n=1, there are 4 segments, etc. As we remove more and more, 2<sup>n+1</sup> approaches infinity. In other words, the limit does not exist, and the number of segments goes to infinity.</p>
+
+<p><img src="http://media.usrsb.in/sum-paradox/limit-dne.png" alt="title" /></p>
+
+<p><strong>So, even though we&#8217;ve seemingly removed the entire length, there are an infinite number of segments remaining.</strong> That&#8217;s weird.</p>
+
+<p>Hopefully by now I have you a bit puzzled. This is the point in the post where I&#8217;m supposed to resolve the paradox. I have bad news, though: I don&#8217;t have much for you. I&#8217;m definitely not a mathematician (I just play one on the internets), but if I had to speculate, I&#8217;d say there are two things going on here:</p>
+
+<ol>
+<li>Limits!</li>
+<li>We&#8217;re taking the math too literally.</li>
+</ol>
+
+
+<p>What I mean by that is, (1) as we&#8217;ve learned from limits, an infinite number of really small things (in this case, segments) can add to a finite number. This doesn&#8217;t quite resolve the paradox though. Usually an infinite number of small things adds to something greater than 0. Here it looks like all the segments add to nothing. There are an infinite number of segments, but we still have nothing left. Hopefully this is where point (2) saves the day.</p>
+
+<p>We&#8217;re taking the math too literally. When we take this sum to infinity, what we&#8217;re really saying is that as we get closer and closer to infinity, we&#8217;re getting closer and closer to removing a length of 1, <em>but we never actually get there.</em> Similarly, when we take the limit, what we&#8217;re really saying is that as we remove more and more segments, we get closer and closer to having an infinite number of segments left over, <em>but we never actually get there either.</em> <strong>As long as we never actually get to either of these points, we haven&#8217;t contradicted ourselves.</strong> I think. If you have a deeper insight into this, definitely be sure to post it in the comments!</p>
+<p><a rel="bookmark" href="http://blog.usrsb.in/blog/2011/08/05/1-minus-1-equals-what-fun-with-sums-and-limits/">&infin; Permalink</a></p>]]></content>
+    </entry>
+  
+    <entry>
+      
+
+
+
+
+<title type="html"><![CDATA[How Old School C Programmers Process Arguments]]></title>
+<link href="http://blog.usrsb.in/blog/2011/08/04/how-old-school-c-programmers-process-arguments/"/>
+<updated>2011-08-04T16:39:00-06:00</updated>
+<id>http://blog.usrsb.in/blog/2011/08/04/how-old-school-c-programmers-process-arguments</id>
+
+      <content type="html"><![CDATA[<p>Here&#8217;s a bit of code from Kernighan&#8217;s and Ritchie&#8217;s seminal text, <a href="http://www.amazon.com/Programming-Language-2nd-Brian-Kernighan/dp/0131103628">The C Programming Language</a>. I&#8217;m not sure I&#8217;d actually recommend coding this way (as written in the book, the entire program has only one comment), but it&#8217;s so darn clever and concise, I can&#8217;t help but post it. This snippet is part of a larger program called <code>find</code> that searches text for patterns, but the details aren&#8217;t important. I want to focus on the portion below that parses the arguments passed to the program. Don&#8217;t worry about understanding it just yet. I&#8217;ll step through it below:</p>
+
+<pre><code>char *s;
+while (--argc &gt; 0 &amp;&amp; (*++argv)[0] == '-')
+    for(s = argv[0]+1; *s != '\0'; s++)
+        switch(*s) {
+            case 'x':
+                /* Set appropriate flags for 'x' option */
+                break;
+            case 'n':
+                /* Set appropriate flags for 'n' option */
+                break;
+            default:
+                printf("Illegal option %c\n", *s);
+                argc = 0;
+                break;
+        }
+if( argc != 1)
+    printf("Usage: find -x -n pattern\n");
+else
+    /* Main program logic goes here */
+</code></pre>
+
+<p>What&#8217;s so cool about this is its flexibility. Those two nested loops can process all of the following (and more):</p>
+
+<pre><code>find -xn hello
+find -nx hello
+find -x -n hello
+find -n -x hello
+find hello
+find -x hello
+...
+</code></pre>
+
+<p>As you can see, the usage is <code>find [-x] [-n] PATTERN</code>. The nested loops above process the flags, <code>-x</code> and <code>-n</code>, in any order, and either separated or concatenated. Hopefully you&#8217;re as impressed as I was.
+Anyway, let&#8217;s dive into the code and begin by looking at the while statement.</p>
+
+<h2>The while Loop</h2>
+
+<pre><code>while (--argc &gt; 0 &amp;&amp; (*++argv)[0] == '-')
+</code></pre>
+
+<p>What&#8217;s going on here? First, the while loop decrements <code>argc</code> and checks that it&#8217;s greater than 0 (as dictated by convention, <code>argc</code> holds the number of arguments passed to the program). Whenever a flag is processed, <code>argc</code> is decremented, thus making it a running count of how many flags there are left to process. If it&#8217;s 0, then there&#8217;s nothing left to do. Notice that the decrement always occurs before the &#8216;>&#8217; is evaluated. This would be true even if it were postfix (i.e., <code>argc-- &gt; 0</code>).</p>
+
+<p>If argc checks out, then we move on to <code>(*++argv)[0]=='-'</code>. Yikes. That&#8217;s a doozy. First remember that <code>argv</code> is a pointer to the strings that contain the arguments. So, <code>argv</code> points to the string containing the program name and <code>(argv+1)</code> points to the string containing the first argument. That means that <code>(*argv)[0]</code> is the first character of the program name and <code>(*argv)[1]</code> is the first character of the first argument. Putting that together, <code>(*++argv)[0]</code> increments <code>argv</code>, dereferences it to a string, and then gets the first character of that string. In other words, if <code>argv</code> was originally pointing to the string containing the program&#8217;s name, it&#8217;s now pointing to the string containing the first argument, and then grabbing the first character of that string and comparing it to &#8216;-&#8216;. Why&#8217;s it doing that? Because it wants to make sure it&#8217;s looking at a string containing a flag, and flags begin with the &#8216;-&#8217; character.</p>
+
+<p>Extra Credit: How is <code>*++argv[0] == '-'</code> different than <code>(*++argv)[0] == '-'</code>?</p>
+
+<p>By the end of all of this, <code>argc</code> represents the number of arguments remaining and <code>argv</code> is pointing to the string containing the first argument. Wow.</p>
+
+<p>That was a bit of a slog, but we&#8217;re not done yet. Let&#8217;s look at the for loop.</p>
+
+<h2>The for Loop</h2>
+
+<pre><code>char *s;
+for(s = argv[0]+1; *s != '\0'; s++)
+</code></pre>
+
+<p>Oh boy. More pointer arithmetic on arrays of arrays. Well, what&#8217;s going on here? Remember that now <code>argv</code> is pointing to the string containing the first argument. Therefore, <code>argv[0]</code> is the pointer to the first character of that string and <code>argv[0]+1</code> is the pointer to the second character of that string. <code>argv[0]+1</code> is then assigned to <code>s</code>. The result is that, if <code>argv</code> was pointing to &#8220;-xn&#8221;, then s is now pointing to the &#8220;x&#8221; in that string.
+Lucky for us, the last half is much simpler. <code>*s != '\0'</code> checks to make sure that it hasn&#8217;t reached the end of the string yet, and <code>s++</code> increments the pointer (after the loop has finished its first run, of course). If the first run processed the &#8220;x&#8221; in &#8220;-xn&#8221;, then <code>s</code> is incremented and the &#8220;n&#8221; is processed. The third iterations sees the &#8220;\0&#8221; at the end of the string and exits. So, to bring this all together, the for loop traverses concatenated flags (i.e., it moves the pointer from the &#8220;x&#8221; to the &#8220;n&#8221; in &#8220;-xn&#8221;) and the while loop traverses separated flags (i.e., it moves the pointer from the &#8220;-x&#8221; to the &#8220;-n&#8221; in &#8220;-x -n&#8221;).</p>
+
+<h1>The switch Statement</h1>
+
+<pre><code>switch(*s) {
+      case 'x':
+        /* Set appropriate flags for 'x' option */
+        break;
+    case 'n':
+         /* Set appropriate flags for 'n' option */
+        break;
+    default:
+        printf("Illegal option %c\n", *s);
+        argc = 0;
+        break;
+}
+</code></pre>
+
+<p>The switch is simple enough. It tests if <code>*s</code> is equal to one of the flags, and then does the necessary processing for that flag. Most likely it just sets an internal flag, which will be taken into account when the main part of the program runs (this is how it&#8217;s set up in the full program).</p>
+
+<h2>The if Statement</h2>
+
+<pre><code>if( argc != 1)
+    printf("Usage: find -x -n pattern\n");
+else
+    /* Main program logic goes here */
+</code></pre>
+
+<p>The last and final part is the if statement. It prints an error/usage message if <code>argc</code> is not equal to 1. Why? Because there should always be one argument left after the flags are processed (the <code>PATTERN</code> argument). The error will also be printed if the program is given an unrecognized flag and the default case in the switch is executed. If there aren&#8217;t any problems, then it executes the else where the main part of the program is contained.</p>
+
+<p>So there you have it. That&#8217;s how Kernigham and Ritchie did it in 1978. Nowadays they just haul in the software weenies with their fancy objects and methods. Lost is the subtle art of manipulating arrays of pointers to strings of characters. Alas. (Just kidding. After all, I&#8217;m probably one of those software weenies.)</p>
+<p><a rel="bookmark" href="http://blog.usrsb.in/blog/2011/08/04/how-old-school-c-programmers-process-arguments/">&infin; Permalink</a></p>]]></content>
+    </entry>
+  
+    <entry>
+      
+
+
+
+
+<title type="html"><![CDATA[Fibonacci Sequence, Part II]]></title>
+<link href="http://blog.usrsb.in/blog/2011/08/03/fibonacci-sequence-part-ii/"/>
+<updated>2011-08-03T16:49:00-06:00</updated>
+<id>http://blog.usrsb.in/blog/2011/08/03/fibonacci-sequence-part-ii</id>
+
+      <content type="html"><![CDATA[<p>The matrix equation in the last post can actually be whittled down a bit further to produce another equation that, in some ways, is easier to work with. The result is as follows:</p>
+
+<p><img src="http://media.usrsb.in/fib2/fib.png" alt="fib" /></p>
+
+<p>F<sub>k</sub> is, of course, the k<sup>th</sup> Fibonacci number. Now, before I go on, I want to point out that I stumbled upon these two equations and the proofs for these equations in <a href="http://www-math.mit.edu/~gs/">Gilbert Strang&#8217;s</a> excellent <a href="http://www.amazon.com/Linear-Algebra-Applications-Gilbert-Strang/dp/0030105676/ref=sr_1_2?s=books&amp;ie=UTF8&amp;qid=1312385275&amp;sr=1-2">Linear Algebra and Its Applications</a>. All credit goes to him for coming up with this, and I recommend his book for an even more in depth explanation.</p>
+
+<p>Anyway, back to the equation, which I found interesting for a few reasons:</p>
+
+<ol>
+<li>This equation allows you to easily find the kth term using only a pocket calculator. The last equation requires something that can deal with matrices.</li>
+<li>This also makes it easier to use in programming applications. There&#8217;s no need to write functions or import libraries to deal with matrices. It&#8217;s also probably faster than writing some sort of recursive function to compute the kth Fibonacci number.</li>
+<li>As Strang points out, that equation, amazingly, produces an integer, despite all the fractions and square roots.</li>
+<li>We can simplify that equation further for a very good approximation (so good that it&#8217;s not really an approximation).</li>
+</ol>
+
+
+<p>To see how we get that equation from the equation in the last post, let&#8217;s begin with the way Mr. Strang has it written in his book (it&#8217;s the same as mine, but flipped upside down).</p>
+
+<p><img src="http://media.usrsb.in/fib2/fibmat.png" alt="title" /></p>
+
+<p>Where F<sub>0</sub>=0, F<sub>1</sub>=1, F<sub>2</sub>=1, etc. Let&#8217;s now make some substitutions:</p>
+
+<p><img src="http://media.usrsb.in/fib2/subs.png" alt="title" /></p>
+
+<p>We now have:</p>
+
+<p><img src="http://media.usrsb.in/fib2/matform.png" alt="title" /></p>
+
+<p>This hasn&#8217;t changed the content of the equation at all. We&#8217;ve just substituted in new symbols to represent the different terms.</p>
+
+<p>The next step is to diagonalize the matrix A. Remember that diagonalizing A produces A = SΛS<sup>-1</sup> where S contains A&#8217;s eigenvectors and Λ contains A&#8217;s eigenvalues. Substituting A = SΛS<sup>-1</sup> into the previous equation yields:</p>
+
+<p><img src="http://media.usrsb.in/fib2/diag.png" alt="title" /></p>
+
+<p>Notice how everything but the first and last S and S<sup>-1</sup> cancel, giving the final form: SΛ<sup>k</sup>S<sup>-1</sup>u<sub>0</sub>. This is important, because Λ is a diagonal matrix, making Λ<sup>k</sup> very simple:</p>
+
+<p><img src="http://media.usrsb.in/fib2/lampow.png" alt="title" /></p>
+
+<p>λ<sub>1</sub> and λ<sub>2</sub> are, of course, the eigenvalues of A. Let&#8217;s now make one last substitution and put all this diagonalization stuff together. First we define c as</p>
+
+<p><img src="http://media.usrsb.in/fib2/csub.png" alt="title" /></p>
+
+<p>Then we substitute it into the equation:</p>
+
+<p><img src="http://media.usrsb.in/fib2/diag2.png" alt="title" /></p>
+
+<p>That might need some explaining. The first bit is simply the equation with c substituted in. Following that, the first matrix is S, but written to show that it contains x<sub>1</sub> and x<sub>2</sub>, which are the eigenvectors of A placed vertically in the two columns. The middle matrix is Λ<sup>k</sup> and the last is simply the matrix c. Finally, the matrices are multiplied out, yielding the final c<sub>1</sub>λ<sup>k</sup><sub>1</sub>x<sub>1</sub>+c<sub>2</sub>λ<sup>k</sup><sub>2</sub>x<sub>2</sub></p>
+
+<p>The final steps are simply to compute c, and A&#8217;s eigenvalues and eigenvectors. I&#8217;ll spare you the tedious algebra and simply tell you that:</p>
+
+<p><img src="http://media.usrsb.in/fib2/eigenvals.png" alt="title" /></p>
+
+<p><img src="http://media.usrsb.in/fib2/eigenvec.png" alt="title" /></p>
+
+<p>This can be computed the standard way, by solving: det(A-λI)=0.</p>
+
+<p>All the variables are then plugged into the equation for u<sub>k</sub>.</p>
+
+<p><img src="http://media.usrsb.in/fib2/almost-there.png" alt="title" /></p>
+
+<p>We want F<sub>k</sub>, so we multiply, factor, and take the bottom row, giving the equation we want:</p>
+
+<p><img src="http://media.usrsb.in/fib2/approx.png" alt="title" /></p>
+
+<p>That&#8217;s the full equation, but now notice that the second term is always less than 1/2. This mean we can simply drop it, yielding:</p>
+
+<p>In fact, since the second term is always less than 1/2 and the full equation always gives us an integer, we can take this a step further: <strong>Rounding the approximation to the nearest integer will always give you the exact value for F<sub>k</sub>.</strong> Cool.</p>
+<p><a rel="bookmark" href="http://blog.usrsb.in/blog/2011/08/03/fibonacci-sequence-part-ii/">&infin; Permalink</a></p>]]></content>
+    </entry>
+  
+    <entry>
+      
+
+
+
+
+<title type="html"><![CDATA[Using Matrices to Generate the Fibonacci Sequence]]></title>
+<link href="http://blog.usrsb.in/blog/2011/04/10/using-matrices-to-generate-the-fibonacci-sequence/"/>
+<updated>2011-04-10T12:47:00-06:00</updated>
+<id>http://blog.usrsb.in/blog/2011/04/10/using-matrices-to-generate-the-fibonacci-sequence</id>
+
+      <content type="html"><![CDATA[<p>Here&#8217;s a fun little matrix:</p>
+
+<p><img src="http://media.usrsb.in/fib-mat/equation.png" alt="Fib Matrix" /></p>
+
+<p>That generates the a<sub>n</sub> and a<sub>n+1</sub> terms of the Fibonacci sequence.<sup>1</sup> To see why, let&#8217;s look at a recursive definition of the Fibonacci sequence.</p>
+
+<p><img src="http://media.usrsb.in/fib-mat/1.png" alt="Fib Def" /></p>
+
+<p><img src="http://media.usrsb.in/fib-mat/2.png" alt="Fib Def" /></p>
+
+<p>That&#8217;s easy enough to understand. The first and second terms are both 1, and the next term is the sum of the last term plus the current term. To see how this relates to the matrix above, we must turn this into a matrix equation. The trick here is to have a good understanding of matrix multiplication. If you need a refresher, <a href="http://www.mathsisfun.com/algebra/matrix-multiplying.html">here&#8217;s a site</a> with a tutorial. Let&#8217;s look at an example of a 2x2 matrix multiplied by a 2x1 (even if you have a good understanding of matrix multiplication, hang tight, this is going somewhere).</p>
+
+<p><img src="http://media.usrsb.in/fib-mat/3.png" alt="title" /></p>
+
+<p>Now let&#8217;s make some substitutions and multiply it out:</p>
+
+<p><img src="http://media.usrsb.in/fib-mat/7.png" alt="title" /></p>
+
+<p>As you can see, the effect of multiplying the b matrix by the Fibonacci matrix is that it moves the b<sub>1,2</sub> position to the b<sub>1,1</sub> position, and the b<sub>1,2</sub> gets filled with the sum of b<sub>1,1</sub> and b<sub>1,2</sub>. Let&#8217;s now substitute the b&#8217;s for a<sub>n-1</sub> and a<sub>n</sub>:</p>
+
+<p><img src="http://media.usrsb.in/fib-mat/8.png" alt="title" /></p>
+
+<p>Does the resultant matrix look familiar? If you look above, you&#8217;ll see that it&#8217;s the same as our recursive definition of the Fibonacci sequence! The top row is equal to the current number in the sequence (a<sub>n</sub>) and the bottom row is equal to the next number in the sequence (a<sub>n-1</sub> + a<sub>n</sub> = a<sub>n+1</sub>). Continuing to multiply the resultant matrix by the Fibonacci matrix will cause consecutive entries to be produced. Because matrix multiplication is associative, we can move our multiplication to the exponent, and multiply that result by the first two terms in the sequence (0, 1), leading to our initial matrix:</p>
+
+<p><img src="http://media.usrsb.in/fib-mat/equation.png" alt="Fib Matrix" /></p>
+
+<h3>References</h3>
+
+<p>1: Strang, Gilbert. &#8221;<a href="http://www.amazon.com/Linear-Algebra-Applications-Gilbert-Strang/dp/0030105676/ref=sr_1_2?s=books&amp;ie=UTF8&amp;qid=1312385275&amp;sr=1-2">Linear Algebra and Its Applications</a>.&#8221;</p>
+<p><a rel="bookmark" href="http://blog.usrsb.in/blog/2011/04/10/using-matrices-to-generate-the-fibonacci-sequence/">&infin; Permalink</a></p>]]></content>
+    </entry>
+  
+</feed>

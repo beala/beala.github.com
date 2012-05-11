@@ -1,0 +1,438 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: scripting | /usr/sbin/blog]]></title>
+  <link href="http://blog.usrsb.in/" rel="self"/>
+  <link href="http://blog.usrsb.in/"/>
+  <updated>2012-05-11T13:43:47-06:00</updated>
+  <id>http://blog.usrsb.in/</id>
+  <author>
+    <name><![CDATA[Alex Beal]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+    <entry>
+      
+
+
+
+
+<title type="html"><![CDATA[A Database Engine in 16 Lines]]></title>
+<link href="http://blog.usrsb.in/blog/2011/08/15/a-database-engine-in-16-lines/"/>
+<updated>2011-08-15T13:36:00-06:00</updated>
+<id>http://blog.usrsb.in/blog/2011/08/15/a-database-engine-in-16-lines</id>
+
+      <content type="html"><![CDATA[<p>Recently I've been playing around with a neat command line utility called netcat. It makes it incredibly easy to add networking functionality to your scripts. What it does is allow you to open a port on your machine and listen for incoming connections. Should a connection occur, anything the remote machine sends is dumped to stdout, and anything written to stdin is sent out to the remote machine. As a demo, I decided to write a database engine with it, and I managed to do it in 16 lines.</p>
+
+<pre><code>#!/bin/bash
+
+PORT=1234
+DATA_FILE="/full/path/to/data"
+
+listen () {
+    TIMEOUT=10
+    echo "$2" | nc -l -p $1 -w $TIMEOUT -q 0 
+}
+
+while :; do
+    ANSWER_PORT=$((RANDOM % 1000 + 1028))
+    QUERY="$(echo $ANSWER_PORT | nc -l -p $PORT -q 2)"
+    ANSWER="$(grep "^$QUERY," "$DATA_FILE" | sed "s/ $QUERY, //")"
+    listen "$ANSWER_PORT" "$ANSWER" &amp;
+done
+</code></pre>
+
+<p>The database itself is simply a text file full of key-value pairs. So, a remote machine can send over a key, and the database responds with that key's corresponding value. If, for example, the database was full of names (keys) and phone numbers (values), a remote machine could send over someone's name, and the database would respond with that person's phone number. Not bad for 16 lines.</p>
+
+<p>Before I step through the code, I'll explain its overall functionality. When first executed, the script opens up port 1234 and listens. When a remote machine wants to query it, the remote machine connects to port 1234 and sends over its query (a key). The script receives this and, over the same connection, sends back a random number between 1028 and 2028. Suppose the random number is 1050. The database will then open up port 1050, and when the remote machine connect to that port, the database will send its answer over that connection (the value corresponding to the key), and the transaction is finished. Let's look at the code now.</p>
+
+<h2>Analysis</h2>
+
+<p>The script starts off with two variables. The first is the port that the script listens on for incoming queries. The second points to the text file containing the key-value pairs. The file would look something like this:</p>
+
+<pre><code>alex beal, 555-555-5555
+bob, 111-111-1111
+joe, 222-222-2222
+</code></pre>
+
+<p>Where, "alex beal", "bob", and "joe" are the keys, and the values corresponding to those keys are listed after the comma. Let's skip over the listen function for now and examine the while loop below it.</p>
+
+<pre><code>while :; do
+    ANSWER_PORT=$((RANDOM % 1000 + 1028))
+    QUERY="$(echo $ANSWER_PORT | nc -l -p $PORT -q 2)"
+    ANSWER="$(grep "^$QUERY," "$DATA_FILE" | sed "s/^$QUERY, //")" 
+    listen "$ANSWER_PORT" "$ANSWER" &amp;
+done
+</code></pre>
+
+<p>The first line is a while loop that continues forever until the script receives an interrupt. The second two lines get a random number between 1028 and 2028 and store it to <code>$ANSWER_PORT</code>. That value is piped into the netcat instance on the third line, which listens for connections (<code>-l</code>) on port 1234 (<code>-p $PORT</code>). Once a connection is established, and the random port number is sent, the remote host has 2 seconds to send over a query (<code>-q 2</code>), which gets stored to <code>$QUERY</code>. This means that after the first two lines have executed, the query is received, and the random answer port is sent.</p>
+
+<p>The next lines search through the database file for the key-value pair. Searching the database is as simple as <code>grep</code>-ing the data file for the line beginning with the key, and stripping that key from the output with sed.</p>
+
+<p>Finally we call the <code>listen</code> function defined above. This is passed the port that the client must connect to to receive the answer (<code>$ANSWER_PORT</code>), and the answer itself (<code>$ANSWER</code>).</p>
+
+<pre><code>listen () {
+    TIMEOUT=10
+    echo "$2" | nc -l -p $1 -w $TIMEOUT -q 0 
+}
+</code></pre>
+
+<p>The answer, which is the second argument (<code>$2</code>), is piped into netcat (<code>nc</code>). The flags tell it to listen (<code>-l</code>) on the port passed to it as the first argument (<code>-p $1</code>). The netcat instance will stop listening after <code>$TIMEOUT</code> seconds, and after the answer is sent, it will close immediately (<code>-q 0</code>). As you can see, the listen function is called as a background process, so the loop can continue back to the top, allowing other requests to be handled while the answer is sent to the client in the background.</p>
+
+<h2>The Client's Script</h2>
+
+<p>You can query it remotely with this script:</p>
+
+<pre><code>#!/bin/bash
+ANSWERPORT=$(echo "$2" | nc $1 1234)
+sleep 1s
+nc $1 $ANSWERPORT
+</code></pre>
+
+<p>The first line both receives the answer port, and sends over the query. The script then sleeps for 1 second, while the database handles the request. Finally, it connects a second time to retrieve its answer. The script is used as follows:</p>
+
+<pre><code>query.sh REMOTE_IP QUERY_STRING
+</code></pre>
+
+<h2>Conclusion</h2>
+
+<p>Although this was a fun exercise, the script itself isn't very practical. It's slow (at least compared to MySQL), and probably insecure, but there might be a use for it on a private network with trusted users. The take away points here are the different netcat constructs that you could apply to your own programs, such as sending and receiving at the same time, and setting up a client-server model. Definitely let me know in the comments if you end up making something cool!</p>
+
+<p><a href="http://media.usrsb.in/db/db-scripts.zip">Download the scripts.</a></p>
+
+<p><a rel="bookmark" href="http://blog.usrsb.in/blog/2011/08/15/a-database-engine-in-16-lines/">&infin; Permalink</a></p>
+
+]]></content>
+    </entry>
+  
+    <entry>
+      
+
+
+
+
+<title type="html"><![CDATA[Secure Versioned Remote Backups with Rdiff-Backup]]></title>
+<link href="http://blog.usrsb.in/blog/2011/08/13/secure-versioned-remote-backups-with-rdiff-backup/"/>
+<updated>2011-08-13T14:31:00-06:00</updated>
+<id>http://blog.usrsb.in/blog/2011/08/13/secure-versioned-remote-backups-with-rdiff-backup</id>
+
+      <content type="html"><![CDATA[<p>When putting together a backup solution for this web server, I was looking for a few things:</p>
+
+<ol>
+<li><strong>Simplicity:</strong> The less new software, the better. Rsync is both powerful and complex, and I wanted to avoid it. Other things being equal, simple solutions are also more reliable.</li>
+<li><strong>Security:</strong> I needed to prevent an attacker who gained access to my web server from also gaining access to my backup server. Backing up over an encrypted connection was also a necessity.</li>
+<li><strong>Versioning:</strong> I needed my solution to keep several versions of all my files. A solution that only keeps the most recent version of a file is useless, if that version turns out to be corrupted.</li>
+<li><strong>Incrementing:</strong> An efficient backup solution should only update the files that have changed. This ruled out simply tar-ing and ssh-ing my entire webroot over to my backup server.</li>
+<li><strong>Automation:</strong> This solution should automatically run as a cron job.</li>
+</ol>
+
+
+<p>As you can see, some of these goals conflict. Wanting versioned incremental backups, while also ruling out rsync just made my life harder. Automation and security also butt heads. If my web server can access my backup server without a password, how can I prevent an attacker who's taken over my web server from trashing my backups? As I'll show, I managed to piece this together with only one new software package: rdiff-backup. This took care of versioning and incrementing in a simpler way than rsync would have. The rest was achieved with tools installed on every web server: ssh and cron.</p>
+
+<h2>Backing up with rdiff-backup</h2>
+
+<p>Let's start with rdiff-backup. This is dead simple. On Ubuntu, installing is only an apt-get away. This needs to be done on the web server and backup server:</p>
+
+<pre><code>sudo apt-get install rdiff-backup
+</code></pre>
+
+<p>Backing up to a remote directory over ssh isn't much harder:</p>
+
+<pre><code>rdiff-backup /var/www backups@example.com::/var/backups
+</code></pre>
+
+<p>That will backup the local directory <code>/var/www</code> to <code>/var/backups</code> on <code>example.com</code> using the ssh user <code>backups</code>. It's that simple. rdiff-backup handles the versioning and incrementing automatically. Also, since it's done over ssh, everything is encrypted.
+Restoring is just as easy:</p>
+
+<pre><code>rdiff-backup -r 3D backups@example.com::/var/backups/www /var/www.old
+</code></pre>
+
+<p>That will copy whatever you backed up to <code>/var/backups/www</code> three days prior to <code>/var/www.old</code> on the local machine. Hopefully by now you see why I love this utility. It's basically rsync, but stripped down and rebuilt specifically for backups. Best of all, there are no config files or servers to maintain.</p>
+
+<h2>Automation with cron</h2>
+
+<p>So, those are the basics of rdiff-backup. How do we automate this? Here's the backup script that I use on this web server:</p>
+
+<pre><code>#!/bin/bash
+
+RDIFF="/usr/bin/rdiff-backup"
+REMOTE="backups@example.com::/home/backups/newest/"
+CONF="/etc/backups"
+
+cat $CONF | while read DIR; do
+        $RDIFF $DIR $REMOTE$(basename $DIR)
+        if [ $? != 0 ]; then
+                echo "Exited with errors. Backup process stopped at $DIR"
+                exit 1;
+        fi
+done
+</code></pre>
+
+<p>What this does is read the paths I've listed in the text file <code>/etc/backups</code>, and backs those up to <code>/home/backups/newest</code> on the machine <code>example.com</code> with the user <code>backups</code>. So if <code>/etc/backups</code> looks like this:</p>
+
+<pre><code>/etc/
+/home/alex/
+/var/www/
+</code></pre>
+
+<p>Then all those directories get backed up to the remote machine. The first time it's run, it simply mirrors the directories to the remote machine. Each consecutive execution only copies the changed files over. Versioning is, of course, handled automatically by rdiff-backup.</p>
+
+<p>I wrote the script to be easily customizable. Change <code>$REMOTE</code> to modify which machine, user, and directory the files are backed up to. Change <code>$CONF</code> to modify which file contains all the paths to be backed up. <code>$RDIFF</code> simply points to wherever the rdiff-backup binary is (well, python script, actually). As it's currently set, <code>$RDIFF</code> should work on Ubuntu 10.04 machines.</p>
+
+<p>To automate this, simply set it as a cron job on the web server, and run it hourly or daily. Make sure the user running the job has high enough privileges to access the files you want to back up (unless you want to set up some complex permissions, simply running this as root is an unfortunate necessity).</p>
+
+<p>Finally, on the remote machine, you may want some sort of script that manages the backup directory. One idea would be to have the backup directory tar-ed and compressed, then saved somewhere safe. Once that's done, the directory could be cleared out, so the next time the backup script runs, a fresh copy of all the files would be copied over. Set this to run once a week and you'll have weekly full backups, with nightly (or hourly) incremental backups. The following script will do that for you:</p>
+
+<pre><code>#!/bin/bash
+
+NEW="/home/backups/newest"
+OLD="/home/backups/archive"
+
+# Tar and compress the old files
+(
+    cd `dirname $NEW`
+    tar -zcf "$OLD/`date "+%F-%H%M"`.tar.gz" "`basename "$NEW"`"
+)
+
+# Clear out the backup directory
+if [ $? == 0 ]; then
+    rm -rf "$NEW"
+    mkdir "$NEW"
+else
+    echo "Exited with errors. Nothing was deleted, but the files may not have been rotated."
+    exit 1
+fi
+</code></pre>
+
+<p><code>$NEW</code> is the location of your newest backups. <code>$OLD</code> is where you want the tar-ed and compressed copies stored.</p>
+
+<h2>Security with ssh</h2>
+
+<p>We're almost there. Rdiff-backup is installed, and the scripts are automatically backing up and rotating our backup files. The only problem is that every time the script connects to the backup server, it's asked for a password (the remote user's ssh password). We can't be there to type it in, so how do we deal with this? The solution is to create a public/private key pair that the script can log in with. There are lots of places on the web that have detailed instructions on how to do this, but I'll run through it quickly.</p>
+
+<p>First we decide which user is running the backup script on our web server. If it's root, then we log in as root and run <code>ssh-keygen</code>. When prompted for a password, leave it blank. After this is done, we need to copy the public key located under <code>/root/.ssh/id_rsa.pub</code> to the remote machine. If we're logging in as backups on the remote machine, then we copy the public key into the <code>/home/backups/.ssh</code> directory (create the <code>.ssh</code> directory if it doesn't already exist) and rename the file <code>authorized_keys</code>. Now when root connects over ssh to the backup server, he won't be prompted for a password, and neither will the backup script being run as a root cron job. Ahhh the magic of public key cryptography.</p>
+
+<p>The obvious problem here is that if an attacker gets root on the web server, he has access to the backup server. Lucky for us, ssh has a built in way of restricting a remote user to only one command. We do this by prefixing the public key with <code>command="RESTRICTED_COMMAND"</code>. So, for example, we can restrict a remote user to rdiff-backup by modifying the <code>authorized_keys</code> file to look something like this:</p>
+
+<pre><code>command="rdiff-backup --server --restrict-update-only /home/backups/newest/" ssh-rsa AAB3NzaC1 [...]
+</code></pre>
+
+<p>That allows a remote user to only execute rdiff-backup in server mode. But notice the second flag <code>--restrict-update-only</code>. That restricts the user to the backup directory, and only allows her to update the backups, and not delete or otherwise trash them. Pretty cool. The worst an attacker could do is fill the backup server's hard drive by pushing a huge amount of data to it, but since rdiff-backup is versioned, no old versions of the files will be lost.</p>
+
+<p>Also, there are additional options you can prefix to the public key to lock down the server even more. Check out the <code>ssh-keygen</code> man pages, and look under the <code>-O</code> flag.</p>
+
+<h2>Conclusion</h2>
+
+<p>So, that's my custom built backup solution. I realize I glazed over a lot of small details, and this isn't really a step by step how-to (e.g., I never explained how to set up a cron job). I leave it as an exercise to the reader to put it all together. To help you, I've included the scripts at the bottom of this post. I also check the comments obsessively, so please don't hesitate to ask if you have any questions.</p>
+
+<p><a href="http://media.usrsb.in/rdiff-backup/backup.zip">Download the scripts.</a></p>
+
+<p><a rel="bookmark" href="http://blog.usrsb.in/blog/2011/08/13/secure-versioned-remote-backups-with-rdiff-backup/">&infin; Permalink</a></p>
+
+]]></content>
+    </entry>
+  
+    <entry>
+      
+
+
+
+
+<title type="html"><![CDATA[Using 'trap' To Catch 'Ctrl + C's and Control How Your Script Exits]]></title>
+<link href="http://blog.usrsb.in/blog/2011/04/02/using-trap-to-catch-ctrl-plus-cs-and-control-how-your-script-exits/"/>
+<updated>2011-04-02T16:00:00-06:00</updated>
+<id>http://blog.usrsb.in/blog/2011/04/02/using-trap-to-catch-ctrl-plus-cs-and-control-how-your-script-exits</id>
+
+      <content type="html"><![CDATA[<p>So you've written a script that creates all sorts of temporary files, and launches dozens of processes in the background, and, as is, the script runs indefinitely. The only way to quit is Ctrl + C, but once you fire off this hotkey combo, you're left with a mess of background processes and temp files. There are lots of reasons why your script might do this. For example, I'm currently writing a download manager that sends its wget processes to the background, and creates various temporary status files. It runs indefinitely because it polls a queue file, which contains the URLs of the files it's instructed to download. So, given all that, how is it that I get my script to clean up after itself once I deal it the fatal Ctrl + C blow (or more technically, a "signal interrupt" or "SIGINT" for short)? The trick here is to use the <code>trap</code> command along with some basic process manipulation. Here's the syntax:</p>
+
+<pre><code>trap 'command' signal_to_trap
+</code></pre>
+
+<p>The above bit of code will cause the <em>command</em> (or string of commands between the quotes) to execute if the script is issued a <em>signal_to_trap</em>. As is implied by the syntax, you can trap more than one type of signal. To catch the Ctrl + C combo, you usually want to trap a SIGINT, which is done as follows:</p>
+
+<pre><code>trap 'echo "Exiting"; exit 0' INT
+</code></pre>
+
+<p>That bit of code will cause your script to print the message "Exiting" and exit with status 0 once Ctrl + C is pressed (or gets issued a SIGINT some other way). One important caveat is <strong>always remember the exit command.</strong> For example, the following code will cause your program to print "Exiting" and then continue, effectively ignoring the SIGINT. What NOT to do if you want your program to actually quit:</p>
+
+<pre><code>trap 'echo "Exiting"' INT
+</code></pre>
+
+<p>Of course, that construct isn't without its uses. Perhaps you want your script to immediately run some routine if Ctrl + C is entered, but you don't want it to quit. The above bit of code would be the way to do it, but that strikes me as a confusing break from convention. Most people expect Ctrl + C to stop the currently running process. A better way to do this would be to use a USR signal. Just substitute <code>INT</code> for <code>USR1</code> or <code>USR2</code>, and send the <code>USR</code> signal to the script using the kill command: <code>kill -USR1 pid</code>. In any case, back to the topic at hand: exiting a script cleanly.</p>
+
+<h2>'Trapping' and Cleaning Up After Yourself</h2>
+
+<p>The way I use 'trap' is something along these lines:</p>
+
+<pre><code>exit_routine () {
+    # TODO: Clean up stuff.
+}
+trap 'exit_routine' INT # Intercept SIGINT and call exit_routine
+</code></pre>
+
+<p>If it's short enough, you can, of course, cram your entire exit routine between the single quotes, but if it's nontrivial it's best to pull it out into its own function. Also remember that BASH executes a script's commands in the order it sees them, so this must be placed somewhere near the beginning of the script to set the <code>trap</code> early on. (Perhaps that's obvious, but I'd be the first to admit that that's just the sort of pitfall I'd waste an hour puzzling over.) Also remember that the function must be declared before the <code>trap</code> statement (or at least before the script receives a SIGINT and tries to call <code>exit_routine</code>).</p>
+
+<h2>Cleaning Up Stuff (Processes)</h2>
+
+<p>Now that we've declared the exit routine and set the trap, we need to do some actual housekeeping. I do this by keeping track of all the background processes' PIDs and temporary files' filenames in an array. Consider the following code:</p>
+
+<pre><code>for i in $(seq 3); do
+    wget "$URL[$i]" &amp; 
+    PIDS[$i]=$!
+done
+</code></pre>
+
+<p>Three <code>wget</code> instances are launched and sent to the background with the <code>&amp;</code> operator. Their PIDs are accessed with the <code>$!</code> variable and stored to <code>$PIDS</code>. We can now kill off those processes with the following bit of code:</p>
+
+<pre><code>exit_routine () {
+    kill ${PIDS[*]}
+    echo "Script exiting."
+    exit 0
+}
+trap 'exit_routine' INT
+</code></pre>
+
+<p>Whenever Ctrl + C is pressed, the SIGINT is trapped and <code>exit_routine</code> is called. <code>kill</code> is then given all the PIDs, which are accessed using <code>${PIDS[*]}</code>. This kills the wget processes, an exit message is printed, and the script is exited. The neat thing about the <code>${ARRAY[*]}</code> way of accessing all an array's elements is that empty elements won't be returned. So if I do:</p>
+
+<pre><code>PIDS[5]="5"
+PIDS[10]="10"
+echo ${PIDS[*]}
+</code></pre>
+
+<p>Then only "5 10" is printed.</p>
+
+<h2>Dealing with Temp Files</h2>
+
+<p>Erasing temp files is a bit more tricky. The possibility of white space characters in a file's name makes <code>rm ${FILES[*]}</code> troublesome. Enclosing the array in double quotes doesn't help either. Instead, we need to step through the array as follows:</p>
+
+<pre><code>for i in $(seq 3); do
+    rm "${FILES[$i]}"
+done
+</code></pre>
+
+<p>If we want to ignore the empty elements of <code>$FILES</code> like <code>${PIDS[*]}</code> automatically did for the PIDs, then we can test if an element is empty using an if statement. Alternatively, you can impress your friends with some BASH-fu and take advantage of BASH's short circuit functionality:</p>
+
+<pre><code>for i in $(seq 3); do
+    [ "${FILES[$i]}" != "" ] &amp;&amp; rm "${FILES[$i]}"
+done
+</code></pre>
+
+<p>If <code>${FILES[$i]}</code> is empty, the statement short circuits, and does nothing. If it contains something, the <code>rm</code> command is executed.</p>
+
+<p>So, that's how it's done. Now you have no excuse for leaving garbage behind (if only BASH had some way of automagically collecting this so called garbage!), and, as always, if you have any tips regarding this, please share your BASH-fu with us in the comments!<p><a rel="bookmark" href="http://blog.usrsb.in/blog/2011/04/02/using-trap-to-catch-ctrl-plus-cs-and-control-how-your-script-exits/">&infin; Permalink</a></p></p>
+]]></content>
+    </entry>
+  
+    <entry>
+      
+
+
+
+
+<title type="html"><![CDATA[Sending Emails and Texts from the Command Line]]></title>
+<link href="http://blog.usrsb.in/blog/2011/03/24/sending-emails-and-texts-from-the-command-line/"/>
+<updated>2011-03-24T16:39:00-06:00</updated>
+<id>http://blog.usrsb.in/blog/2011/03/24/sending-emails-and-texts-from-the-command-line</id>
+
+      <content type="html"><![CDATA[<p>Here's a handy way to send emails from the command line:</p>
+
+<pre><code>echo 'message' | mail -s 'subject' 'email_address'
+</code></pre>
+
+<p>If you know the recipient's carrier, you can also use it to send text messages from the command line. For example, if the recipient's number is 111-111-1111 and she's on Verizon, you can send her a text message using the following command:</p>
+
+<pre><code>echo 'Sent from my terminal!' | 
+    mail -s 'Linux is fun' '1111111111@vtext.com'
+</code></pre>
+
+<p>Once again, the trick here is knowing the domain name of the carrier's <a href="http://en.wikipedia.org/wiki/SMS_Gateway">Email-to-SMS Gateway</a>. In the case of Verizon, it's @vtext.com. Wikipedia has a handy list of other gateways <a href="http://en.wikipedia.org/wiki/List_of_SMS_gateways">here</a>. Another trick is to send yourself an email from the phone, and the phone's SMS gateway will be revealed in the 'from' field.</p>
+
+<p>You can use this to create all sorts of fun shell scripts. For example, here's one I wrote recently that tells me whether or not the VPS provider BuyVM has any VPSs in stock:</p>
+
+<pre><code>#!/bin/bash -
+
+echo 'Is BuyVM in stock?'
+while :; do
+        wget -O - -q http://doesbuyvmhavestock.com/ | grep -i yes
+        if [ $? == 0 ]; then
+                echo 'Well, what are you waiting for?' | 
+                    mail -s "BuyVM is in stock" "you@example.com"
+                echo 'Yes!'
+                exit 0
+        else
+            echo 'No'
+            sleep 15m
+        fi
+done
+</code></pre>
+
+<p>It's pretty simple. Every 15 minutes it scrapes the webpage <a href="http://doesbuyvmhavestock.com/">doesbuyvmhavestock.com</a> and sends me an email if it contains the word 'yes'. Obviously, the success of your own script depends on how well it can parse the webpage. As you can see, my parsing routine (the <code>grep</code> on line 5) is pretty primitive.<p><a rel="bookmark" href="http://blog.usrsb.in/blog/2011/03/24/sending-emails-and-texts-from-the-command-line/">&infin; Permalink</a></p></p>
+]]></content>
+    </entry>
+  
+    <entry>
+      
+
+
+
+
+<title type="html"><![CDATA[Backing Up a Directory's Permissions]]></title>
+<link href="http://blog.usrsb.in/blog/2011/03/17/backing-up-a-directorys-permissions/"/>
+<updated>2011-03-17T10:39:00-06:00</updated>
+<id>http://blog.usrsb.in/blog/2011/03/17/backing-up-a-directorys-permissions</id>
+
+      <content type="html"><![CDATA[<p>We've all done it before, and if it hasn't happened to you yet, it's only a matter of time. You're attempting to set the permissions on a directory and and you're doing something along the lines of <code>sudo chmod -R 660 ./foobar</code>. You execute the command only to realize that you're in the wrong directory or you've mistyped the directory's name, and now your permissions are totally clobbered. If you've kept good backups, this is annoying, but not devastating. Either you could completely restore the files, or perhaps you could write a script which would copy the old file permissions back over. An easier alternative would be to plan ahead and backup the file permissions before disaster strikes. Here's a script that will do that for you:</p>
+
+<pre><code>#!/bin/bash
+
+#Check that we've been passed a directory.
+if [ ! -d "$1" ]; then
+   echo "$1 is not a directory. Exiting."
+   exit 1
+fi
+
+#Check if we've been passed a relative or absolute
+#path. If it's relative, store $PWD in $DIR. We'll need
+#this later to build the absolute path.
+echo "$1" | grep -q '^/'
+if [ $? == 0 ]; then
+   DIR='' 
+else
+   DIR="$PWD/"
+fi
+
+#Generate the header comments for the script.
+echo "#!/bin/bash"
+echo "#"
+echo "#This script will restore permissions under $DIR$1"
+echo "#to how they were on `date`"
+echo "#"
+
+#Loop through the given directory's tree and 
+#echo the commands to restore the permissions and owner.
+find "$1" -print0 | while read -d $'\0' i
+do
+   echo chmod `stat -c %a "$i"` \"$DIR$i\"
+   echo chown `stat -c "%U:%G" "$i"` \"$DIR$i\"
+done
+</code></pre>
+
+<p>What this script does is generate another script, which, when run, will restore a directory's permissions, owner, and group (and also the permissions, owner, and group of any files and directories under it). Suppose you drop this script into a file called <code>backup.sh</code> and you want to backup the permissions of a directory called <code>/home/you/mystuff</code>. Here's how you'd do it:</p>
+
+<pre><code>./backup.sh /home/you/mystuff &gt; mystuff-backup.sh
+</code></pre>
+
+<p>Now when you execute <code>mystuff-backup.sh</code>, all of <code>/home/you/mystuff</code>'s permissions will be restored. Easy.</p>
+
+<p>There is one security caveat you should keep in mind. The resultant script will contain the names of all the files and subdirectories in the directory tree. The upshot is that anyone who has read access to the script will be able to see this information. If this is a problem, you should adjust the script's permissions accordingly.</p>
+
+<p>The script itself is pretty straight forward. On line 4, we tell a relative path from an absolute path by seeing if it's prefixed with a forward slash. If it is, then it's absolute. If it isn't, then it's relative. We'll need this information later to build the absolute path to all the files. The next step is to loop through the files, which is a bit tricky. On line 28, we need to pipe the output of <code>find</code> to a <code>while read</code> because the more intuitive <code>for</code> loop construct doesn't handle spaces and newlines in filenames properly (of course, anyone who puts newlines in a filename needs to be thrown into the <a href="http://www.starwars.com/databank/creature/sarlacc/">sarlacc</a>). In fact, you may just want to memorize that line, as it's a common problem with a far from obvious solution. Finally, on line 30 and 31, we read the file's permission and owners with <code>stat</code>, which is a handy command that, among other things, outputs file information in a user definable format.</p>
+
+<p>So there you have it. <a href="http://media.usrsb.in/dir-perm/backupperm.sh">Download the script here.</a> Now go forth and make this a cron job.<p><a rel="bookmark" href="http://blog.usrsb.in/blog/2011/03/17/backing-up-a-directorys-permissions/">&infin; Permalink</a></p></p>
+]]></content>
+    </entry>
+  
+</feed>
+

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: the dark arts | /usr/sbin/blog]]></title>
+  <link href="http://blog.usrsb.in/" rel="self"/>
+  <link href="http://blog.usrsb.in/"/>
+  <updated>2012-05-11T13:43:47-06:00</updated>
+  <id>http://blog.usrsb.in/</id>
+  <author>
+    <name><![CDATA[Alex Beal]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+    <entry>
+      
+
+
+
+
+<title type="html"><![CDATA[Copying Strings in One Line (C Programming)]]></title>
+<link href="http://blog.usrsb.in/blog/2011/08/06/copying-strings-in-one-line-c-programming/"/>
+<updated>2011-08-06T16:01:00-06:00</updated>
+<id>http://blog.usrsb.in/blog/2011/08/06/copying-strings-in-one-line-c-programming</id>
+
+      <content type="html"><![CDATA[<p>Here's a quickie for your Saturday afternoon:</p>
+
+<pre><code>strcpy(s, t)    /* copy t to s; pointer version 3 */
+char *s, *t;
+{
+    while(*s++ = *t++)
+        ;
+}
+</code></pre>
+
+<p>That's a classic one from the <a href="http://en.wikipedia.org/wiki/The_c_programming_language">K&amp;R text</a> (page 101). You can tell how old it is by the style of the function declaration. There's no return type (so it defaults to <code>int</code>, even though nothing is actually returned), and the types of the arguments are declared on a separate line. Although it's far from obvious, what the function does is copy the string <code>t</code> to the string <code>s</code>.</p>
+
+<p>Anyway, as you can see, order of operations is key. Dereferencing precedes assignment, assignment precedes evaluation, and evaluation precedes increment. Here's what happens:</p>
+
+<ol>
+<li>The current position of <code>s</code> and <code>t</code> are dereferenced, and the character at that position is fetched.</li>
+<li>That character is copied from <code>t</code> to <code>s</code></li>
+<li>The character just copied gets evaluated. The loop terminates if it's the null character, '\0'.</li>
+<li>The pointers are incremented to the next character in the string.</li>
+<li>The loop repeats, copying the consecutive characters, including the null character.</li>
+</ol>
+
+
+<p>It's definitely a cool academic exercise, but it's so obfuscated, that even the order of operations table in the K&amp;R book is of no help. It lists <code>++</code> and <code>*</code> as having the same precedence. To see what's going on here, we need to go to the C99 spec:</p>
+
+<blockquote><p>The result of the postfix <code>++</code> operator is the value of the operand. After the result is obtained, the value of the operand is incremented. (page 75)</p></blockquote>
+
+<p>It's definitely a bit of black magic. Use this code wisely.</p>
+
+<p><a rel="bookmark" href="http://blog.usrsb.in/blog/2011/08/06/copying-strings-in-one-line-c-programming/">&infin; Permalink</a></p>
+
+]]></content>
+    </entry>
+  
+</feed>
+

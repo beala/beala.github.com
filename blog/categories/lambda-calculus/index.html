@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: lambda calculus | /usr/sbin/blog]]></title>
+  <link href="http://blog.usrsb.in/" rel="self"/>
+  <link href="http://blog.usrsb.in/"/>
+  <updated>2012-05-11T13:43:47-06:00</updated>
+  <id>http://blog.usrsb.in/</id>
+  <author>
+    <name><![CDATA[Alex Beal]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+    <entry>
+      
+
+
+
+
+<title type="html"><![CDATA[Building Data Structures from Functions]]></title>
+<link href="http://blog.usrsb.in/blog/2012/04/01/building-data-structures-from-functions/"/>
+<updated>2012-04-01T09:00:00-06:00</updated>
+<id>http://blog.usrsb.in/blog/2012/04/01/building-data-structures-from-functions</id>
+
+      <content type="html"><![CDATA[<p>Here's a puzzle I've adapted from <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-14.html#%_sec_2.1.3">exercise 2.4</a> of SICP.</p>
+
+<blockquote><p>Suppose you are programming in a language that only supports function application. That is, defining functions and applying arguments to these functions are the only things this language supports. Using only these building blocks, could you construct a linked list?</p></blockquote>
+
+<p>Surprisingly, the answer is yes, and the exercise linked to above provides a partial solution. Below, I've translated that solution into Python, and completed the exercise:</p>
+
+<p>```python Solution in Python</p>
+
+<h1>Create a pair from l and r</h1>
+
+<p>def cons(l, r):</p>
+
+<pre><code>return lambda get: get(l, r)
+</code></pre>
+
+<h1>Given a pair, return the head (left) value.</h1>
+
+<p>def head(pair):</p>
+
+<pre><code>return pair(lambda l, r: l)
+</code></pre>
+
+<h1>Give a pair, return the tail (right) value.</h1>
+
+<p>def tail(pair):</p>
+
+<pre><code>return pair(lambda l, r: r)
+</code></pre>
+
+<p>```</p>
+
+<p>First, let's examine how these functions can be used, and then I'll explain how they work. Consider the snippet below:</p>
+
+<p><code>python Usage Example
+l1 = cons(1, 2)
+print head(l1)       # Prints 1
+print tail(l1)       # Prints 2
+l2 = cons(0, l1)
+print head(l2)       # Prints 0
+print head(tail(l2)) # Prints 1
+print tail(tail(l2)) # Prints 2
+</code></p>
+
+<p>As can be seen, <code>cons()</code> is the constructor for this pair type. Give it two values, and it will create a pair of those two values. <code>head()</code> and <code>tail()</code> are the basic operators that let us access values inside these pairs; they return the left and right element of the pair, respectively. Also notice that we can create pairs of pairs. The last half of the example creates a pair composed of <code>0</code> and <code>(1,2)</code>. Why is this significant? Well, we've just made a linked list! Linked lists are simply pairs of pairs. The list <code>[1,2,3,4]</code> can, for example, be represented as <code>cons(1,cons(2,cons(3,cons(4,None))))</code>. What's <code>None</code> doing at the end of the list? You can think of it like the <code>NULL</code> pointer at the end of a linked list in C. If a function were traversing the list, <code>None</code> would signify to the function that it has reached the end. Mathematically, you can think of a linked list as an inductively defined data structure, where <code>None</code> is the base case. <code>None</code> is referred to as the <em>empty list</em>.</p>
+
+<p>Now for the interesting part. How do these functions work? First let's look at the <code>cons()</code> function:</p>
+
+<p>```python cons()</p>
+
+<h1>Create a pair from l and r</h1>
+
+<p>def cons(l, r):</p>
+
+<pre><code>return lambda get: get(l, r)
+</code></pre>
+
+<p>```</p>
+
+<p>This takes in two parameters (<code>l</code> and <code>r</code>) and returns a function.<sup>1</sup> This returned function takes yet another function, which it applies to <code>l</code> and <code>r</code> and returns the result. So, if we call <code>cons(1,2)</code>, we are returned a function, which takes a function and applies that function to the arguments <code>1</code> and <code>2</code>. If, for example, I called <code>cons(1,2)(lambda x, y: x+y)</code> I'd get <code>3</code>, because the addition function would be applied to <code>1</code> and <code>2</code>.</p>
+
+<p>Now suppose that we didn't want to add <code>l</code> and <code>r</code>. Instead, we wanted to pull either <code>l</code> or <code>r</code> out of a pair that was already constructed. In other words, given <code>list = cons(1,2)</code>, how could we pull the <code>1</code> or <code>2</code> out of the function stored in <code>list</code>? Well, all we need to do is pass it a function that returns only the left or right parameter. So, <code>cons(1,2)(lambda l, r: l)</code> would give us back <code>1</code>, and <code>cons(1,2)(lambda l,r: r)</code> would give us back <code>2</code>. This is almost exactly what the <code>head()</code> and <code>tail()</code> functions are doing! They take in a function (presumably produced by the <code>cons()</code> function), and apply either <code>lambda l,r: l</code> or <code>lambda l,r: r</code>. Just to cement this all together, below I step through the evaluation for the example <code>head(cons(1,2))</code>.</p>
+
+<p><code>python Evaluation Steps for head(cons(1,2,))
+head(cons(1,2))
+-&gt; head(lambda get: get(1, 2))
+-&gt; (lambda get: get(1, 2))(lambda l,r: l)
+-&gt; (lambda l,r: l)(1,2)
+-&gt; 1
+</code></p>
+
+<p>And here is a bit of code that uses these new functions to add the elements of a list:</p>
+
+<p>```python Sum Function
+def sum_list(l):</p>
+
+<pre><code>return head(l) if tail(l) == None else head(l) + sum_list(tail(l))
+</code></pre>
+
+<p>sum_list(cons(1,cons(2,cons(3,None)))) # Returns 6
+```</p>
+
+<p>In the end, this might strike you as nothing more than a useless programming trick. In a sense that's right. I'd never use this in my own code. What makes this technique so valuable is that it actually fits into the broader context of lambda calculus, which is a mathematical abstraction of computation. In the language of lambda calculus, you're given only a very basic set of tools. Essentially all you have are simple one parameter functions (it doesn't even have integers!). Incredibly, it turns out that that's all you need for a Turing complete language. It's possible to build integers, conditionals, loops, arithmetic operations, and (as you've seen here) data structures out of these simple building blocks. As a next step, and to see this for yourself, it might be fun to take a minute and see how the code presented here could be modified to give you binary trees, or even graphs. After that, you could check out this incredible article on writing the infamous <a href="http://www.codinghorror.com/blog/2007/02/why-cant-programmers-program.html">FizzBuzz</a> exercise <a href="http://experthuman.com/programming-with-nothing">in Ruby using only functions</a>.</p>
+
+<h3>Notes</h3>
+
+<ol>
+<li>Technically, this is really a closure, which is a function with some of its variables already set. In the terminology of the PL world, it's a function bundled with its environment (the set of variables in its outer scope).</li>
+</ol>
+
+
+<p><a rel="bookmark" href="http://blog.usrsb.in/blog/2012/04/01/building-data-structures-from-functions/">&infin; Permalink</a></p>
+
+]]></content>
+    </entry>
+  
+</feed>
+
