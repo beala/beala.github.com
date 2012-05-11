@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: puzzler | /usr/sbin/blog]]></title>
+  <link href="http://usrsb.in/blog/blog/categories/puzzler/atom.xml" rel="self"/>
+  <link href="http://usrsb.in/blog/"/>
+  <updated>2012-05-05T13:43:03-06:00</updated>
+  <id>http://usrsb.in/blog/</id>
+  <author>
+    <name><![CDATA[Alex Beal]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[A Search Algorithm Puzzle: Finding a Bad Coin]]></title>
+    <link href="http://usrsb.in/blog/blog/2011/08/17/a-search-algorithm-puzzle-finding-a-bad-coin/"/>
+    <updated>2011-08-17T13:30:00-06:00</updated>
+    <id>http://usrsb.in/blog/blog/2011/08/17/a-search-algorithm-puzzle-finding-a-bad-coin</id>
+    <content type="html"><![CDATA[<p>Today I have a puzzle for you from James Hein's textbook, <a href="http://www.amazon.com/Discrete-Structures-Logic-Computability-James/dp/0763772062">Discrete Structures, Logic, and Computability</a>. It's a question about finding a "bad coin" and goes as follows:</p>
+
+<blockquote><p>Suppose we are asked to use a pan balance to find the heavy coin among eight coins with the assumption that they all look alike and the other seven all have the same weight. (p. 287)
+So, the problem is that we have 8 coins, and one of them is a bad coin that weighs more than the others. With only a pan balance, what's the most efficient way to find the bad coin?</p></blockquote>
+
+<p>The simplest solution is to just weigh the coins in pairs. Grab a pair of coins and put one coin on each side of the balance. If one is heavier, you've found the bad coin and you can stop. If they weigh the same, move on to the next pair. At most, this will take 4 trials, but is this optimal? No. As James Hein points out, we can do better.</p>
+
+<p>The better solution is to put 4 of the coins on one side of the balance, and the other 4 coins on the other side of the balance. One side must be heavier than the other, because one side must contain the heavier coin. If the left side is heavier, then we discard the lighter coins on the right side. We then split the remaining coins into 2 groups of 2, and repeat the procedure by weighing one group against the other. The heavier of the two pairs then gets split and weighed. The coin that is heavier is the bad coin. This is a sure way to find the bad coin in 3 steps.</p>
+
+<p>Programmers will recognize this algorithm as a binary search, which can be represented by the following decision tree from page 287 of Hein's book:</p>
+
+<p><img src="http://media.usrsb.in/bad-coin/dectree.png" alt="Binary Search Tree" /></p>
+
+<p>First we weigh 1 through 4 against 5 through 8. If 1 through 4 is heavier, then we weigh 1 and 2 against 3 and 4 and so on until we reach the bottom of the tree. It's a neat solution that has lots of uses. The obvious application for this is searching through lots of data, but an especially cool use is the <a href="https://secure.wikimedia.org/wikipedia/en/wiki/Huffman_coding">Huffman coding algorithm</a>. A variation on Huffman coding is how zip archives are compressed.</p>
+
+<p>But wait a minute. We can do one better by allowing some decision points (nodes) on the tree to have three connections rather than two, making it a ternary tree. See the revised, and optimal, decision tree below (Hein, p. 288):</p>
+
+<p><img src="http://media.usrsb.in/bad-coin/ternary.png" alt="Optimal Decision Tree" /></p>
+
+<p>For this revised procedure, we begin by weighing 1 through 3 and 4 through 6. If those groups have equal weight, then we go down the middle branch and see that the bad coin must be 7 or 8. We follow a similar procedure if, after the first weighing, 1 through 3 is heavier. We go down the left branch and test 1 and 2. If those weigh the same, then the bad coin must be coin 3. Pretty clever.</p>
+
+<p>Next post I'll attempt some mathematical analysis on the algorithms, and see what we can say about how many steps it takes to sort through n coins. In the meantime, check out this <a href="https://secure.wikimedia.org/wikipedia/en/wiki/Binary_search_algorithm#Computer_use">interesting tidbit from Wikipedia's Binary Search article</a>. Despite its ubiquity and seeming simplicity, it's apparently quite difficult to implement!</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[1 Minus 1 Equals What? (Fun with sums and limits)]]></title>
+    <link href="http://usrsb.in/blog/blog/2011/08/05/1-minus-1-equals-what-fun-with-sums-and-limits/"/>
+    <updated>2011-08-05T16:10:00-06:00</updated>
+    <id>http://usrsb.in/blog/blog/2011/08/05/1-minus-1-equals-what-fun-with-sums-and-limits</id>
+    <content type="html"><![CDATA[<p>Here's a cool problem I came across when reviewing for one of my calculus exams:</p>
+
+<p><img src="http://media.usrsb.in/sum-paradox/question.png" alt="The Question" /></p>
+
+<p>You begin with the numbers 0 through 1. Every iteration removes 1/3 from the remaining segments. As stated above, the expression for the total amount removed after m iterations is:</p>
+
+<p><img src="http://media.usrsb.in/sum-paradox/sum.png" alt="title" /></p>
+
+<p>The first iteration removes 1/3. The second removes 1/3 from the remaining two segments. The remaining segments are 1/3 long, and 1/3 of that is 1/9. We do that once for each remaining segment, so 2/9 is removed. And so on.</p>
+
+<p><img src="http://media.usrsb.in/sum-paradox/sum2.png" alt="title" /></p>
+
+<p>What if we iterate an infinite number of times? Then we have a convergent geometric series. Finding the sum is easy:</p>
+
+<p><img src="http://media.usrsb.in/sum-paradox/sol.png" alt="title" /></p>
+
+<p>So, what's the total amount or length of numbers removed? 1. That's the entire length. It seems like we've removed the entire segment. But wait a minute. If we look at the image of the original question above, we see that after every iteration, there are 2<sup>n+1</sup> segments remaining. When n=0, there are 2 segments. When n=1, there are 4 segments, etc. As we remove more and more, 2<sup>n+1</sup> approaches infinity. In other words, the limit does not exist, and the number of segments goes to infinity.</p>
+
+<p><img src="http://media.usrsb.in/sum-paradox/limit-dne.png" alt="title" /></p>
+
+<p><strong>So, even though we've seemingly removed the entire length, there are an infinite number of segments remaining.</strong> That's weird.</p>
+
+<p>Hopefully by now I have you a bit puzzled. This is the point in the post where I'm supposed to resolve the paradox. I have bad news, though: I don't have much for you. I'm definitely not a mathematician (I just play one on the internets), but if I had to speculate, I'd say there are two things going on here:</p>
+
+<ol>
+<li>Limits!</li>
+<li>We're taking the math too literally.</li>
+</ol>
+
+
+<p>What I mean by that is, (1) as we've learned from limits, an infinite number of really small things (in this case, segments) can add to a finite number. This doesn't quite resolve the paradox though. Usually an infinite number of small things adds to something greater than 0. Here it looks like all the segments add to nothing. There are an infinite number of segments, but we still have nothing left. Hopefully this is where point (2) saves the day.</p>
+
+<p>We're taking the math too literally. When we take this sum to infinity, what we're really saying is that as we get closer and closer to infinity, we're getting closer and closer to removing a length of 1, <em>but we never actually get there.</em> Similarly, when we take the limit, what we're really saying is that as we remove more and more segments, we get closer and closer to having an infinite number of segments left over, <em>but we never actually get there either.</em> <strong>As long as we never actually get to either of these points, we haven't contradicted ourselves.</strong> I think. If you have a deeper insight into this, definitely be sure to post it in the comments!</p>
+]]></content>
+  </entry>
+  
+</feed>
