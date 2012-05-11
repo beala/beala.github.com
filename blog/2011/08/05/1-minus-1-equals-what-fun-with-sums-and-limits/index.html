@@ -1,0 +1,386 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>1 Minus 1 Equals What? (Fun with sums and limits) - /usr/sbin/blog</title>
+  <meta name="author" content="Alex Beal">
+
+  
+  <meta name="description" content="Here&#8217;s a cool problem I came across when reviewing for one of my calculus exams: You begin with the numbers 0 through 1. Every iteration &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://blog.usrsb.in/blog/2011/08/05/1-minus-1-equals-what-fun-with-sums-and-limits">
+  <link href="/blog/favicon.png" rel="icon">
+  <link href="/blog/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/blog/javascripts/modernizr-2.0.js"></script>
+  <script src="/blog/javascripts/ender.js"></script>
+  <script src="/blog/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/blog/atom.xml" rel="alternate" title="/usr/sbin/blog" type="application/atom+xml">
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-27836693-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/blog/">/usr/sbin/blog</a></h1>
+  
+    <h2>Alex's Geekery Journal.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/blog/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:blog.usrsb.in" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="https://usrsb.in">Home</a></li>
+  <li><a href="/blog/">Blog</a></li>
+  <li><a href="/blog/tools">Tools</a></li>
+  <li><a href="/blog/about">About</a></li>
+  <li><a href="/blog/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+
+
+
+
+
+
+
+
+
+
+
+<article class="hentry" role="article" >
+  
+  <header>
+    <h1 class="entry-title">
+
+1 Minus 1 Equals What? (Fun With Sums and Limits)
+
+</h1>
+
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-08-05T16:10:00-06:00" pubdate data-updated="true">Aug 5<span>th</span>, 2011</time>
+         &bull; <a rel="bookmark" href="/blog/blog/2011/08/05/1-minus-1-equals-what-fun-with-sums-and-limits/">&infin;</a>
+      </p>
+    
+  </header>
+
+<div class="entry-content"><p>Here&#8217;s a cool problem I came across when reviewing for one of my calculus exams:</p>
+
+<p><img src="http://media.usrsb.in/sum-paradox/question.png" alt="The Question" /></p>
+
+<p>You begin with the numbers 0 through 1. Every iteration removes 1/3 from the remaining segments. As stated above, the expression for the total amount removed after m iterations is:</p>
+
+<p><img src="http://media.usrsb.in/sum-paradox/sum.png" alt="title" /></p>
+
+<p>The first iteration removes 1/3. The second removes 1/3 from the remaining two segments. The remaining segments are 1/3 long, and 1/3 of that is 1/9. We do that once for each remaining segment, so 2/9 is removed. And so on.</p>
+
+<p><img src="http://media.usrsb.in/sum-paradox/sum2.png" alt="title" /></p>
+
+<p>What if we iterate an infinite number of times? Then we have a convergent geometric series. Finding the sum is easy:</p>
+
+<p><img src="http://media.usrsb.in/sum-paradox/sol.png" alt="title" /></p>
+
+<p>So, what&#8217;s the total amount or length of numbers removed? 1. That&#8217;s the entire length. It seems like we&#8217;ve removed the entire segment. But wait a minute. If we look at the image of the original question above, we see that after every iteration, there are 2<sup>n+1</sup> segments remaining. When n=0, there are 2 segments. When n=1, there are 4 segments, etc. As we remove more and more, 2<sup>n+1</sup> approaches infinity. In other words, the limit does not exist, and the number of segments goes to infinity.</p>
+
+<p><img src="http://media.usrsb.in/sum-paradox/limit-dne.png" alt="title" /></p>
+
+<p><strong>So, even though we&#8217;ve seemingly removed the entire length, there are an infinite number of segments remaining.</strong> That&#8217;s weird.</p>
+
+<p>Hopefully by now I have you a bit puzzled. This is the point in the post where I&#8217;m supposed to resolve the paradox. I have bad news, though: I don&#8217;t have much for you. I&#8217;m definitely not a mathematician (I just play one on the internets), but if I had to speculate, I&#8217;d say there are two things going on here:</p>
+
+<ol>
+<li>Limits!</li>
+<li>We&#8217;re taking the math too literally.</li>
+</ol>
+
+
+<p>What I mean by that is, (1) as we&#8217;ve learned from limits, an infinite number of really small things (in this case, segments) can add to a finite number. This doesn&#8217;t quite resolve the paradox though. Usually an infinite number of small things adds to something greater than 0. Here it looks like all the segments add to nothing. There are an infinite number of segments, but we still have nothing left. Hopefully this is where point (2) saves the day.</p>
+
+<p>We&#8217;re taking the math too literally. When we take this sum to infinity, what we&#8217;re really saying is that as we get closer and closer to infinity, we&#8217;re getting closer and closer to removing a length of 1, <em>but we never actually get there.</em> Similarly, when we take the limit, what we&#8217;re really saying is that as we remove more and more segments, we get closer and closer to having an infinite number of segments left over, <em>but we never actually get there either.</em> <strong>As long as we never actually get to either of these points, we haven&#8217;t contradicted ourselves.</strong> I think. If you have a deeper insight into this, definitely be sure to post it in the comments!</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Alex Beal</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-08-05T16:10:00-06:00" pubdate data-updated="true">Aug 5<span>th</span>, 2011</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/blog/categories/calculus/'>calculus</a>, <a class='category' href='/blog/blog/categories/limits/'>limits</a>, <a class='category' href='/blog/blog/categories/paradox/'>paradox</a>, <a class='category' href='/blog/blog/categories/puzzler/'>puzzler</a>, <a class='category' href='/blog/blog/categories/sums/'>sums</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://blog.usrsb.in/blog/2011/08/05/1-minus-1-equals-what-fun-with-sums-and-limits/" data-via="beala" data-counturl="http://blog.usrsb.in/blog/2011/08/05/1-minus-1-equals-what-fun-with-sums-and-limits/" >Tweet</a>
+  
+  
+  <div class="g-plusone" data-size="medium"></div>
+  
+  
+    <div class="fb-like" data-send="true" data-width="450" data-show-faces="false"></div>
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/blog/2011/08/04/how-old-school-c-programmers-process-arguments/" title="Previous Post: How Old School C Programmers Process Arguments">&laquo; How Old School C Programmers Process Arguments</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/blog/2011/08/06/copying-strings-in-one-line-c-programming/" title="Next Post: Copying Strings in One Line (C Programming)">Copying Strings in One Line (C Programming) &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/blog/2012/05/05/permutations-an-interview-question/">Permutations: An Interview Question</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/blog/2012/04/07/look-ma-no-loops/">Look, Ma! No Loops: Reversing Word Order</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/blog/2012/04/01/building-data-structures-from-functions/">Building Data Structures from Functions</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/blog/2012/02/05/super-bowl-probabilities/">Super Bowl Probabilities: The Coin Toss</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/blog/2012/01/28/implementing-a-logic-evaluator-without-if-expressions/">Implementing a Logic Evaluator Without if-expressions or Boolean Operators</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/beala">@beala</a> on GitHub
+  
+  <script type="text/javascript">
+    $.domReady(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'beala',
+            count: 0,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/blog/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+<section>
+  <h1>Latest Tweets</h1>
+  <ul id="tweets">
+    <li class="loading">Status updating...</li>
+  </ul>
+  <script type="text/javascript">
+    $.domReady(function(){
+      getTwitterFeed("beala", 4, false);
+    });
+  </script>
+  <script src="/blog/javascripts/twitter.js" type="text/javascript"> </script>
+  
+    <a href="http://twitter.com/beala" class="twitter-follow-button" data-show-count="false">Follow @beala</a>
+  
+</section>
+
+
+<section>
+  <h1>My Pinboard</h1>
+  <ul id="pinboard_linkroll">Fetching linkroll...</ul>
+  <p><a href="http://pinboard.in/u:beala">My Pinboard Bookmarks &raquo;</a></p>
+</section>
+<script type="text/javascript">
+  var linkroll = 'pinboard_linkroll'; //id target for pinboard list
+  var pinboard_user = "beala"; //id target for pinboard list
+  var pinboard_count = 3; //id target for pinboard list
+  (function(){
+    var pinboardInit = document.createElement('script');
+    pinboardInit.type = 'text/javascript';
+    pinboardInit.async = true;
+    pinboardInit.src = '/javascripts/pinboard.js';
+    document.getElementsByTagName('head')[0].appendChild(pinboardInit);
+  })();
+</script>
+
+
+
+
+  
+</aside>
+
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2012 - Alex Beal -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'usrsbin';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://blog.usrsb.in/blog/2011/08/05/1-minus-1-equals-what-fun-with-sums-and-limits/';
+        var disqus_url = 'http://blog.usrsb.in/blog/2011/08/05/1-minus-1-equals-what-fun-with-sums-and-limits/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) {return;}
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/all.js#appId=212934732101925&xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var script = document.createElement('script'); script.type = 'text/javascript'; script.async = true;
+      script.src = 'https://apis.google.com/js/plusone.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script, s);
+    })();
+  </script>
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

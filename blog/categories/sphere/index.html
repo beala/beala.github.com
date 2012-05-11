@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: sphere | /usr/sbin/blog]]></title>
+  <link href="http://blog.usrsb.in/" rel="self"/>
+  <link href="http://blog.usrsb.in/"/>
+  <updated>2012-05-11T14:09:53-06:00</updated>
+  <id>http://blog.usrsb.in/</id>
+  <author>
+    <name><![CDATA[Alex Beal]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+    <entry>
+      
+
+
+
+
+<title type="html"><![CDATA[The Surface Area of a Sphere Between Parallel Planes]]></title>
+<link href="http://blog.usrsb.in/blog/2011/08/11/the-surface-area-of-a-sphere-between-parallel-planes/"/>
+<updated>2011-08-11T15:49:00-06:00</updated>
+<id>http://blog.usrsb.in/blog/2011/08/11/the-surface-area-of-a-sphere-between-parallel-planes</id>
+
+      <content type="html"><![CDATA[<p>Here's a math problem that surprised me: Imagine a sphere of diameter <em>d</em> intersected by two parallel planes a distance <em>h</em> apart. What do you think the surface area of the section of the sphere between the planes is? You're first thought might be that there's not enough information. The area will depend upon what part of the sphere the planes intersect. If the planes cut out the middle third of the sphere, that will be a different surface area compared to if the planes cut out the left third or the right third.</p>
+
+<p>That was my first thought, at least, and, as it turns out, it's wrong. <strong>The area only depends on the distance between the planes, and the diameter of the sphere. It doesn't matter where these planes are in relation to the sphere.</strong> As long as they both intersect the sphere, the surface area will equal <em>πdh</em>, where d is the diameter and <em>h</em> is the distance between the planes. Don't believe me? Here's the math to prove it:</p>
+
+<p>First we begin with the formula for the surface area of a function rotated around the x axis from <em>a</em> to <em>b</em>. If you want an explanation of this equation, the section of my textbook that covers this is actually <a href="http://www.stewartcalculus.com/data/ESSENTIAL%20CALCULUS/upfiles/topics/ess_at_06_asr_stu.pdf">posted online [PDF]</a> by the publishers (also note that this is problem 32 from that chapter).</p>
+
+<p><img src="http://media.usrsb.in/sa-sphere/1.png" alt="Suface Area Formula" /></p>
+
+<p>Since we are finding the surface area of a sphere, we need the function for a circle, which we will rotate around the x axis, thus producing our sphere. If we can remember back to high school geometry, we'll know that the equation for a sphere is <em>x2+y2=r2</em>. We now solve for <em>y</em>, and plug it in for <em>f(x)</em>, and also find the derivative of <em>f(x)</em> and plug it in for <em>f'(x)</em>:</p>
+
+<p><img src="http://media.usrsb.in/sa-sphere/2.png" alt="title" /></p>
+
+<p>We now simplify the integral:</p>
+
+<p><img src="http://media.usrsb.in/sa-sphere/3.png" alt="title" /></p>
+
+<p><em>f(x)</em> is moved into the square root:</p>
+
+<p><img src="http://media.usrsb.in/sa-sphere/4.png" alt="title" /></p>
+
+<p>We distribute:</p>
+
+<p><img src="http://media.usrsb.in/sa-sphere/5.png" alt="title" /></p>
+
+<p>More simplification:</p>
+
+<p><img src="http://media.usrsb.in/sa-sphere/6.png" alt="title" /></p>
+
+<p><img src="http://media.usrsb.in/sa-sphere/7.png" alt="title" /></p>
+
+<p>We now integrate:</p>
+
+<p><img src="http://media.usrsb.in/sa-sphere/8.png" alt="title" /></p>
+
+<p><img src="http://media.usrsb.in/sa-sphere/9.png" alt="title" /></p>
+
+<p><img src="http://media.usrsb.in/sa-sphere/10.png" alt="title" /></p>
+
+<p><em>b-a</em> is simply the distance between the two planes, which we call <em>h</em>:</p>
+
+<p><img src="http://media.usrsb.in/sa-sphere/11.png" alt="title" /></p>
+
+<p>2r is the diameter of the sphere, which we call d:</p>
+
+<p><img src="http://media.usrsb.in/sa-sphere/12.png" alt="title" /></p>
+
+<p>There you have it. The surface area of a sphere between two parallel planes is equal to <em>πdh</em>. It doesn't matter where these planes are in relation to the sphere. All that matters is that both planes intersect the sphere. Cool, huh? No? Ok, fine. Well, I thought it was interesting.</p>
+
+<p><a rel="bookmark" href="http://blog.usrsb.in/blog/2011/08/11/the-surface-area-of-a-sphere-between-parallel-planes/">&infin; Permalink</a></p>
+
+]]></content>
+    </entry>
+  
+</feed>
+

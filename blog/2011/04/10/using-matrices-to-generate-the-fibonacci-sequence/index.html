@@ -1,0 +1,382 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Using Matrices to Generate the Fibonacci Sequence - /usr/sbin/blog</title>
+  <meta name="author" content="Alex Beal">
+
+  
+  <meta name="description" content="Here&#8217;s a fun little matrix: That generates the an and an+1 terms of the Fibonacci sequence.1 To see why, let&#8217;s look at a recursive &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://blog.usrsb.in/blog/2011/04/10/using-matrices-to-generate-the-fibonacci-sequence">
+  <link href="/blog/favicon.png" rel="icon">
+  <link href="/blog/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/blog/javascripts/modernizr-2.0.js"></script>
+  <script src="/blog/javascripts/ender.js"></script>
+  <script src="/blog/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/blog/atom.xml" rel="alternate" title="/usr/sbin/blog" type="application/atom+xml">
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-27836693-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/blog/">/usr/sbin/blog</a></h1>
+  
+    <h2>Alex's Geekery Journal.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/blog/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:blog.usrsb.in" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="https://usrsb.in">Home</a></li>
+  <li><a href="/blog/">Blog</a></li>
+  <li><a href="/blog/tools">Tools</a></li>
+  <li><a href="/blog/about">About</a></li>
+  <li><a href="/blog/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+
+
+
+
+
+
+
+
+
+
+
+<article class="hentry" role="article" >
+  
+  <header>
+    <h1 class="entry-title">
+
+Using Matrices to Generate the Fibonacci Sequence
+
+</h1>
+
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-04-10T12:47:00-06:00" pubdate data-updated="true">Apr 10<span>th</span>, 2011</time>
+         &bull; <a rel="bookmark" href="/blog/blog/2011/04/10/using-matrices-to-generate-the-fibonacci-sequence/">&infin;</a>
+      </p>
+    
+  </header>
+
+<div class="entry-content"><p>Here&#8217;s a fun little matrix:</p>
+
+<p><img src="http://media.usrsb.in/fib-mat/equation.png" alt="Fib Matrix" /></p>
+
+<p>That generates the a<sub>n</sub> and a<sub>n+1</sub> terms of the Fibonacci sequence.<sup>1</sup> To see why, let&#8217;s look at a recursive definition of the Fibonacci sequence.</p>
+
+<p><img src="http://media.usrsb.in/fib-mat/1.png" alt="Fib Def" /></p>
+
+<p><img src="http://media.usrsb.in/fib-mat/2.png" alt="Fib Def" /></p>
+
+<p>That&#8217;s easy enough to understand. The first and second terms are both 1, and the next term is the sum of the last term plus the current term. To see how this relates to the matrix above, we must turn this into a matrix equation. The trick here is to have a good understanding of matrix multiplication. If you need a refresher, <a href="http://www.mathsisfun.com/algebra/matrix-multiplying.html">here&#8217;s a site</a> with a tutorial. Let&#8217;s look at an example of a 2x2 matrix multiplied by a 2x1 (even if you have a good understanding of matrix multiplication, hang tight, this is going somewhere).</p>
+
+<p><img src="http://media.usrsb.in/fib-mat/3.png" alt="title" /></p>
+
+<p>Now let&#8217;s make some substitutions and multiply it out:</p>
+
+<p><img src="http://media.usrsb.in/fib-mat/7.png" alt="title" /></p>
+
+<p>As you can see, the effect of multiplying the b matrix by the Fibonacci matrix is that it moves the b<sub>1,2</sub> position to the b<sub>1,1</sub> position, and the b<sub>1,2</sub> gets filled with the sum of b<sub>1,1</sub> and b<sub>1,2</sub>. Let&#8217;s now substitute the b&#8217;s for a<sub>n-1</sub> and a<sub>n</sub>:</p>
+
+<p><img src="http://media.usrsb.in/fib-mat/8.png" alt="title" /></p>
+
+<p>Does the resultant matrix look familiar? If you look above, you&#8217;ll see that it&#8217;s the same as our recursive definition of the Fibonacci sequence! The top row is equal to the current number in the sequence (a<sub>n</sub>) and the bottom row is equal to the next number in the sequence (a<sub>n-1</sub> + a<sub>n</sub> = a<sub>n+1</sub>). Continuing to multiply the resultant matrix by the Fibonacci matrix will cause consecutive entries to be produced. Because matrix multiplication is associative, we can move our multiplication to the exponent, and multiply that result by the first two terms in the sequence (0, 1), leading to our initial matrix:</p>
+
+<p><img src="http://media.usrsb.in/fib-mat/equation.png" alt="Fib Matrix" /></p>
+
+<h3>References</h3>
+
+<p>1: Strang, Gilbert. &#8221;<a href="http://www.amazon.com/Linear-Algebra-Applications-Gilbert-Strang/dp/0030105676/ref=sr_1_2?s=books&amp;ie=UTF8&amp;qid=1312385275&amp;sr=1-2">Linear Algebra and Its Applications</a>.&#8221;</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Alex Beal</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-04-10T12:47:00-06:00" pubdate data-updated="true">Apr 10<span>th</span>, 2011</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/blog/categories/fibonacci/'>fibonacci</a>, <a class='category' href='/blog/blog/categories/linear-algebra/'>linear algebra</a>, <a class='category' href='/blog/blog/categories/math/'>math</a>, <a class='category' href='/blog/blog/categories/matrix/'>matrix</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://blog.usrsb.in/blog/2011/04/10/using-matrices-to-generate-the-fibonacci-sequence/" data-via="beala" data-counturl="http://blog.usrsb.in/blog/2011/04/10/using-matrices-to-generate-the-fibonacci-sequence/" >Tweet</a>
+  
+  
+  <div class="g-plusone" data-size="medium"></div>
+  
+  
+    <div class="fb-like" data-send="true" data-width="450" data-show-faces="false"></div>
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/blog/2011/04/02/using-trap-to-catch-ctrl-plus-cs-and-control-how-your-script-exits/" title="Previous Post: Using 'trap' To Catch 'Ctrl + C's and Control How Your Script Exits">&laquo; Using 'trap' To Catch 'Ctrl + C's and Control How Your Script Exits</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/blog/2011/08/03/fibonacci-sequence-part-ii/" title="Next Post: Fibonacci Sequence, Part II">Fibonacci Sequence, Part II &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/blog/2012/05/05/permutations-an-interview-question/">Permutations: An Interview Question</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/blog/2012/04/07/look-ma-no-loops/">Look, Ma! No Loops: Reversing Word Order</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/blog/2012/04/01/building-data-structures-from-functions/">Building Data Structures from Functions</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/blog/2012/02/05/super-bowl-probabilities/">Super Bowl Probabilities: The Coin Toss</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/blog/2012/01/28/implementing-a-logic-evaluator-without-if-expressions/">Implementing a Logic Evaluator Without if-expressions or Boolean Operators</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/beala">@beala</a> on GitHub
+  
+  <script type="text/javascript">
+    $.domReady(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'beala',
+            count: 0,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/blog/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+<section>
+  <h1>Latest Tweets</h1>
+  <ul id="tweets">
+    <li class="loading">Status updating...</li>
+  </ul>
+  <script type="text/javascript">
+    $.domReady(function(){
+      getTwitterFeed("beala", 4, false);
+    });
+  </script>
+  <script src="/blog/javascripts/twitter.js" type="text/javascript"> </script>
+  
+    <a href="http://twitter.com/beala" class="twitter-follow-button" data-show-count="false">Follow @beala</a>
+  
+</section>
+
+
+<section>
+  <h1>My Pinboard</h1>
+  <ul id="pinboard_linkroll">Fetching linkroll...</ul>
+  <p><a href="http://pinboard.in/u:beala">My Pinboard Bookmarks &raquo;</a></p>
+</section>
+<script type="text/javascript">
+  var linkroll = 'pinboard_linkroll'; //id target for pinboard list
+  var pinboard_user = "beala"; //id target for pinboard list
+  var pinboard_count = 3; //id target for pinboard list
+  (function(){
+    var pinboardInit = document.createElement('script');
+    pinboardInit.type = 'text/javascript';
+    pinboardInit.async = true;
+    pinboardInit.src = '/javascripts/pinboard.js';
+    document.getElementsByTagName('head')[0].appendChild(pinboardInit);
+  })();
+</script>
+
+
+
+
+  
+</aside>
+
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2012 - Alex Beal -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'usrsbin';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://blog.usrsb.in/blog/2011/04/10/using-matrices-to-generate-the-fibonacci-sequence/';
+        var disqus_url = 'http://blog.usrsb.in/blog/2011/04/10/using-matrices-to-generate-the-fibonacci-sequence/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) {return;}
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/all.js#appId=212934732101925&xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var script = document.createElement('script'); script.type = 'text/javascript'; script.async = true;
+      script.src = 'https://apis.google.com/js/plusone.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script, s);
+    })();
+  </script>
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

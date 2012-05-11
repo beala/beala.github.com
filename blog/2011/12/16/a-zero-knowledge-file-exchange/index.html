@@ -1,0 +1,509 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>A Zero-Knowledge File Exchange - /usr/sbin/blog</title>
+  <meta name="author" content="Alex Beal">
+
+  
+  <meta name="description" content="The Problem Alice wants to send Bob an encrypted file over the Internet. Alice&#8217;s first attempt is to encrypt the file using 7-zip and send it &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://blog.usrsb.in/blog/2011/12/16/a-zero-knowledge-file-exchange">
+  <link href="/blog/favicon.png" rel="icon">
+  <link href="/blog/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/blog/javascripts/modernizr-2.0.js"></script>
+  <script src="/blog/javascripts/ender.js"></script>
+  <script src="/blog/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/blog/atom.xml" rel="alternate" title="/usr/sbin/blog" type="application/atom+xml">
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-27836693-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/blog/">/usr/sbin/blog</a></h1>
+  
+    <h2>Alex's Geekery Journal.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/blog/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:blog.usrsb.in" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="https://usrsb.in">Home</a></li>
+  <li><a href="/blog/">Blog</a></li>
+  <li><a href="/blog/tools">Tools</a></li>
+  <li><a href="/blog/about">About</a></li>
+  <li><a href="/blog/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+
+
+
+
+
+
+
+
+
+
+
+<article class="hentry" role="article" >
+  
+  <header>
+    <h1 class="entry-title">
+
+A Zero-Knowledge File Exchange
+
+</h1>
+
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-12-16T13:14:00-07:00" pubdate data-updated="true">Dec 16<span>th</span>, 2011</time>
+         &bull; <a rel="bookmark" href="/blog/blog/2011/12/16/a-zero-knowledge-file-exchange/">&infin;</a>
+      </p>
+    
+  </header>
+
+<div class="entry-content"><h2>The Problem</h2>
+
+<p>Alice wants to send Bob an encrypted file over the Internet. Alice&#8217;s first attempt is to encrypt the file using 7-zip and send it as an attachment, but quickly realizes that Bob now has no way of decrypting the file. Alice could email the decryption key, but realizes that this is insecure. Why encrypt the file in the first place if she is going to email the key in plaintext? Another solution is to use public key encryption, but contrary to everything we&#8217;ve ever read about Alice and Bob, neither knows how to use GPG. Alex, a dashing computer-scientist-in-training and intrepid narrator of this post, decides to craft a solution. Here is his proposal.</p>
+
+<h2>Goals</h2>
+
+<p>The goal is to create an online service with the following characteristics. It will:</p>
+
+<ol>
+<li>Facilitate file exchanges between users.</li>
+<li>Not require any accounts.</li>
+<li>Not require downloaded software.</li>
+<li>Be zero-knowledge. The web service itself must not have access to the decrypted file.</li>
+</ol>
+
+
+<p>In order to meet requirement (4), the service will need to store only encrypted files. This is easy enough. The service can let Alice encrypt the file in her browser, and then host the file, but then we still have the original problem to deal with. Once Bob retrieves the file, how can he access the decryption key? It seems that we have a chicken-or-the-egg problem. Alice and Bob can&#8217;t communicate securely because they don&#8217;t share a key, and they can&#8217;t share a key because they can&#8217;t communicate securely. If only there were some way for two parties to negotiate an encryption key over an insecure channel. Luckily, computer scientists have anticipated this need and come up with the <a href="https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange">Diffie-Hellman key exchange</a>.</p>
+
+<h2>The Site</h2>
+
+<p>Here&#8217;s a sketch of how the service will look to Alice and Bob. In the next section, I&#8217;ll explain the implementation.</p>
+
+<ol>
+<li>Alice initiates a file exchange by going to the website and entering the following information:
+
+<ul>
+<li>Bob&#8217;s email and cell.</li>
+<li>Her email.</li>
+<li>A secret password of her choosing (Alice&#8217;s secret key).</li>
+</ul>
+</li>
+<li>The site sends the following to Bob:
+
+<ul>
+<li>An email containing a link.</li>
+<li>A text message containing a secret code.</li>
+</ul>
+</li>
+<li>Bob receives the email and link.
+
+<ul>
+<li>He navigates to the link and is prompted for the code he received in the text. He enters it.</li>
+<li>He is granted access to a form, and he enters a secret password of his choosing (Bob&#8217;s secret key). This doesn&#8217;t need to be the same as Alice&#8217;s secret key.</li>
+</ul>
+</li>
+<li>Alice receives an email saying the website is ready for her upload.
+
+<ul>
+<li>She clicks the link, enters her secret password, and selects her file. Her file gets encrypted in the browser and uploaded to the website.</li>
+</ul>
+</li>
+<li>Bob gets an email saying the download is ready with a link to a retrieval webpage.
+
+<ul>
+<li>He clicks the link and enters his secret password.</li>
+<li>It&#8217;s decrypted in the browser, and saved to his hard drive.</li>
+</ul>
+</li>
+</ol>
+
+
+<p>Readers familiar with the D-H key exchange may already see what&#8217;s going on here. The real trick is in steps (3) and (4) where Alice and Bob are both able to generate a shared secret key without the web service having access to it. Bob and Alice can then encrypt files using the shared secret, and no one but them will be able to decrypt the files.</p>
+
+<h2>Implementation Magic</h2>
+
+<p>So, how does this work? This is the same story, but with the implementation details inserted:</p>
+
+<ol>
+<li>Alice initiates a file transfer with Bob, and enters their contact details. The web page uses Javascript or a Java applet to generate the following encryption details:
+
+<ul>
+<li>A shared prime <em>p</em> and a generator number <em>g</em>. This gets sent to the web service for storage.</li>
+<li>Alice enters a secret password of her choosing, and it gets hashed into a large 128+ bit integer using something like SHA-2. This is her private key <em>a</em> (but she only needs to memorize the password).</li>
+<li>In the browser, Alice&#8217;s public key, <em>A</em>, gets calculated. It equals <em>g<sup>a</sup> mod p</em>. This gets sent to the web service for storage.</li>
+</ul>
+</li>
+<li>The web service sends out the email and text.</li>
+<li>Bob gets the email and text.
+
+<ul>
+<li>He enters the secret code from the text into the web page (this will be explained later), and he&#8217;s granted access to the form.</li>
+<li>He enters a secret password of his choosing, which also gets hashed just like Alice&#8217;s. This is his private key, <em>b</em>.</li>
+<li>In the browser, Bob&#8217;s public key, <em>B</em>, gets calculated as <em>g<sup>b</sup> mod p</em>. This gets sent to the web service for storage.</li>
+</ul>
+</li>
+<li>Alice receives an email saying that her file is ready for encryption and upload.
+
+<ul>
+<li>Bob&#8217;s public key is retrieved, and Alice enters her secret password. In browser, the shared secret is calculated as <em>B<sup>a</sup> mod p</em>.</li>
+<li>The file is encrypted using the shared secret.</li>
+</ul>
+</li>
+<li>Bob gets an email saying the file is ready for retrieval.
+
+<ul>
+<li>Alice&#8217;s public key is retrieved, and he enters his secret password. The shared secret is calculated from <em>A<sup>b</sup> mod p</em>.</li>
+<li>In browser, the file is decrypted using the secret key, and the file is saved to disk.</li>
+</ul>
+</li>
+</ol>
+
+
+<p>Although I still find the process incredible, there&#8217;s really nothing new about the above procedure. It&#8217;s simply an implementation of the D-H exchange that hides the details from the users. What&#8217;s so neat is that the web service and anyone monitoring their communications only ever sees Bob&#8217;s public key, Alice&#8217;s public key, the generator and the prime. No one knows Bob&#8217;s secret key (including Alice!), and no one knows Alice&#8217;s (including Bob). Without these secret keys, no one, including the web service, can calculate the shared encryption key. The web service is zero-knowledge. Sort of.</p>
+
+<h2>Stuck In The Middle</h2>
+
+<p>The most glaring vulnerability with the D-H exchange is the possibility of a man-in-the-middle (MITM) attack. This is well documented. If Eve the eavesdropper can intercept and control Bob&#8217;s or Alice&#8217;s email channel, then Eve can sit in the middle and pretend to be both Bob and Alice. Eve can generate two shared secrets, one with Bob and one with Alice. Alice, who thinks Eve is Bob, sends the file to Eve. Eve decrypts it, reads it, then re-encrypts it using the secret she has with Bob (who thinks Eve is Alice), and sends it to Bob. The file is stolen and neither Alice nor Bob know that it happened. This raises two issues:</p>
+
+<ol>
+<li>If the email channel is insecure, Eve could steal the file.</li>
+<li>If the service is evil, then the service can steal the file by doing exactly what Eve did.</li>
+</ol>
+
+
+<p>The first problem is solved by the text message containing the secret text code that Bob receives. In order for Bob to finish the exchange, he needs to enter the secret text code into the web page. Eve can&#8217;t do this unless she&#8217;s hijacked both his email and his phone. So, Eve can&#8217;t be the woman-in-the-middle because she can access Bob&#8217;s web page and pretend to be Bob.</p>
+
+<p>The second one is a tough one. A potential solution is for some in-browser code to generate a hash of the public keys (<em>A</em>, and <em>B</em>). Bob and Alice could then use some out-of-band channel (perhaps over the phone) to compare the hashes. If Eve were in the middle, they&#8217;d both have a copy of Eve&#8217;s key, and the hashes wouldn&#8217;t match. The issue here is that if the site really is evil, it could simply poison the browser code to do something evil, making this whole out-of-band hash thing moot. Really, the problem is that there&#8217;s no such thing as a zero-knowledge web site. There has to be some amount of trust between the users and site. One side note is that the site does have a motivation for being honest. As long as it never sees the secret keys, it can&#8217;t be subpoenaed from anything useful (unless a judge orders it to poison its browser code).</p>
+
+<h2>An Alternative Method</h2>
+
+<p>Here&#8217;s an alternative method that might be simpler. It uses public key encryption:</p>
+
+<ol>
+<li>Alice initiates a file exchange by entering Bob&#8217;s email.</li>
+<li>Bob gets the email, and navigates to a page that generates a key pair.
+
+<ul>
+<li>The public half of the key pair gets uploaded to the web service. He downloads the private half.</li>
+</ul>
+</li>
+<li>Alice gets an email saying the exchange is ready.
+
+<ul>
+<li>She navigates to the site, which automatically retrieves the public key, encrypts the file, and uploads it.</li>
+</ul>
+</li>
+<li>Bob downloads the file and decrypts it using his private key, in-browser.</li>
+</ol>
+
+
+<p>The advantage is that it might be simpler to implement. It&#8217;s really just a way of creating a one-time key pair, and hiding the details from the user. The disadvantage is that Bob has to hold onto a secret key, rather than a passphrase, and the same MITM vulnerability exists (although it could be fixed in a similar way).</p>
+
+<h2>Conclusion</h2>
+
+<p>That&#8217;s my first stab at a solution. Although I had a lot of fun dreaming it up, it&#8217;s not without its disadvantages, and open questions.</p>
+
+<ol>
+<li>The potential for MITM attacks introduces unwanted complexity (especially if you don&#8217;t trust the site). Could this be made more user friendly? Is there another solution?</li>
+<li>The entire process is complex, and would probably scare off the exact people it&#8217;s trying to help. Is there an alternative method that&#8217;s simpler, but still maintains zero-knowledge?</li>
+<li>Is it secure?</li>
+</ol>
+
+
+<p>I&#8217;d love to hear your comments on these points, or anything related.</p>
+
+<p>Also, many thanks for <a href="http://twitter.com/Cinesias">Cinesias</a> for inspiring me to think about this, and having a bit of a brainstorming session. #FollowFriday</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Alex Beal</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-12-16T13:14:00-07:00" pubdate data-updated="true">Dec 16<span>th</span>, 2011</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/blog/categories/encryption/'>encryption</a>, <a class='category' href='/blog/blog/categories/ideas/'>ideas</a>, <a class='category' href='/blog/blog/categories/security/'>security</a>, <a class='category' href='/blog/blog/categories/web/'>web</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://blog.usrsb.in/blog/2011/12/16/a-zero-knowledge-file-exchange/" data-via="beala" data-counturl="http://blog.usrsb.in/blog/2011/12/16/a-zero-knowledge-file-exchange/" >Tweet</a>
+  
+  
+  <div class="g-plusone" data-size="medium"></div>
+  
+  
+    <div class="fb-like" data-send="true" data-width="450" data-show-faces="false"></div>
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/blog/2011/08/18/search-algorithms-finding-a-bad-coin-part-ii/" title="Previous Post: Search Algorithms: Finding a Bad Coin (Part II)">&laquo; Search Algorithms: Finding a Bad Coin (Part II)</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/blog/2011/12/29/implementing-switches-with-dictionaries/" title="Next Post: Implementing Switches With Dictionaries (Python)">Implementing Switches With Dictionaries (Python) &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/blog/2012/05/05/permutations-an-interview-question/">Permutations: An Interview Question</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/blog/2012/04/07/look-ma-no-loops/">Look, Ma! No Loops: Reversing Word Order</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/blog/2012/04/01/building-data-structures-from-functions/">Building Data Structures from Functions</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/blog/2012/02/05/super-bowl-probabilities/">Super Bowl Probabilities: The Coin Toss</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/blog/2012/01/28/implementing-a-logic-evaluator-without-if-expressions/">Implementing a Logic Evaluator Without if-expressions or Boolean Operators</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/beala">@beala</a> on GitHub
+  
+  <script type="text/javascript">
+    $.domReady(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'beala',
+            count: 0,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/blog/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+<section>
+  <h1>Latest Tweets</h1>
+  <ul id="tweets">
+    <li class="loading">Status updating...</li>
+  </ul>
+  <script type="text/javascript">
+    $.domReady(function(){
+      getTwitterFeed("beala", 4, false);
+    });
+  </script>
+  <script src="/blog/javascripts/twitter.js" type="text/javascript"> </script>
+  
+    <a href="http://twitter.com/beala" class="twitter-follow-button" data-show-count="false">Follow @beala</a>
+  
+</section>
+
+
+<section>
+  <h1>My Pinboard</h1>
+  <ul id="pinboard_linkroll">Fetching linkroll...</ul>
+  <p><a href="http://pinboard.in/u:beala">My Pinboard Bookmarks &raquo;</a></p>
+</section>
+<script type="text/javascript">
+  var linkroll = 'pinboard_linkroll'; //id target for pinboard list
+  var pinboard_user = "beala"; //id target for pinboard list
+  var pinboard_count = 3; //id target for pinboard list
+  (function(){
+    var pinboardInit = document.createElement('script');
+    pinboardInit.type = 'text/javascript';
+    pinboardInit.async = true;
+    pinboardInit.src = '/javascripts/pinboard.js';
+    document.getElementsByTagName('head')[0].appendChild(pinboardInit);
+  })();
+</script>
+
+
+
+
+  
+</aside>
+
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2012 - Alex Beal -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'usrsbin';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://blog.usrsb.in/blog/2011/12/16/a-zero-knowledge-file-exchange/';
+        var disqus_url = 'http://blog.usrsb.in/blog/2011/12/16/a-zero-knowledge-file-exchange/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) {return;}
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/all.js#appId=212934732101925&xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var script = document.createElement('script'); script.type = 'text/javascript'; script.async = true;
+      script.src = 'https://apis.google.com/js/plusone.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script, s);
+    })();
+  </script>
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

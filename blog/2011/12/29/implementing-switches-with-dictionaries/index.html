@@ -1,0 +1,423 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Implementing Switches With Dictionaries (Python) - /usr/sbin/blog</title>
+  <meta name="author" content="Alex Beal">
+
+  
+  <meta name="description" content="One thing I like about Python is that it lets you do just about anything. Classes can be modified at runtime, lists can contain a mix of types, and &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://blog.usrsb.in/blog/2011/12/29/implementing-switches-with-dictionaries">
+  <link href="/blog/favicon.png" rel="icon">
+  <link href="/blog/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/blog/javascripts/modernizr-2.0.js"></script>
+  <script src="/blog/javascripts/ender.js"></script>
+  <script src="/blog/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/blog/atom.xml" rel="alternate" title="/usr/sbin/blog" type="application/atom+xml">
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-27836693-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/blog/">/usr/sbin/blog</a></h1>
+  
+    <h2>Alex's Geekery Journal.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/blog/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:blog.usrsb.in" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="https://usrsb.in">Home</a></li>
+  <li><a href="/blog/">Blog</a></li>
+  <li><a href="/blog/tools">Tools</a></li>
+  <li><a href="/blog/about">About</a></li>
+  <li><a href="/blog/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+
+
+
+
+
+
+
+
+
+
+
+<article class="hentry" role="article" >
+  
+  <header>
+    <h1 class="entry-title">
+
+Implementing Switches With Dictionaries (Python)
+
+</h1>
+
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-12-29T10:55:00-07:00" pubdate data-updated="true">Dec 29<span>th</span>, 2011</time>
+         &bull; <a rel="bookmark" href="/blog/blog/2011/12/29/implementing-switches-with-dictionaries/">&infin;</a>
+      </p>
+    
+  </header>
+
+<div class="entry-content"><p>One thing I like about Python is that it lets you do just about anything. Classes can be modified at runtime, lists can contain a mix of types, and functions are first-class. The built in dictionaries are especially powerful. They are fast, and can hash and contain just about any immutable datatype, including functions. This allows for a novel use: fast <code>switch</code> statements. Consider the following bit of C, which adds, subtracts, or multiplies two numbers based on the value of <code>op</code>:</p>
+
+<figure class='code'><figcaption><span>A C Calculator</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="k">switch</span><span class="p">(</span><span class="n">op</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">case</span> <span class="sc">&#39;+&#39;</span>:
+</span><span class='line'>      <span class="n">c</span> <span class="o">=</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">;</span>
+</span><span class='line'>      <span class="k">break</span><span class="p">;</span>
+</span><span class='line'>  <span class="k">case</span> <span class="sc">&#39;-&#39;</span>:
+</span><span class='line'>      <span class="n">c</span> <span class="o">=</span> <span class="n">a</span> <span class="o">-</span> <span class="n">b</span><span class="p">;</span>
+</span><span class='line'>      <span class="k">break</span><span class="p">;</span>
+</span><span class='line'>  <span class="nl">default:</span>
+</span><span class='line'>      <span class="n">c</span> <span class="o">=</span> <span class="n">a</span> <span class="o">*</span> <span class="n">b</span><span class="p">;</span>
+</span><span class='line'>      <span class="k">break</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This behavior could be duplicated in Python using an <code>if ... elif ... elif ...</code> sequence,<sup>1</sup> or we could use the following dictionary:</p>
+
+<figure class='code'><figcaption><span>A Python Calculator</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">add</span><span class="p">():</span>
+</span><span class='line'>  <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span>
+</span><span class='line'><span class="k">def</span> <span class="nf">sub</span><span class="p">():</span>
+</span><span class='line'>  <span class="k">return</span> <span class="n">a</span> <span class="o">-</span> <span class="n">b</span>
+</span><span class='line'><span class="k">def</span> <span class="nf">mult</span><span class="p">():</span>
+</span><span class='line'>  <span class="k">return</span> <span class="n">a</span> <span class="o">*</span> <span class="n">b</span>
+</span><span class='line'>  
+</span><span class='line'><span class="n">switch_substitute</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class='line'>  <span class="s">&#39;+&#39;</span> <span class="p">:</span> <span class="n">add</span><span class="p">,</span>
+</span><span class='line'>  <span class="s">&#39;-&#39;</span> <span class="p">:</span> <span class="n">sub</span> <span class="p">}</span>
+</span><span class='line'>  
+</span><span class='line'><span class="n">c</span> <span class="o">=</span> <span class="n">switch_substitute</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">mult</span><span class="p">)()</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>There, the three operations are wrapped in functions, and added as values to the dictionary. The <code>get()</code> method looks for the function associated with the value of <code>op</code> and returns the <code>mult</code> function if the key is not in the dictionary, mimicking the action of the <code>default</code> case.<sup>2</sup> Once one of the functions is retrieved, it&#8217;s immediately called, and the appropriate value gets assigned to <code>c</code>.</p>
+
+<p>The advantage of this method is that it&#8217;s fast. Dictionaries are implemented as hash tables, so the lookup happens in constant time.<sup>3</sup> <code>elif</code>s and <code>switch</code>es probably take linear time, but would depend on the implementation.</p>
+
+<p>It&#8217;s also worth thinking about how something similar could be built using a class and Python&#8217;s <a href="http://docs.python.org/library/functions.html#getattr">getattr</a> function.</p>
+
+<h2>Footnotes:</h2>
+
+<ol>
+<li><a href="http://docs.python.org/tutorial/controlflow.html#if-statements">http://docs.python.org/tutorial/controlflow.html#if-statements</a></li>
+<li><a href="http://docs.python.org/library/stdtypes.html#dict.get">http://docs.python.org/library/stdtypes.html#dict.get</a></li>
+<li><a href="http://docs.python.org/library/stdtypes.html#mapping-types-dict">http://docs.python.org/library/stdtypes.html#mapping-types-dict</a></li>
+</ol>
+
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Alex Beal</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-12-29T10:55:00-07:00" pubdate data-updated="true">Dec 29<span>th</span>, 2011</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/blog/categories/programming/'>programming</a>, <a class='category' href='/blog/blog/categories/python/'>python</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://blog.usrsb.in/blog/2011/12/29/implementing-switches-with-dictionaries/" data-via="beala" data-counturl="http://blog.usrsb.in/blog/2011/12/29/implementing-switches-with-dictionaries/" >Tweet</a>
+  
+  
+  <div class="g-plusone" data-size="medium"></div>
+  
+  
+    <div class="fb-like" data-send="true" data-width="450" data-show-faces="false"></div>
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/blog/2011/12/16/a-zero-knowledge-file-exchange/" title="Previous Post: A Zero-Knowledge File Exchange">&laquo; A Zero-Knowledge File Exchange</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/blog/2012/01/03/a-program-analysis-for-tail-call-optimization/" title="Next Post: A Program Analysis For Tail Call Optimization">A Program Analysis For Tail Call Optimization &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/blog/2012/05/05/permutations-an-interview-question/">Permutations: An Interview Question</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/blog/2012/04/07/look-ma-no-loops/">Look, Ma! No Loops: Reversing Word Order</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/blog/2012/04/01/building-data-structures-from-functions/">Building Data Structures from Functions</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/blog/2012/02/05/super-bowl-probabilities/">Super Bowl Probabilities: The Coin Toss</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/blog/2012/01/28/implementing-a-logic-evaluator-without-if-expressions/">Implementing a Logic Evaluator Without if-expressions or Boolean Operators</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/beala">@beala</a> on GitHub
+  
+  <script type="text/javascript">
+    $.domReady(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'beala',
+            count: 0,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/blog/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+<section>
+  <h1>Latest Tweets</h1>
+  <ul id="tweets">
+    <li class="loading">Status updating...</li>
+  </ul>
+  <script type="text/javascript">
+    $.domReady(function(){
+      getTwitterFeed("beala", 4, false);
+    });
+  </script>
+  <script src="/blog/javascripts/twitter.js" type="text/javascript"> </script>
+  
+    <a href="http://twitter.com/beala" class="twitter-follow-button" data-show-count="false">Follow @beala</a>
+  
+</section>
+
+
+<section>
+  <h1>My Pinboard</h1>
+  <ul id="pinboard_linkroll">Fetching linkroll...</ul>
+  <p><a href="http://pinboard.in/u:beala">My Pinboard Bookmarks &raquo;</a></p>
+</section>
+<script type="text/javascript">
+  var linkroll = 'pinboard_linkroll'; //id target for pinboard list
+  var pinboard_user = "beala"; //id target for pinboard list
+  var pinboard_count = 3; //id target for pinboard list
+  (function(){
+    var pinboardInit = document.createElement('script');
+    pinboardInit.type = 'text/javascript';
+    pinboardInit.async = true;
+    pinboardInit.src = '/javascripts/pinboard.js';
+    document.getElementsByTagName('head')[0].appendChild(pinboardInit);
+  })();
+</script>
+
+
+
+
+  
+</aside>
+
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2012 - Alex Beal -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'usrsbin';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://blog.usrsb.in/blog/2011/12/29/implementing-switches-with-dictionaries/';
+        var disqus_url = 'http://blog.usrsb.in/blog/2011/12/29/implementing-switches-with-dictionaries/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) {return;}
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/all.js#appId=212934732101925&xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var script = document.createElement('script'); script.type = 'text/javascript'; script.async = true;
+      script.src = 'https://apis.google.com/js/plusone.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script, s);
+    })();
+  </script>
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>
