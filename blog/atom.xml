@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
-
   <title><![CDATA[/usr/sbin/blog]]></title>
-  <link href="http://usrsb.in/blog/atom.xml" rel="self"/>
-  <link href="http://usrsb.in/blog/"/>
-  <updated>2012-05-05T13:43:03-06:00</updated>
-  <id>http://usrsb.in/blog/</id>
+  <link href="http://blog.usrsb.in/atom.xml" rel="self"/>
+  <link href="http://blog.usrsb.in/"/>
+  <updated>2012-05-11T14:13:09-06:00</updated>
+  <id>http://blog.usrsb.in/</id>
   <author>
     <name><![CDATA[Alex Beal]]></name>
     
@@ -13,12 +12,18 @@
   <generator uri="http://octopress.org/">Octopress</generator>
 
   
-  <entry>
-    <title type="html"><![CDATA[Permutations: An Interview Question]]></title>
-    <link href="http://usrsb.in/blog/blog/2012/05/05/permutations-an-interview-question/"/>
-    <updated>2012-05-05T13:41:00-06:00</updated>
-    <id>http://usrsb.in/blog/blog/2012/05/05/permutations-an-interview-question</id>
-    <content type="html"><![CDATA[<p>Here I go over a coding question I was recently asked during an interview.</p>
+    <entry>
+      
+
+
+
+
+<title type="html"><![CDATA[Permutations: An Interview Question]]></title>
+<link href="http://blog.usrsb.in/blog/2012/05/05/permutations-an-interview-question/"/>
+<updated>2012-05-05T13:41:00-06:00</updated>
+<id>http://blog.usrsb.in/blog/2012/05/05/permutations-an-interview-question</id>
+
+      <content type="html"><![CDATA[<p>Here I go over a coding question I was recently asked during an interview.</p>
 
 <iframe width="853" height="480" src="http://www.youtube.com/embed/wIPcruaQ3Sg" frameborder="0" allowfullscreen></iframe>
 
@@ -32,15 +37,21 @@
 <li>The weird characters in the Vim session are whitespace characters. <code>$</code> is a newline character.</li>
 </ol>
 
-]]></content>
-  </entry>
+<p><a rel="bookmark" href="http://blog.usrsb.in/blog/2012/05/05/permutations-an-interview-question/">&infin; Permalink</a></p>]]></content>
+    </entry>
   
-  <entry>
-    <title type="html"><![CDATA[Look, Ma! No Loops: Reversing Word Order]]></title>
-    <link href="http://usrsb.in/blog/blog/2012/04/07/look-ma-no-loops/"/>
-    <updated>2012-04-07T17:08:00-06:00</updated>
-    <id>http://usrsb.in/blog/blog/2012/04/07/look-ma-no-loops</id>
-    <content type="html"><![CDATA[<p>Here&#8217;s a classic interview question:</p>
+    <entry>
+      
+
+
+
+
+<title type="html"><![CDATA[Look, Ma! No Loops: Reversing Word Order]]></title>
+<link href="http://blog.usrsb.in/blog/2012/04/07/look-ma-no-loops/"/>
+<updated>2012-04-07T17:08:00-06:00</updated>
+<id>http://blog.usrsb.in/blog/2012/04/07/look-ma-no-loops</id>
+
+      <content type="html"><![CDATA[<p>Here&#8217;s a classic interview question:</p>
 
 <blockquote><p>Write a function that takes a string and reverses its word order. So, &#8220;Reverse this string&#8221; results in &#8220;string this Reverse&#8221;.</p></blockquote>
 
@@ -148,15 +159,21 @@
 <li>If Python had a constant time prepend function (&#8216;cons&#8217; in the functional world), I suspect a better solution would be possible.</li>
 </ol>
 
-]]></content>
-  </entry>
+<p><a rel="bookmark" href="http://blog.usrsb.in/blog/2012/04/07/look-ma-no-loops/">&infin; Permalink</a></p>]]></content>
+    </entry>
   
-  <entry>
-    <title type="html"><![CDATA[Building Data Structures from Functions]]></title>
-    <link href="http://usrsb.in/blog/blog/2012/04/01/building-data-structures-from-functions/"/>
-    <updated>2012-04-01T09:00:00-06:00</updated>
-    <id>http://usrsb.in/blog/blog/2012/04/01/building-data-structures-from-functions</id>
-    <content type="html"><![CDATA[<p>Here&#8217;s a puzzle I&#8217;ve adapted from <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-14.html#%_sec_2.1.3">exercise 2.4</a> of SICP.</p>
+    <entry>
+      
+
+
+
+
+<title type="html"><![CDATA[Building Data Structures from Functions]]></title>
+<link href="http://blog.usrsb.in/blog/2012/04/01/building-data-structures-from-functions/"/>
+<updated>2012-04-01T09:00:00-06:00</updated>
+<id>http://blog.usrsb.in/blog/2012/04/01/building-data-structures-from-functions</id>
+
+      <content type="html"><![CDATA[<p>Here&#8217;s a puzzle I&#8217;ve adapted from <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-14.html#%_sec_2.1.3">exercise 2.4</a> of SICP.</p>
 
 <blockquote><p>Suppose you are programming in a language that only supports function application. That is, defining functions and applying arguments to these functions are the only things this language supports. Using only these building blocks, could you construct a linked list?</p></blockquote>
 
@@ -251,15 +268,21 @@
 <li>Technically, this is really a closure, which is a function with some of its variables already set. In the terminology of the PL world, it&#8217;s a function bundled with its environment (the set of variables in its outer scope).</li>
 </ol>
 
-]]></content>
-  </entry>
+<p><a rel="bookmark" href="http://blog.usrsb.in/blog/2012/04/01/building-data-structures-from-functions/">&infin; Permalink</a></p>]]></content>
+    </entry>
   
-  <entry>
-    <title type="html"><![CDATA[Super Bowl Probabilities: The Coin Toss]]></title>
-    <link href="http://usrsb.in/blog/blog/2012/02/05/super-bowl-probabilities/"/>
-    <updated>2012-02-05T09:53:00-07:00</updated>
-    <id>http://usrsb.in/blog/blog/2012/02/05/super-bowl-probabilities</id>
-    <content type="html"><![CDATA[<p>Browsing through my Twitter stream, I came across a blog post discussing an allegedly 3.8-sigma event: <a href="http://blogs.discovermagazine.com/cosmicvariance/2012/02/04/a-3-8-sigma-anomaly/">Apparently the last 14 Super Bowl coin tosses have been won by the NFC</a>. What are the chances of this? The blog linked to above claims a probability of (1/2)<sup>13</sup>. Another <a href="http://www.outsidethebeltway.com/super-bowl-coin-flip/">blog</a> claims (1/2)<sup>14</sup>. Which is correct? Before I get into the mathematics, I&#8217;ll try to disentangle three different questions:</p>
+    <entry>
+      
+
+
+
+
+<title type="html"><![CDATA[Super Bowl Probabilities: The Coin Toss]]></title>
+<link href="http://blog.usrsb.in/blog/2012/02/05/super-bowl-probabilities/"/>
+<updated>2012-02-05T09:53:00-07:00</updated>
+<id>http://blog.usrsb.in/blog/2012/02/05/super-bowl-probabilities</id>
+
+      <content type="html"><![CDATA[<p>Browsing through my Twitter stream, I came across a blog post discussing an allegedly 3.8-sigma event: <a href="http://blogs.discovermagazine.com/cosmicvariance/2012/02/04/a-3-8-sigma-anomaly/">Apparently the last 14 Super Bowl coin tosses have been won by the NFC</a>. What are the chances of this? The blog linked to above claims a probability of (1/2)<sup>13</sup>. Another <a href="http://www.outsidethebeltway.com/super-bowl-coin-flip/">blog</a> claims (1/2)<sup>14</sup>. Which is correct? Before I get into the mathematics, I&#8217;ll try to disentangle three different questions:</p>
 
 <ol>
 <li>Out of 14 tosses, what&#8217;s the probability that they all come up heads?</li>
@@ -440,15 +463,21 @@
 <li>Perhaps the equation <em>v<sub>n</sub>(0)</em> is technically undefined. That is, <em>i</em> cannot equal 0 because you must have a streak of at least 1 head or 1 tail. Nevertheless, it looks like the formula still works for this technically undefined state.</li>
 </ol>
 
-]]></content>
-  </entry>
+<p><a rel="bookmark" href="http://blog.usrsb.in/blog/2012/02/05/super-bowl-probabilities/">&infin; Permalink</a></p>]]></content>
+    </entry>
   
-  <entry>
-    <title type="html"><![CDATA[Implementing a Logic Evaluator Without if-expressions or Boolean Operators]]></title>
-    <link href="http://usrsb.in/blog/blog/2012/01/28/implementing-a-logic-evaluator-without-if-expressions/"/>
-    <updated>2012-01-28T10:19:00-07:00</updated>
-    <id>http://usrsb.in/blog/blog/2012/01/28/implementing-a-logic-evaluator-without-if-expressions</id>
-    <content type="html"><![CDATA[<p>I&#8217;ve slowly been making my way through <a href="http://www.scala-lang.org/sites/default/files/linuxsoft_archives/docu/files/ScalaOverview.pdf">An Overview of the Scala Programming Language</a> [PDF], and was struck by this interesting implementation of Booleans:</p>
+    <entry>
+      
+
+
+
+
+<title type="html"><![CDATA[Implementing a Logic Evaluator Without if-expressions or Boolean Operators]]></title>
+<link href="http://blog.usrsb.in/blog/2012/01/28/implementing-a-logic-evaluator-without-if-expressions/"/>
+<updated>2012-01-28T10:19:00-07:00</updated>
+<id>http://blog.usrsb.in/blog/2012/01/28/implementing-a-logic-evaluator-without-if-expressions</id>
+
+      <content type="html"><![CDATA[<p>I&#8217;ve slowly been making my way through <a href="http://www.scala-lang.org/sites/default/files/linuxsoft_archives/docu/files/ScalaOverview.pdf">An Overview of the Scala Programming Language</a> [PDF], and was struck by this interesting implementation of Booleans:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -561,15 +590,21 @@
 <li>Note that <code>if_</code> is backwards. <code>True if_ False</code> is the same as <code>False -&gt; True</code>, because that&#8217;s closer to the English.</li>
 </ol>
 
-]]></content>
-  </entry>
+<p><a rel="bookmark" href="http://blog.usrsb.in/blog/2012/01/28/implementing-a-logic-evaluator-without-if-expressions/">&infin; Permalink</a></p>]]></content>
+    </entry>
   
-  <entry>
-    <title type="html"><![CDATA[Picking Random Items: Take Two (Hacking Python's Generators)]]></title>
-    <link href="http://usrsb.in/blog/blog/2012/01/14/picking-random-items-take-2/"/>
-    <updated>2012-01-14T10:29:00-07:00</updated>
-    <id>http://usrsb.in/blog/blog/2012/01/14/picking-random-items-take-2</id>
-    <content type="html"><![CDATA[<p>Earlier today I had my mind blown by David Beazley&#8217;s <a href="http://www.dabeaz.com/generators/">presentation on the power of Python&#8217;s generators</a>, and it inspired me to write this highly Pythonic version of <a href="http://usrsb.in/blog/blog/2012/01/11/picking-random-items-from-a-file/">the random word selector</a>, made almost entirely of generators:</p>
+    <entry>
+      
+
+
+
+
+<title type="html"><![CDATA[Picking Random Items: Take Two (Hacking Python's Generators)]]></title>
+<link href="http://blog.usrsb.in/blog/2012/01/14/picking-random-items-take-2/"/>
+<updated>2012-01-14T10:29:00-07:00</updated>
+<id>http://blog.usrsb.in/blog/2012/01/14/picking-random-items-take-2</id>
+
+      <content type="html"><![CDATA[<p>Earlier today I had my mind blown by David Beazley&#8217;s <a href="http://www.dabeaz.com/generators/">presentation on the power of Python&#8217;s generators</a>, and it inspired me to write this highly Pythonic version of <a href="http://blog.usrsb.in/blog/2012/01/11/picking-random-items-from-a-file/">the random word selector</a>, made almost entirely of generators:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -639,15 +674,21 @@
 <li>You could even use the built-in function <code>max()</code> if you only need one word.</li>
 </ol>
 
-]]></content>
-  </entry>
+<p><a rel="bookmark" href="http://blog.usrsb.in/blog/2012/01/14/picking-random-items-take-2/">&infin; Permalink</a></p>]]></content>
+    </entry>
   
-  <entry>
-    <title type="html"><![CDATA[Picking Random Items From a File]]></title>
-    <link href="http://usrsb.in/blog/blog/2012/01/11/picking-random-items-from-a-file/"/>
-    <updated>2012-01-11T10:29:00-07:00</updated>
-    <id>http://usrsb.in/blog/blog/2012/01/11/picking-random-items-from-a-file</id>
-    <content type="html"><![CDATA[<p>Here&#8217;s a deceptively simple programming puzzle: Develop an algorithm for randomly selecting <em>n</em> words from a dictionary file. This is essentially the puzzle I had to solve in order to write my <a href="https://github.com/beala/xkcd-password">xkcd-style password generator</a>, which implements the <a href="http://xkcd.com/936/">xkcd password spec</a>.<sup>1</sup></p>
+    <entry>
+      
+
+
+
+
+<title type="html"><![CDATA[Picking Random Items From a File]]></title>
+<link href="http://blog.usrsb.in/blog/2012/01/11/picking-random-items-from-a-file/"/>
+<updated>2012-01-11T10:29:00-07:00</updated>
+<id>http://blog.usrsb.in/blog/2012/01/11/picking-random-items-from-a-file</id>
+
+      <content type="html"><![CDATA[<p>Here&#8217;s a deceptively simple programming puzzle: Develop an algorithm for randomly selecting <em>n</em> words from a dictionary file. This is essentially the puzzle I had to solve in order to write my <a href="https://github.com/beala/xkcd-password">xkcd-style password generator</a>, which implements the <a href="http://xkcd.com/936/">xkcd password spec</a>.<sup>1</sup></p>
 
 <p>The simplest solution is to parse the dictionary into individual words (easy to do in Python) and put those words into a list. Selecting four random words is then as easy as selecting four random items from the list. This is fast, easy to implement, and simple to understand, but it is also very memory inefficient. I have to load 50,000+ words into memory in order to select four of them.<sup>2</sup> Can we do better? Yes.</p>
 
@@ -745,15 +786,21 @@
 <li><del>If you&#8217;re only using one random value, and your dictionary file has 50,000 words, the chance of a collision is 50,000/2<sup>53</sup> , which is roughly 3 in 562 trillion. I&#8217;ll take those odds.</del> Whoops! This is actually a version of the <a href="http://en.wikipedia.org/wiki/Birthday_problem">birthday problem</a>. The actual probability of a collision is: 1.39e-7. Still quite good.</li>
 </ol>
 
-]]></content>
-  </entry>
+<p><a rel="bookmark" href="http://blog.usrsb.in/blog/2012/01/11/picking-random-items-from-a-file/">&infin; Permalink</a></p>]]></content>
+    </entry>
   
-  <entry>
-    <title type="html"><![CDATA[A Program Analysis For Tail Call Optimization]]></title>
-    <link href="http://usrsb.in/blog/blog/2012/01/03/a-program-analysis-for-tail-call-optimization/"/>
-    <updated>2012-01-03T12:08:00-07:00</updated>
-    <id>http://usrsb.in/blog/blog/2012/01/03/a-program-analysis-for-tail-call-optimization</id>
-    <content type="html"><![CDATA[<p>In this post I will outline a method <a href="http://jwepman.com">Josh Wepman</a> and I have developed for detecting tail calls in programs constructed from a subset of Python. Its original purpose was a Python to x86 compiler we worked on together for a compiler construction course at CU.<sup>1</sup> The approach probably isn&#8217;t new, but it is straightforward and understandable, and might help other novice compiler writers understand a fundamental optimization.</p>
+    <entry>
+      
+
+
+
+
+<title type="html"><![CDATA[A Program Analysis For Tail Call Optimization]]></title>
+<link href="http://blog.usrsb.in/blog/2012/01/03/a-program-analysis-for-tail-call-optimization/"/>
+<updated>2012-01-03T12:08:00-07:00</updated>
+<id>http://blog.usrsb.in/blog/2012/01/03/a-program-analysis-for-tail-call-optimization</id>
+
+      <content type="html"><![CDATA[<p>In this post I will outline a method <a href="http://jwepman.com">Josh Wepman</a> and I have developed for detecting tail calls in programs constructed from a subset of Python. Its original purpose was a Python to x86 compiler we worked on together for a compiler construction course at CU.<sup>1</sup> The approach probably isn&#8217;t new, but it is straightforward and understandable, and might help other novice compiler writers understand a fundamental optimization.</p>
 
 <h2>1. What is a tail call?</h2>
 
@@ -1198,15 +1245,21 @@
 <li>At first blush, this doesn&#8217;t look nested, but it is: <code>x = (((input()) + 1) + g())</code>. The infix notation is deceptive, but, as demonstrated by the parenthesized version, there are actually 2 levels of addition that roughly correspond to the structure of the flattened code.</li>
 </ol>
 
-]]></content>
-  </entry>
+<p><a rel="bookmark" href="http://blog.usrsb.in/blog/2012/01/03/a-program-analysis-for-tail-call-optimization/">&infin; Permalink</a></p>]]></content>
+    </entry>
   
-  <entry>
-    <title type="html"><![CDATA[Implementing Switches With Dictionaries (Python)]]></title>
-    <link href="http://usrsb.in/blog/blog/2011/12/29/implementing-switches-with-dictionaries/"/>
-    <updated>2011-12-29T10:55:00-07:00</updated>
-    <id>http://usrsb.in/blog/blog/2011/12/29/implementing-switches-with-dictionaries</id>
-    <content type="html"><![CDATA[<p>One thing I like about Python is that it lets you do just about anything. Classes can be modified at runtime, lists can contain a mix of types, and functions are first-class. The built in dictionaries are especially powerful. They are fast, and can hash and contain just about any immutable datatype, including functions. This allows for a novel use: fast <code>switch</code> statements. Consider the following bit of C, which adds, subtracts, or multiplies two numbers based on the value of <code>op</code>:</p>
+    <entry>
+      
+
+
+
+
+<title type="html"><![CDATA[Implementing Switches With Dictionaries (Python)]]></title>
+<link href="http://blog.usrsb.in/blog/2011/12/29/implementing-switches-with-dictionaries/"/>
+<updated>2011-12-29T10:55:00-07:00</updated>
+<id>http://blog.usrsb.in/blog/2011/12/29/implementing-switches-with-dictionaries</id>
+
+      <content type="html"><![CDATA[<p>One thing I like about Python is that it lets you do just about anything. Classes can be modified at runtime, lists can contain a mix of types, and functions are first-class. The built in dictionaries are especially powerful. They are fast, and can hash and contain just about any immutable datatype, including functions. This allows for a novel use: fast <code>switch</code> statements. Consider the following bit of C, which adds, subtracts, or multiplies two numbers based on the value of <code>op</code>:</p>
 
 <figure class='code'><figcaption><span>A C Calculator</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -1276,15 +1329,21 @@
 <li><a href="http://docs.python.org/library/stdtypes.html#mapping-types-dict">http://docs.python.org/library/stdtypes.html#mapping-types-dict</a></li>
 </ol>
 
-]]></content>
-  </entry>
+<p><a rel="bookmark" href="http://blog.usrsb.in/blog/2011/12/29/implementing-switches-with-dictionaries/">&infin; Permalink</a></p>]]></content>
+    </entry>
   
-  <entry>
-    <title type="html"><![CDATA[A Zero-Knowledge File Exchange]]></title>
-    <link href="http://usrsb.in/blog/blog/2011/12/16/a-zero-knowledge-file-exchange/"/>
-    <updated>2011-12-16T13:14:00-07:00</updated>
-    <id>http://usrsb.in/blog/blog/2011/12/16/a-zero-knowledge-file-exchange</id>
-    <content type="html"><![CDATA[<h2>The Problem</h2>
+    <entry>
+      
+
+
+
+
+<title type="html"><![CDATA[A Zero-Knowledge File Exchange]]></title>
+<link href="http://blog.usrsb.in/blog/2011/12/16/a-zero-knowledge-file-exchange/"/>
+<updated>2011-12-16T13:14:00-07:00</updated>
+<id>http://blog.usrsb.in/blog/2011/12/16/a-zero-knowledge-file-exchange</id>
+
+      <content type="html"><![CDATA[<h2>The Problem</h2>
 
 <p>Alice wants to send Bob an encrypted file over the Internet. Alice&#8217;s first attempt is to encrypt the file using 7-zip and send it as an attachment, but quickly realizes that Bob now has no way of decrypting the file. Alice could email the decryption key, but realizes that this is insecure. Why encrypt the file in the first place if she is going to email the key in plaintext? Another solution is to use public key encryption, but contrary to everything we&#8217;ve ever read about Alice and Bob, neither knows how to use GPG. Alex, a dashing computer-scientist-in-training and intrepid narrator of this post, decides to craft a solution. Here is his proposal.</p>
 
@@ -1440,15 +1499,21 @@
 <p>I&#8217;d love to hear your comments on these points, or anything related.</p>
 
 <p>Also, many thanks for <a href="http://twitter.com/Cinesias">Cinesias</a> for inspiring me to think about this, and having a bit of a brainstorming session. #FollowFriday</p>
-]]></content>
-  </entry>
+<p><a rel="bookmark" href="http://blog.usrsb.in/blog/2011/12/16/a-zero-knowledge-file-exchange/">&infin; Permalink</a></p>]]></content>
+    </entry>
   
-  <entry>
-    <title type="html"><![CDATA[Search Algorithms: Finding a Bad Coin (Part II)]]></title>
-    <link href="http://usrsb.in/blog/blog/2011/08/18/search-algorithms-finding-a-bad-coin-part-ii/"/>
-    <updated>2011-08-18T13:24:00-06:00</updated>
-    <id>http://usrsb.in/blog/blog/2011/08/18/search-algorithms-finding-a-bad-coin-part-ii</id>
-    <content type="html"><![CDATA[<p>In the last post, I discussed a problem about finding the bad coin in a set of 8 coins. Here, I&#8217;ll do some mathematical analysis of the different algorithms, and talk about the number of steps it takes to search through n coins using each algorithm.</p>
+    <entry>
+      
+
+
+
+
+<title type="html"><![CDATA[Search Algorithms: Finding a Bad Coin (Part II)]]></title>
+<link href="http://blog.usrsb.in/blog/2011/08/18/search-algorithms-finding-a-bad-coin-part-ii/"/>
+<updated>2011-08-18T13:24:00-06:00</updated>
+<id>http://blog.usrsb.in/blog/2011/08/18/search-algorithms-finding-a-bad-coin-part-ii</id>
+
+      <content type="html"><![CDATA[<p>In the last post, I discussed a problem about finding the bad coin in a set of 8 coins. Here, I&#8217;ll do some mathematical analysis of the different algorithms, and talk about the number of steps it takes to search through n coins using each algorithm.</p>
 
 <h2>The Simplest Algorithm</h2>
 
@@ -1503,15 +1568,21 @@ So, what are the takeaway points?</p>
 
 
 <p>As Jon Bentley points out in <a href="http://www.amazon.com/Programming-Pearls-2nd-Jon-Bentley/dp/0201657880">Programming Pearls</a> [Amazon.com], because the ternary search scales so much better, there&#8217;s some sufficiently large value of n, at which a pocket calculator running the ternary search will outpace a supercomputer running the simple algorithm.</p>
-]]></content>
-  </entry>
+<p><a rel="bookmark" href="http://blog.usrsb.in/blog/2011/08/18/search-algorithms-finding-a-bad-coin-part-ii/">&infin; Permalink</a></p>]]></content>
+    </entry>
   
-  <entry>
-    <title type="html"><![CDATA[A Search Algorithm Puzzle: Finding a Bad Coin]]></title>
-    <link href="http://usrsb.in/blog/blog/2011/08/17/a-search-algorithm-puzzle-finding-a-bad-coin/"/>
-    <updated>2011-08-17T13:30:00-06:00</updated>
-    <id>http://usrsb.in/blog/blog/2011/08/17/a-search-algorithm-puzzle-finding-a-bad-coin</id>
-    <content type="html"><![CDATA[<p>Today I have a puzzle for you from James Hein&#8217;s textbook, <a href="http://www.amazon.com/Discrete-Structures-Logic-Computability-James/dp/0763772062">Discrete Structures, Logic, and Computability</a>. It&#8217;s a question about finding a &#8220;bad coin&#8221; and goes as follows:</p>
+    <entry>
+      
+
+
+
+
+<title type="html"><![CDATA[A Search Algorithm Puzzle: Finding a Bad Coin]]></title>
+<link href="http://blog.usrsb.in/blog/2011/08/17/a-search-algorithm-puzzle-finding-a-bad-coin/"/>
+<updated>2011-08-17T13:30:00-06:00</updated>
+<id>http://blog.usrsb.in/blog/2011/08/17/a-search-algorithm-puzzle-finding-a-bad-coin</id>
+
+      <content type="html"><![CDATA[<p>Today I have a puzzle for you from James Hein&#8217;s textbook, <a href="http://www.amazon.com/Discrete-Structures-Logic-Computability-James/dp/0763772062">Discrete Structures, Logic, and Computability</a>. It&#8217;s a question about finding a &#8220;bad coin&#8221; and goes as follows:</p>
 
 <blockquote><p>Suppose we are asked to use a pan balance to find the heavy coin among eight coins with the assumption that they all look alike and the other seven all have the same weight. (p. 287)
 So, the problem is that we have 8 coins, and one of them is a bad coin that weighs more than the others. With only a pan balance, what&#8217;s the most efficient way to find the bad coin?</p></blockquote>
@@ -1533,15 +1604,21 @@ So, the problem is that we have 8 coins, and one of them is a bad coin that weig
 <p>For this revised procedure, we begin by weighing 1 through 3 and 4 through 6. If those groups have equal weight, then we go down the middle branch and see that the bad coin must be 7 or 8. We follow a similar procedure if, after the first weighing, 1 through 3 is heavier. We go down the left branch and test 1 and 2. If those weigh the same, then the bad coin must be coin 3. Pretty clever.</p>
 
 <p>Next post I&#8217;ll attempt some mathematical analysis on the algorithms, and see what we can say about how many steps it takes to sort through n coins. In the meantime, check out this <a href="https://secure.wikimedia.org/wikipedia/en/wiki/Binary_search_algorithm#Computer_use">interesting tidbit from Wikipedia&#8217;s Binary Search article</a>. Despite its ubiquity and seeming simplicity, it&#8217;s apparently quite difficult to implement!</p>
-]]></content>
-  </entry>
+<p><a rel="bookmark" href="http://blog.usrsb.in/blog/2011/08/17/a-search-algorithm-puzzle-finding-a-bad-coin/">&infin; Permalink</a></p>]]></content>
+    </entry>
   
-  <entry>
-    <title type="html"><![CDATA[A Database Engine in 16 Lines]]></title>
-    <link href="http://usrsb.in/blog/blog/2011/08/15/a-database-engine-in-16-lines/"/>
-    <updated>2011-08-15T13:36:00-06:00</updated>
-    <id>http://usrsb.in/blog/blog/2011/08/15/a-database-engine-in-16-lines</id>
-    <content type="html"><![CDATA[<p>Recently I&#8217;ve been playing around with a neat command line utility called netcat. It makes it incredibly easy to add networking functionality to your scripts. What it does is allow you to open a port on your machine and listen for incoming connections. Should a connection occur, anything the remote machine sends is dumped to stdout, and anything written to stdin is sent out to the remote machine. As a demo, I decided to write a database engine with it, and I managed to do it in 16 lines.</p>
+    <entry>
+      
+
+
+
+
+<title type="html"><![CDATA[A Database Engine in 16 Lines]]></title>
+<link href="http://blog.usrsb.in/blog/2011/08/15/a-database-engine-in-16-lines/"/>
+<updated>2011-08-15T13:36:00-06:00</updated>
+<id>http://blog.usrsb.in/blog/2011/08/15/a-database-engine-in-16-lines</id>
+
+      <content type="html"><![CDATA[<p>Recently I&#8217;ve been playing around with a neat command line utility called netcat. It makes it incredibly easy to add networking functionality to your scripts. What it does is allow you to open a port on your machine and listen for incoming connections. Should a connection occur, anything the remote machine sends is dumped to stdout, and anything written to stdin is sent out to the remote machine. As a demo, I decided to write a database engine with it, and I managed to do it in 16 lines.</p>
 
 <pre><code>#!/bin/bash
 
@@ -1618,15 +1695,21 @@ nc $1 $ANSWERPORT
 <p>Although this was a fun exercise, the script itself isn&#8217;t very practical. It&#8217;s slow (at least compared to MySQL), and probably insecure, but there might be a use for it on a private network with trusted users. The take away points here are the different netcat constructs that you could apply to your own programs, such as sending and receiving at the same time, and setting up a client-server model. Definitely let me know in the comments if you end up making something cool!</p>
 
 <p><a href="http://media.usrsb.in/db/db-scripts.zip">Download the scripts.</a></p>
-]]></content>
-  </entry>
+<p><a rel="bookmark" href="http://blog.usrsb.in/blog/2011/08/15/a-database-engine-in-16-lines/">&infin; Permalink</a></p>]]></content>
+    </entry>
   
-  <entry>
-    <title type="html"><![CDATA[Secure Versioned Remote Backups with Rdiff-Backup]]></title>
-    <link href="http://usrsb.in/blog/blog/2011/08/13/secure-versioned-remote-backups-with-rdiff-backup/"/>
-    <updated>2011-08-13T14:31:00-06:00</updated>
-    <id>http://usrsb.in/blog/blog/2011/08/13/secure-versioned-remote-backups-with-rdiff-backup</id>
-    <content type="html"><![CDATA[<p>When putting together a backup solution for this web server, I was looking for a few things:</p>
+    <entry>
+      
+
+
+
+
+<title type="html"><![CDATA[Secure Versioned Remote Backups with Rdiff-Backup]]></title>
+<link href="http://blog.usrsb.in/blog/2011/08/13/secure-versioned-remote-backups-with-rdiff-backup/"/>
+<updated>2011-08-13T14:31:00-06:00</updated>
+<id>http://blog.usrsb.in/blog/2011/08/13/secure-versioned-remote-backups-with-rdiff-backup</id>
+
+      <content type="html"><![CDATA[<p>When putting together a backup solution for this web server, I was looking for a few things:</p>
 
 <ol>
 <li><strong>Simplicity:</strong> The less new software, the better. Rsync is both powerful and complex, and I wanted to avoid it. Other things being equal, simple solutions are also more reliable.</li>
@@ -1736,15 +1819,21 @@ fi
 <p>So, that&#8217;s my custom built backup solution. I realize I glazed over a lot of small details, and this isn&#8217;t really a step by step how-to (e.g., I never explained how to set up a cron job). I leave it as an exercise to the reader to put it all together. To help you, I&#8217;ve included the scripts at the bottom of this post. I also check the comments obsessively, so please don&#8217;t hesitate to ask if you have any questions.</p>
 
 <p><a href="http://media.usrsb.in/rdiff-backup/backup.zip">Download the scripts.</a></p>
-]]></content>
-  </entry>
+<p><a rel="bookmark" href="http://blog.usrsb.in/blog/2011/08/13/secure-versioned-remote-backups-with-rdiff-backup/">&infin; Permalink</a></p>]]></content>
+    </entry>
   
-  <entry>
-    <title type="html"><![CDATA[The Surface Area of a Sphere Between Parallel Planes]]></title>
-    <link href="http://usrsb.in/blog/blog/2011/08/11/the-surface-area-of-a-sphere-between-parallel-planes/"/>
-    <updated>2011-08-11T15:49:00-06:00</updated>
-    <id>http://usrsb.in/blog/blog/2011/08/11/the-surface-area-of-a-sphere-between-parallel-planes</id>
-    <content type="html"><![CDATA[<p>Here&#8217;s a math problem that surprised me: Imagine a sphere of diameter <em>d</em> intersected by two parallel planes a distance <em>h</em> apart. What do you think the surface area of the section of the sphere between the planes is? You&#8217;re first thought might be that there&#8217;s not enough information. The area will depend upon what part of the sphere the planes intersect. If the planes cut out the middle third of the sphere, that will be a different surface area compared to if the planes cut out the left third or the right third.</p>
+    <entry>
+      
+
+
+
+
+<title type="html"><![CDATA[The Surface Area of a Sphere Between Parallel Planes]]></title>
+<link href="http://blog.usrsb.in/blog/2011/08/11/the-surface-area-of-a-sphere-between-parallel-planes/"/>
+<updated>2011-08-11T15:49:00-06:00</updated>
+<id>http://blog.usrsb.in/blog/2011/08/11/the-surface-area-of-a-sphere-between-parallel-planes</id>
+
+      <content type="html"><![CDATA[<p>Here&#8217;s a math problem that surprised me: Imagine a sphere of diameter <em>d</em> intersected by two parallel planes a distance <em>h</em> apart. What do you think the surface area of the section of the sphere between the planes is? You&#8217;re first thought might be that there&#8217;s not enough information. The area will depend upon what part of the sphere the planes intersect. If the planes cut out the middle third of the sphere, that will be a different surface area compared to if the planes cut out the left third or the right third.</p>
 
 <p>That was my first thought, at least, and, as it turns out, it&#8217;s wrong. <strong>The area only depends on the distance between the planes, and the diameter of the sphere. It doesn&#8217;t matter where these planes are in relation to the sphere.</strong> As long as they both intersect the sphere, the surface area will equal <em>πdh</em>, where d is the diameter and <em>h</em> is the distance between the planes. Don&#8217;t believe me? Here&#8217;s the math to prove it:</p>
 
@@ -1791,15 +1880,21 @@ fi
 <p><img src="http://media.usrsb.in/sa-sphere/12.png" alt="title" /></p>
 
 <p>There you have it. The surface area of a sphere between two parallel planes is equal to <em>πdh</em>. It doesn&#8217;t matter where these planes are in relation to the sphere. All that matters is that both planes intersect the sphere. Cool, huh? No? Ok, fine. Well, I thought it was interesting.</p>
-]]></content>
-  </entry>
+<p><a rel="bookmark" href="http://blog.usrsb.in/blog/2011/08/11/the-surface-area-of-a-sphere-between-parallel-planes/">&infin; Permalink</a></p>]]></content>
+    </entry>
   
-  <entry>
-    <title type="html"><![CDATA[Copying Strings in One Line (C Programming)]]></title>
-    <link href="http://usrsb.in/blog/blog/2011/08/06/copying-strings-in-one-line-c-programming/"/>
-    <updated>2011-08-06T16:01:00-06:00</updated>
-    <id>http://usrsb.in/blog/blog/2011/08/06/copying-strings-in-one-line-c-programming</id>
-    <content type="html"><![CDATA[<p>Here&#8217;s a quickie for your Saturday afternoon:</p>
+    <entry>
+      
+
+
+
+
+<title type="html"><![CDATA[Copying Strings in One Line (C Programming)]]></title>
+<link href="http://blog.usrsb.in/blog/2011/08/06/copying-strings-in-one-line-c-programming/"/>
+<updated>2011-08-06T16:01:00-06:00</updated>
+<id>http://blog.usrsb.in/blog/2011/08/06/copying-strings-in-one-line-c-programming</id>
+
+      <content type="html"><![CDATA[<p>Here&#8217;s a quickie for your Saturday afternoon:</p>
 
 <pre><code>strcpy(s, t)    /* copy t to s; pointer version 3 */
 char *s, *t;
@@ -1827,15 +1922,21 @@ char *s, *t;
 <blockquote><p>The result of the postfix <code>++</code> operator is the value of the operand. After the result is obtained, the value of the operand is incremented. (page 75)</p></blockquote>
 
 <p>It&#8217;s definitely a bit of black magic. Use this code wisely.</p>
-]]></content>
-  </entry>
+<p><a rel="bookmark" href="http://blog.usrsb.in/blog/2011/08/06/copying-strings-in-one-line-c-programming/">&infin; Permalink</a></p>]]></content>
+    </entry>
   
-  <entry>
-    <title type="html"><![CDATA[1 Minus 1 Equals What? (Fun with sums and limits)]]></title>
-    <link href="http://usrsb.in/blog/blog/2011/08/05/1-minus-1-equals-what-fun-with-sums-and-limits/"/>
-    <updated>2011-08-05T16:10:00-06:00</updated>
-    <id>http://usrsb.in/blog/blog/2011/08/05/1-minus-1-equals-what-fun-with-sums-and-limits</id>
-    <content type="html"><![CDATA[<p>Here&#8217;s a cool problem I came across when reviewing for one of my calculus exams:</p>
+    <entry>
+      
+
+
+
+
+<title type="html"><![CDATA[1 Minus 1 Equals What? (Fun with sums and limits)]]></title>
+<link href="http://blog.usrsb.in/blog/2011/08/05/1-minus-1-equals-what-fun-with-sums-and-limits/"/>
+<updated>2011-08-05T16:10:00-06:00</updated>
+<id>http://blog.usrsb.in/blog/2011/08/05/1-minus-1-equals-what-fun-with-sums-and-limits</id>
+
+      <content type="html"><![CDATA[<p>Here&#8217;s a cool problem I came across when reviewing for one of my calculus exams:</p>
 
 <p><img src="http://media.usrsb.in/sum-paradox/question.png" alt="The Question" /></p>
 
@@ -1868,15 +1969,21 @@ char *s, *t;
 <p>What I mean by that is, (1) as we&#8217;ve learned from limits, an infinite number of really small things (in this case, segments) can add to a finite number. This doesn&#8217;t quite resolve the paradox though. Usually an infinite number of small things adds to something greater than 0. Here it looks like all the segments add to nothing. There are an infinite number of segments, but we still have nothing left. Hopefully this is where point (2) saves the day.</p>
 
 <p>We&#8217;re taking the math too literally. When we take this sum to infinity, what we&#8217;re really saying is that as we get closer and closer to infinity, we&#8217;re getting closer and closer to removing a length of 1, <em>but we never actually get there.</em> Similarly, when we take the limit, what we&#8217;re really saying is that as we remove more and more segments, we get closer and closer to having an infinite number of segments left over, <em>but we never actually get there either.</em> <strong>As long as we never actually get to either of these points, we haven&#8217;t contradicted ourselves.</strong> I think. If you have a deeper insight into this, definitely be sure to post it in the comments!</p>
-]]></content>
-  </entry>
+<p><a rel="bookmark" href="http://blog.usrsb.in/blog/2011/08/05/1-minus-1-equals-what-fun-with-sums-and-limits/">&infin; Permalink</a></p>]]></content>
+    </entry>
   
-  <entry>
-    <title type="html"><![CDATA[How Old School C Programmers Process Arguments]]></title>
-    <link href="http://usrsb.in/blog/blog/2011/08/04/how-old-school-c-programmers-process-arguments/"/>
-    <updated>2011-08-04T16:39:00-06:00</updated>
-    <id>http://usrsb.in/blog/blog/2011/08/04/how-old-school-c-programmers-process-arguments</id>
-    <content type="html"><![CDATA[<p>Here&#8217;s a bit of code from Kernighan&#8217;s and Ritchie&#8217;s seminal text, <a href="http://www.amazon.com/Programming-Language-2nd-Brian-Kernighan/dp/0131103628">The C Programming Language</a>. I&#8217;m not sure I&#8217;d actually recommend coding this way (as written in the book, the entire program has only one comment), but it&#8217;s so darn clever and concise, I can&#8217;t help but post it. This snippet is part of a larger program called <code>find</code> that searches text for patterns, but the details aren&#8217;t important. I want to focus on the portion below that parses the arguments passed to the program. Don&#8217;t worry about understanding it just yet. I&#8217;ll step through it below:</p>
+    <entry>
+      
+
+
+
+
+<title type="html"><![CDATA[How Old School C Programmers Process Arguments]]></title>
+<link href="http://blog.usrsb.in/blog/2011/08/04/how-old-school-c-programmers-process-arguments/"/>
+<updated>2011-08-04T16:39:00-06:00</updated>
+<id>http://blog.usrsb.in/blog/2011/08/04/how-old-school-c-programmers-process-arguments</id>
+
+      <content type="html"><![CDATA[<p>Here&#8217;s a bit of code from Kernighan&#8217;s and Ritchie&#8217;s seminal text, <a href="http://www.amazon.com/Programming-Language-2nd-Brian-Kernighan/dp/0131103628">The C Programming Language</a>. I&#8217;m not sure I&#8217;d actually recommend coding this way (as written in the book, the entire program has only one comment), but it&#8217;s so darn clever and concise, I can&#8217;t help but post it. This snippet is part of a larger program called <code>find</code> that searches text for patterns, but the details aren&#8217;t important. I want to focus on the portion below that parses the arguments passed to the program. Don&#8217;t worry about understanding it just yet. I&#8217;ll step through it below:</p>
 
 <pre><code>char *s;
 while (--argc &gt; 0 &amp;&amp; (*++argv)[0] == '-')
@@ -1966,15 +2073,21 @@ else
 <p>The last and final part is the if statement. It prints an error/usage message if <code>argc</code> is not equal to 1. Why? Because there should always be one argument left after the flags are processed (the <code>PATTERN</code> argument). The error will also be printed if the program is given an unrecognized flag and the default case in the switch is executed. If there aren&#8217;t any problems, then it executes the else where the main part of the program is contained.</p>
 
 <p>So there you have it. That&#8217;s how Kernigham and Ritchie did it in 1978. Nowadays they just haul in the software weenies with their fancy objects and methods. Lost is the subtle art of manipulating arrays of pointers to strings of characters. Alas. (Just kidding. After all, I&#8217;m probably one of those software weenies.)</p>
-]]></content>
-  </entry>
+<p><a rel="bookmark" href="http://blog.usrsb.in/blog/2011/08/04/how-old-school-c-programmers-process-arguments/">&infin; Permalink</a></p>]]></content>
+    </entry>
   
-  <entry>
-    <title type="html"><![CDATA[Fibonacci Sequence, Part II]]></title>
-    <link href="http://usrsb.in/blog/blog/2011/08/03/fibonacci-sequence-part-ii/"/>
-    <updated>2011-08-03T16:49:00-06:00</updated>
-    <id>http://usrsb.in/blog/blog/2011/08/03/fibonacci-sequence-part-ii</id>
-    <content type="html"><![CDATA[<p>The matrix equation in the last post can actually be whittled down a bit further to produce another equation that, in some ways, is easier to work with. The result is as follows:</p>
+    <entry>
+      
+
+
+
+
+<title type="html"><![CDATA[Fibonacci Sequence, Part II]]></title>
+<link href="http://blog.usrsb.in/blog/2011/08/03/fibonacci-sequence-part-ii/"/>
+<updated>2011-08-03T16:49:00-06:00</updated>
+<id>http://blog.usrsb.in/blog/2011/08/03/fibonacci-sequence-part-ii</id>
+
+      <content type="html"><![CDATA[<p>The matrix equation in the last post can actually be whittled down a bit further to produce another equation that, in some ways, is easier to work with. The result is as follows:</p>
 
 <p><img src="http://media.usrsb.in/fib2/fib.png" alt="fib" /></p>
 
@@ -2041,15 +2154,21 @@ else
 <p>That&#8217;s the full equation, but now notice that the second term is always less than 1/2. This mean we can simply drop it, yielding:</p>
 
 <p>In fact, since the second term is always less than 1/2 and the full equation always gives us an integer, we can take this a step further: <strong>Rounding the approximation to the nearest integer will always give you the exact value for F<sub>k</sub>.</strong> Cool.</p>
-]]></content>
-  </entry>
+<p><a rel="bookmark" href="http://blog.usrsb.in/blog/2011/08/03/fibonacci-sequence-part-ii/">&infin; Permalink</a></p>]]></content>
+    </entry>
   
-  <entry>
-    <title type="html"><![CDATA[Using Matrices to Generate the Fibonacci Sequence]]></title>
-    <link href="http://usrsb.in/blog/blog/2011/04/10/using-matrices-to-generate-the-fibonacci-sequence/"/>
-    <updated>2011-04-10T12:47:00-06:00</updated>
-    <id>http://usrsb.in/blog/blog/2011/04/10/using-matrices-to-generate-the-fibonacci-sequence</id>
-    <content type="html"><![CDATA[<p>Here&#8217;s a fun little matrix:</p>
+    <entry>
+      
+
+
+
+
+<title type="html"><![CDATA[Using Matrices to Generate the Fibonacci Sequence]]></title>
+<link href="http://blog.usrsb.in/blog/2011/04/10/using-matrices-to-generate-the-fibonacci-sequence/"/>
+<updated>2011-04-10T12:47:00-06:00</updated>
+<id>http://blog.usrsb.in/blog/2011/04/10/using-matrices-to-generate-the-fibonacci-sequence</id>
+
+      <content type="html"><![CDATA[<p>Here&#8217;s a fun little matrix:</p>
 
 <p><img src="http://media.usrsb.in/fib-mat/equation.png" alt="Fib Matrix" /></p>
 
@@ -2078,7 +2197,7 @@ else
 <h3>References</h3>
 
 <p>1: Strang, Gilbert. &#8221;<a href="http://www.amazon.com/Linear-Algebra-Applications-Gilbert-Strang/dp/0030105676/ref=sr_1_2?s=books&amp;ie=UTF8&amp;qid=1312385275&amp;sr=1-2">Linear Algebra and Its Applications</a>.&#8221;</p>
-]]></content>
-  </entry>
+<p><a rel="bookmark" href="http://blog.usrsb.in/blog/2011/04/10/using-matrices-to-generate-the-fibonacci-sequence/">&infin; Permalink</a></p>]]></content>
+    </entry>
   
 </feed>
