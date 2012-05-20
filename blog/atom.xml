@@ -3,7 +3,7 @@
   <title><![CDATA[/usr/sbin/blog]]></title>
   <link href="http://blog.usrsb.in/atom.xml" rel="self"/>
   <link href="http://blog.usrsb.in/"/>
-  <updated>2012-05-11T14:13:09-06:00</updated>
+  <updated>2012-05-20T09:10:55-06:00</updated>
   <id>http://blog.usrsb.in/</id>
   <author>
     <name><![CDATA[Alex Beal]]></name>
@@ -11,6 +11,101 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+    <entry>
+      
+
+
+
+
+<title type="html"><![CDATA[Did the Boulder PD Reduce Traffic Accidents?]]></title>
+<link href="http://blog.usrsb.in/blog/2012/05/20/did-the-boulder-pd-reduce-traffic-accidents/"/>
+<updated>2012-05-20T09:00:00-06:00</updated>
+<id>http://blog.usrsb.in/blog/2012/05/20/did-the-boulder-pd-reduce-traffic-accidents</id>
+
+      <content type="html"><![CDATA[<p>There&#8217;s an article I came across a couple of years ago, which I filed away in the back of my brain, concerning the number of traffic accidents in Boulder. The police department increased enforcement at several intersections, and they were optimistic about the results. At all of the intersections, the number of accidents had dropped compared to the number of accidents in the year before.</p>
+
+<blockquote><p>The police department&#8217;s traffic unit decided early last year to step up enforcement around three intersections that consistently rank among the top accident locations in the city&#8230;That meant placing more officers in marked cars at the intersection&#8230;Compared with 2008, last year saw 14 fewer accidents at those intersections, an 11 percent decrease.</p><footer><strong>The Daily Camera</strong> <cite><a href='http://www.dailycamera.com/ci_14456899'>www.dailycamera.com/ci_14456899/&hellip;</a></cite></footer></blockquote>
+
+
+<p>The box to the left of the article presents the data, which I&#8217;ve reproduced below:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>Accident data
+</span><span class='line'>Intersection            2008    2009
+</span><span class='line'>
+</span><span class='line'>28th and Arapahoe       52      46
+</span><span class='line'>
+</span><span class='line'>30th and Arapahoe       39      33
+</span><span class='line'>
+</span><span class='line'>Foothills and Arapahoe  35      33
+</span><span class='line'>
+</span><span class='line'>Citywide                3,242   3,405
+</span><span class='line'>
+</span><span class='line'>Source: Boulder Police Department</span></code></pre></td></tr></table></div></figure>
+
+
+<p>As you may have guessed, I was quite skeptical of this article. Just because a random variable varies from experiment to experiment, doesn&#8217;t mean the variation is anything but coincidence. I just flipped a coin 4 times. The first two times it was heads, and the second two, it was first heads and then tails. That, of course, doesn&#8217;t mean the coin suddenly became less lucky. So, the question I want to answer in this post is: <em>Is the Boulder PD justified in thinking that they&#8217;ve decreased the number of traffic accidents at these three intersections?</em></p>
+
+<p>The way I&#8217;m going to answer this question is to first model these accidents with a probability distribution, and then use this to find the probability that the decrease in accidents could have been due to random variation. The distribution I&#8217;m going to use is a really interesting one called the Poisson distribution. This distribution is great for modeling events that happen very rarely, such as shark attacks and traffic accidents. Many people drive every day, but very few (relatively speaking) are involved in an accident. Further, this distribution has one parameter, λ, and both its variance and expected value are equal to it.</p>
+
+<p><img src="http://media.usrsb.in/traffic-poisson/expected-var.png" title="Expected Value and Variance of the Poisson Distribution" ></p>
+
+<p>The issue, of course, is that we don&#8217;t know the expected value or variance of traffic accidents at these intersections. We can, though, make a charitable assumption. In the interests of some fun mathematics, let&#8217;s assume that 2008 was an incredibly average year, and that the number of accidents that occurred that year is exactly the expected value. Since the variance is equal to the expected value, we can, for example, say that the variance is 52 for 28th and Arapahoe.</p>
+
+<p>Now that we know the variance and expected value, we can calculate the <em>z-score</em> of the decrease in accidents. This will tell us the probability that the random variable (in this case, the number of accidents at 28th and Arapahoe) could, by mere chance, decrease by 6 to 46. But wait a minute. z-scores only pertain to normal distributions, and we&#8217;re using the Poisson distribution. This is ok, though. Since λ is large (λ > 25) it can be approximated with the normal distribution.<sup>1</sup> So, let&#8217;s calculate the z-score:</p>
+
+<p><img src="http://media.usrsb.in/traffic-poisson/z-val.png" title="z-value of the Normal Distribution" ></p>
+
+<p><img src="http://media.usrsb.in/traffic-poisson/z-val-calc.png" title="z-value of the reduction = 0.832" ></p>
+
+<p>We now know that a decrease of 6 accidents from 52 falls at exactly -0.832 standard deviations from the mean. From this, we can tell that <a href="http://www.wolframalpha.com/input/?i=z-score+-0.832">the chance that the number of accidents in a given year would vary between 46 and 58 (±6 from the mean of 52) is 60%,</a> and the chance that the number of accidents would be something less than or equal to 46 is 20%. So, it seems quite likely that this variation was just random coincidence. The Boulder PD is probably being a bit too optimistic in thinking that it&#8217;s their additional enforcement that decreased the number of traffic accidents at 28th and Arapahoe. Now, what about the other intersections? I&#8217;ve repeated this calculation for the other three statistics below:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>Accident data
+</span><span class='line'>Intersection            2008    2009    z-value     P(z &lt; z-value) (left tailed p-value)
+</span><span class='line'>
+</span><span class='line'>28th and Arapahoe       52      46      -0.832      0.202
+</span><span class='line'>
+</span><span class='line'>30th and Arapahoe       39      33      -0.971      0.1683
+</span><span class='line'>
+</span><span class='line'>Foothills and Arapahoe  35      33      -0.334      0.369
+</span><span class='line'>
+</span><span class='line'>Citywide                3,242   3,405    2.862      0.0021 (right tailed)</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The decrease at 30th and Arapahoe is slightly more significant, but still has a 17% chance of being due to randomness. Foothills and Arapahoe fairs the worst of the three, with a whopping 37% chance of being random. Ironically, it is the citywide <em>increase</em> in accidents that is the most significant result. There&#8217;s only a 0.2% chance that the number of accidents would randomly increase by at least 163! This is statistically significant, and it&#8217;s plausible that this variation isn&#8217;t due to random chance. Perhaps the Boulder PD spent too much time at these intersections at a cost to all of the other intersections in the city!</p>
+
+<p>In any case, this analysis is, of course, far from perfect. The assumption I made concerning the expected value may very well have been wrong. Perhaps both 2008 and 2009 were anomalous years, and the expected value is actually much different. I will also grant that it is interesting that the citywide total went up, while these three intersections all went down, but I&#8217;m also not sure how much cherry picking they did. Really, the point of this post was to showcase some interesting mathematics, and show how far a little algebra can go. With only a little more data, I think this sort of analysis would have some interesting results. Hopefully someone at Boulder PD is listening. I wonder how much more money they threw at this enforcement campaign without really having any good data on its efficacy.</p>
+
+<h3>Notes</h3>
+
+<ol>
+<li>Tijms, Henk. Understanding Probability: Chance Rules in Everyday Life. 2nd ed. New York: Cambridge University Press, 2010. 169. Print.</li>
+</ol>
+
+<p><a rel="bookmark" href="http://blog.usrsb.in/blog/2012/05/20/did-the-boulder-pd-reduce-traffic-accidents/">&infin; Permalink</a></p>]]></content>
+    </entry>
   
     <entry>
       
@@ -2155,49 +2250,6 @@ else
 
 <p>In fact, since the second term is always less than 1/2 and the full equation always gives us an integer, we can take this a step further: <strong>Rounding the approximation to the nearest integer will always give you the exact value for F<sub>k</sub>.</strong> Cool.</p>
 <p><a rel="bookmark" href="http://blog.usrsb.in/blog/2011/08/03/fibonacci-sequence-part-ii/">&infin; Permalink</a></p>]]></content>
-    </entry>
-  
-    <entry>
-      
-
-
-
-
-<title type="html"><![CDATA[Using Matrices to Generate the Fibonacci Sequence]]></title>
-<link href="http://blog.usrsb.in/blog/2011/04/10/using-matrices-to-generate-the-fibonacci-sequence/"/>
-<updated>2011-04-10T12:47:00-06:00</updated>
-<id>http://blog.usrsb.in/blog/2011/04/10/using-matrices-to-generate-the-fibonacci-sequence</id>
-
-      <content type="html"><![CDATA[<p>Here&#8217;s a fun little matrix:</p>
-
-<p><img src="http://media.usrsb.in/fib-mat/equation.png" alt="Fib Matrix" /></p>
-
-<p>That generates the a<sub>n</sub> and a<sub>n+1</sub> terms of the Fibonacci sequence.<sup>1</sup> To see why, let&#8217;s look at a recursive definition of the Fibonacci sequence.</p>
-
-<p><img src="http://media.usrsb.in/fib-mat/1.png" alt="Fib Def" /></p>
-
-<p><img src="http://media.usrsb.in/fib-mat/2.png" alt="Fib Def" /></p>
-
-<p>That&#8217;s easy enough to understand. The first and second terms are both 1, and the next term is the sum of the last term plus the current term. To see how this relates to the matrix above, we must turn this into a matrix equation. The trick here is to have a good understanding of matrix multiplication. If you need a refresher, <a href="http://www.mathsisfun.com/algebra/matrix-multiplying.html">here&#8217;s a site</a> with a tutorial. Let&#8217;s look at an example of a 2x2 matrix multiplied by a 2x1 (even if you have a good understanding of matrix multiplication, hang tight, this is going somewhere).</p>
-
-<p><img src="http://media.usrsb.in/fib-mat/3.png" alt="title" /></p>
-
-<p>Now let&#8217;s make some substitutions and multiply it out:</p>
-
-<p><img src="http://media.usrsb.in/fib-mat/7.png" alt="title" /></p>
-
-<p>As you can see, the effect of multiplying the b matrix by the Fibonacci matrix is that it moves the b<sub>1,2</sub> position to the b<sub>1,1</sub> position, and the b<sub>1,2</sub> gets filled with the sum of b<sub>1,1</sub> and b<sub>1,2</sub>. Let&#8217;s now substitute the b&#8217;s for a<sub>n-1</sub> and a<sub>n</sub>:</p>
-
-<p><img src="http://media.usrsb.in/fib-mat/8.png" alt="title" /></p>
-
-<p>Does the resultant matrix look familiar? If you look above, you&#8217;ll see that it&#8217;s the same as our recursive definition of the Fibonacci sequence! The top row is equal to the current number in the sequence (a<sub>n</sub>) and the bottom row is equal to the next number in the sequence (a<sub>n-1</sub> + a<sub>n</sub> = a<sub>n+1</sub>). Continuing to multiply the resultant matrix by the Fibonacci matrix will cause consecutive entries to be produced. Because matrix multiplication is associative, we can move our multiplication to the exponent, and multiply that result by the first two terms in the sequence (0, 1), leading to our initial matrix:</p>
-
-<p><img src="http://media.usrsb.in/fib-mat/equation.png" alt="Fib Matrix" /></p>
-
-<h3>References</h3>
-
-<p>1: Strang, Gilbert. &#8221;<a href="http://www.amazon.com/Linear-Algebra-Applications-Gilbert-Strang/dp/0030105676/ref=sr_1_2?s=books&amp;ie=UTF8&amp;qid=1312385275&amp;sr=1-2">Linear Algebra and Its Applications</a>.&#8221;</p>
-<p><a rel="bookmark" href="http://blog.usrsb.in/blog/2011/04/10/using-matrices-to-generate-the-fibonacci-sequence/">&infin; Permalink</a></p>]]></content>
     </entry>
   
 </feed>

@@ -9,10 +9,7 @@
   <meta name="author" content="Alex Beal">
 
   
-  <meta name="description" content="Here&#8217;s a quickie for your Saturday afternoon: strcpy(s, t) /* copy t to s; pointer version 3 */
-char *s, *t;
-{ while(*s++ = *t++) ;
-} That&# &hellip;">
+  <meta name="description" content="Here&#8217;s a math problem that surprised me: Imagine a sphere of diameter d intersected by two parallel planes a distance h apart. What do you &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -81,6 +78,103 @@ char *s, *t;
   <div id="main">
     <div id="content">
       <div class="blog-index">
+  
+    
+
+
+
+
+
+
+
+
+
+
+    <article >
+      
+  <header>
+    <h1 class="entry-title">
+
+<a href="/blog/blog/2011/08/11/the-surface-area-of-a-sphere-between-parallel-planes/">The Surface Area of a Sphere Between Parallel Planes</a>
+
+</h1>
+
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-08-11T15:49:00-06:00" pubdate data-updated="true">Aug 11<span>th</span>, 2011</time>
+         &bull; <a rel="bookmark" href="/blog/blog/2011/08/11/the-surface-area-of-a-sphere-between-parallel-planes/">&infin;</a>
+      </p>
+    
+  </header>
+
+<div class="entry-content"><p>Here&#8217;s a math problem that surprised me: Imagine a sphere of diameter <em>d</em> intersected by two parallel planes a distance <em>h</em> apart. What do you think the surface area of the section of the sphere between the planes is? You&#8217;re first thought might be that there&#8217;s not enough information. The area will depend upon what part of the sphere the planes intersect. If the planes cut out the middle third of the sphere, that will be a different surface area compared to if the planes cut out the left third or the right third.</p>
+
+<p>That was my first thought, at least, and, as it turns out, it&#8217;s wrong. <strong>The area only depends on the distance between the planes, and the diameter of the sphere. It doesn&#8217;t matter where these planes are in relation to the sphere.</strong> As long as they both intersect the sphere, the surface area will equal <em>πdh</em>, where d is the diameter and <em>h</em> is the distance between the planes. Don&#8217;t believe me? Here&#8217;s the math to prove it:</p>
+
+<p>First we begin with the formula for the surface area of a function rotated around the x axis from <em>a</em> to <em>b</em>. If you want an explanation of this equation, the section of my textbook that covers this is actually <a href="http://www.stewartcalculus.com/data/ESSENTIAL%20CALCULUS/upfiles/topics/ess_at_06_asr_stu.pdf">posted online [PDF]</a> by the publishers (also note that this is problem 32 from that chapter).</p>
+
+<p><img src="http://media.usrsb.in/sa-sphere/1.png" alt="Suface Area Formula" /></p>
+
+<p>Since we are finding the surface area of a sphere, we need the function for a circle, which we will rotate around the x axis, thus producing our sphere. If we can remember back to high school geometry, we&#8217;ll know that the equation for a sphere is <em>x2+y2=r2</em>. We now solve for <em>y</em>, and plug it in for <em>f(x)</em>, and also find the derivative of <em>f(x)</em> and plug it in for <em>f&#8217;(x)</em>:</p>
+
+<p><img src="http://media.usrsb.in/sa-sphere/2.png" alt="title" /></p>
+
+<p>We now simplify the integral:</p>
+
+<p><img src="http://media.usrsb.in/sa-sphere/3.png" alt="title" /></p>
+
+<p><em>f(x)</em> is moved into the square root:</p>
+
+<p><img src="http://media.usrsb.in/sa-sphere/4.png" alt="title" /></p>
+
+<p>We distribute:</p>
+
+<p><img src="http://media.usrsb.in/sa-sphere/5.png" alt="title" /></p>
+
+<p>More simplification:</p>
+
+<p><img src="http://media.usrsb.in/sa-sphere/6.png" alt="title" /></p>
+
+<p><img src="http://media.usrsb.in/sa-sphere/7.png" alt="title" /></p>
+
+<p>We now integrate:</p>
+
+<p><img src="http://media.usrsb.in/sa-sphere/8.png" alt="title" /></p>
+
+<p><img src="http://media.usrsb.in/sa-sphere/9.png" alt="title" /></p>
+
+<p><img src="http://media.usrsb.in/sa-sphere/10.png" alt="title" /></p>
+
+<p><em>b-a</em> is simply the distance between the two planes, which we call <em>h</em>:</p>
+
+<p><img src="http://media.usrsb.in/sa-sphere/11.png" alt="title" /></p>
+
+<p>2r is the diameter of the sphere, which we call d:</p>
+
+<p><img src="http://media.usrsb.in/sa-sphere/12.png" alt="title" /></p>
+
+<p>There you have it. The surface area of a sphere between two parallel planes is equal to <em>πdh</em>. It doesn&#8217;t matter where these planes are in relation to the sphere. All that matters is that both planes intersect the sphere. Cool, huh? No? Ok, fine. Well, I thought it was interesting.</p>
+</div>
+
+  <footer>
+    
+    
+  </footer>
+
+
+    </article>
   
     
 
@@ -500,85 +594,6 @@ else
 
     </article>
   
-    
-
-
-
-
-
-
-
-
-
-
-    <article >
-      
-  <header>
-    <h1 class="entry-title">
-
-<a href="/blog/blog/2011/04/10/using-matrices-to-generate-the-fibonacci-sequence/">Using Matrices to Generate the Fibonacci Sequence</a>
-
-</h1>
-
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2011-04-10T12:47:00-06:00" pubdate data-updated="true">Apr 10<span>th</span>, 2011</time>
-         &bull; <a rel="bookmark" href="/blog/blog/2011/04/10/using-matrices-to-generate-the-fibonacci-sequence/">&infin;</a>
-      </p>
-    
-  </header>
-
-<div class="entry-content"><p>Here&#8217;s a fun little matrix:</p>
-
-<p><img src="http://media.usrsb.in/fib-mat/equation.png" alt="Fib Matrix" /></p>
-
-<p>That generates the a<sub>n</sub> and a<sub>n+1</sub> terms of the Fibonacci sequence.<sup>1</sup> To see why, let&#8217;s look at a recursive definition of the Fibonacci sequence.</p>
-
-<p><img src="http://media.usrsb.in/fib-mat/1.png" alt="Fib Def" /></p>
-
-<p><img src="http://media.usrsb.in/fib-mat/2.png" alt="Fib Def" /></p>
-
-<p>That&#8217;s easy enough to understand. The first and second terms are both 1, and the next term is the sum of the last term plus the current term. To see how this relates to the matrix above, we must turn this into a matrix equation. The trick here is to have a good understanding of matrix multiplication. If you need a refresher, <a href="http://www.mathsisfun.com/algebra/matrix-multiplying.html">here&#8217;s a site</a> with a tutorial. Let&#8217;s look at an example of a 2x2 matrix multiplied by a 2x1 (even if you have a good understanding of matrix multiplication, hang tight, this is going somewhere).</p>
-
-<p><img src="http://media.usrsb.in/fib-mat/3.png" alt="title" /></p>
-
-<p>Now let&#8217;s make some substitutions and multiply it out:</p>
-
-<p><img src="http://media.usrsb.in/fib-mat/7.png" alt="title" /></p>
-
-<p>As you can see, the effect of multiplying the b matrix by the Fibonacci matrix is that it moves the b<sub>1,2</sub> position to the b<sub>1,1</sub> position, and the b<sub>1,2</sub> gets filled with the sum of b<sub>1,1</sub> and b<sub>1,2</sub>. Let&#8217;s now substitute the b&#8217;s for a<sub>n-1</sub> and a<sub>n</sub>:</p>
-
-<p><img src="http://media.usrsb.in/fib-mat/8.png" alt="title" /></p>
-
-<p>Does the resultant matrix look familiar? If you look above, you&#8217;ll see that it&#8217;s the same as our recursive definition of the Fibonacci sequence! The top row is equal to the current number in the sequence (a<sub>n</sub>) and the bottom row is equal to the next number in the sequence (a<sub>n-1</sub> + a<sub>n</sub> = a<sub>n+1</sub>). Continuing to multiply the resultant matrix by the Fibonacci matrix will cause consecutive entries to be produced. Because matrix multiplication is associative, we can move our multiplication to the exponent, and multiply that result by the first two terms in the sequence (0, 1), leading to our initial matrix:</p>
-
-<p><img src="http://media.usrsb.in/fib-mat/equation.png" alt="Fib Matrix" /></p>
-
-<h3>References</h3>
-
-<p>1: Strang, Gilbert. &#8221;<a href="http://www.amazon.com/Linear-Algebra-Applications-Gilbert-Strang/dp/0030105676/ref=sr_1_2?s=books&amp;ie=UTF8&amp;qid=1312385275&amp;sr=1-2">Linear Algebra and Its Applications</a>.&#8221;</p>
-</div>
-
-  <footer>
-    
-    
-  </footer>
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/blog/page/5/">&larr; Older</a>
@@ -596,6 +611,10 @@ else
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/blog/2012/05/20/did-the-boulder-pd-reduce-traffic-accidents/">Did the Boulder PD Reduce Traffic Accidents?</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/blog/2012/05/05/permutations-an-interview-question/">Permutations: An Interview Question</a>
       </li>
     
@@ -609,10 +628,6 @@ else
     
       <li class="post">
         <a href="/blog/blog/2012/02/05/super-bowl-probabilities/">Super Bowl Probabilities: The Coin Toss</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/blog/2012/01/28/implementing-a-logic-evaluator-without-if-expressions/">Implementing a Logic Evaluator Without if-expressions or Boolean Operators</a>
       </li>
     
   </ul>
