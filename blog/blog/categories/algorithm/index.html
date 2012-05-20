@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: algorithm | /usr/sbin/blog]]></title>
-  <link href="http://blog.usrsb.in/" rel="self"/>
-  <link href="http://blog.usrsb.in/"/>
-  <updated>2012-05-20T09:10:55-06:00</updated>
-  <id>http://blog.usrsb.in/</id>
+  <link href="http://usrsb.in/" rel="self"/>
+  <link href="http://usrsb.in/"/>
+  <updated>2012-05-20T09:15:24-06:00</updated>
+  <id>http://usrsb.in/</id>
   <author>
     <name><![CDATA[Alex Beal]]></name>
     
@@ -20,9 +20,9 @@
 
 
 <title type="html"><![CDATA[Picking Random Items: Take Two (Hacking Python's Generators)]]></title>
-<link href="http://blog.usrsb.in/blog/2012/01/14/picking-random-items-take-2/"/>
+<link href="http://usrsb.in/blog/2012/01/14/picking-random-items-take-2/"/>
 <updated>2012-01-14T10:29:00-07:00</updated>
-<id>http://blog.usrsb.in/blog/2012/01/14/picking-random-items-take-2</id>
+<id>http://usrsb.in/blog/2012/01/14/picking-random-items-take-2</id>
 
       <content type="html"><![CDATA[<p>Earlier today I had my mind blown by David Beazley's <a href="http://www.dabeaz.com/generators/">presentation on the power of Python's generators</a>, and it inspired me to write this highly Pythonic version of <a href="/blog/2012/01/11/picking-random-items-from-a-file/">the random word selector</a>, made almost entirely of generators:</p>
 
@@ -70,7 +70,7 @@ print rand_words
 <h2>Notes</h2>
 
 <ol>
-<li>You could even use the built-in function <code>max()</code> if you only need one word.<p><a rel="bookmark" href="http://blog.usrsb.in/blog/2012/01/14/picking-random-items-take-2/">&infin; Permalink</a></p></li>
+<li>You could even use the built-in function <code>max()</code> if you only need one word.<p><a rel="bookmark" href="http://usrsb.in/blog/2012/01/14/picking-random-items-take-2/">&infin; Permalink</a></p></li>
 </ol>
 
 ]]></content>
@@ -83,9 +83,9 @@ print rand_words
 
 
 <title type="html"><![CDATA[Picking Random Items From a File]]></title>
-<link href="http://blog.usrsb.in/blog/2012/01/11/picking-random-items-from-a-file/"/>
+<link href="http://usrsb.in/blog/2012/01/11/picking-random-items-from-a-file/"/>
 <updated>2012-01-11T10:29:00-07:00</updated>
-<id>http://blog.usrsb.in/blog/2012/01/11/picking-random-items-from-a-file</id>
+<id>http://usrsb.in/blog/2012/01/11/picking-random-items-from-a-file</id>
 
       <content type="html"><![CDATA[<p>Here's a deceptively simple programming puzzle: Develop an algorithm for randomly selecting <em>n</em> words from a dictionary file. This is essentially the puzzle I had to solve in order to write my <a href="https://github.com/beala/xkcd-password">xkcd-style password generator</a>, which implements the <a href="http://xkcd.com/936/">xkcd password spec</a>.<sup>1</sup></p>
 
@@ -167,7 +167,7 @@ if len(wordq) &gt; WORD_COUNT:
 <ol>
 <li>Summary: a good password is composed of four random words.</li>
 <li>A slight improvement on this would be to store only the word's position in the file, rather than the word itself. Then the word could be retrieved by seeking to that position. <a href="http://www.bryceboe.com/2009/03/23/random-lines-from-a-file">http://www.bryceboe.com/2009/03/23/random-lines-from-a-file</a></li>
-<li><del>If you're only using one random value, and your dictionary file has 50,000 words, the chance of a collision is 50,000/2<sup>53</sup> , which is roughly 3 in 562 trillion. I'll take those odds.</del> Whoops! This is actually a version of the <a href="http://en.wikipedia.org/wiki/Birthday_problem">birthday problem</a>. The actual probability of a collision is: 1.39e-7. Still quite good.<p><a rel="bookmark" href="http://blog.usrsb.in/blog/2012/01/11/picking-random-items-from-a-file/">&infin; Permalink</a></p></li>
+<li><del>If you're only using one random value, and your dictionary file has 50,000 words, the chance of a collision is 50,000/2<sup>53</sup> , which is roughly 3 in 562 trillion. I'll take those odds.</del> Whoops! This is actually a version of the <a href="http://en.wikipedia.org/wiki/Birthday_problem">birthday problem</a>. The actual probability of a collision is: 1.39e-7. Still quite good.<p><a rel="bookmark" href="http://usrsb.in/blog/2012/01/11/picking-random-items-from-a-file/">&infin; Permalink</a></p></li>
 </ol>
 
 ]]></content>
@@ -180,9 +180,9 @@ if len(wordq) &gt; WORD_COUNT:
 
 
 <title type="html"><![CDATA[Search Algorithms: Finding a Bad Coin (Part II)]]></title>
-<link href="http://blog.usrsb.in/blog/2011/08/18/search-algorithms-finding-a-bad-coin-part-ii/"/>
+<link href="http://usrsb.in/blog/2011/08/18/search-algorithms-finding-a-bad-coin-part-ii/"/>
 <updated>2011-08-18T13:24:00-06:00</updated>
-<id>http://blog.usrsb.in/blog/2011/08/18/search-algorithms-finding-a-bad-coin-part-ii</id>
+<id>http://usrsb.in/blog/2011/08/18/search-algorithms-finding-a-bad-coin-part-ii</id>
 
       <content type="html"><![CDATA[<p>In the last post, I discussed a problem about finding the bad coin in a set of 8 coins. Here, I'll do some mathematical analysis of the different algorithms, and talk about the number of steps it takes to search through n coins using each algorithm.</p>
 
@@ -240,7 +240,7 @@ So, what are the takeaway points?</p>
 
 <p>As Jon Bentley points out in <a href="http://www.amazon.com/Programming-Pearls-2nd-Jon-Bentley/dp/0201657880">Programming Pearls</a> [Amazon.com], because the ternary search scales so much better, there's some sufficiently large value of n, at which a pocket calculator running the ternary search will outpace a supercomputer running the simple algorithm.</p>
 
-<p><a rel="bookmark" href="http://blog.usrsb.in/blog/2011/08/18/search-algorithms-finding-a-bad-coin-part-ii/">&infin; Permalink</a></p>
+<p><a rel="bookmark" href="http://usrsb.in/blog/2011/08/18/search-algorithms-finding-a-bad-coin-part-ii/">&infin; Permalink</a></p>
 
 ]]></content>
     </entry>
@@ -252,9 +252,9 @@ So, what are the takeaway points?</p>
 
 
 <title type="html"><![CDATA[A Search Algorithm Puzzle: Finding a Bad Coin]]></title>
-<link href="http://blog.usrsb.in/blog/2011/08/17/a-search-algorithm-puzzle-finding-a-bad-coin/"/>
+<link href="http://usrsb.in/blog/2011/08/17/a-search-algorithm-puzzle-finding-a-bad-coin/"/>
 <updated>2011-08-17T13:30:00-06:00</updated>
-<id>http://blog.usrsb.in/blog/2011/08/17/a-search-algorithm-puzzle-finding-a-bad-coin</id>
+<id>http://usrsb.in/blog/2011/08/17/a-search-algorithm-puzzle-finding-a-bad-coin</id>
 
       <content type="html"><![CDATA[<p>Today I have a puzzle for you from James Hein's textbook, <a href="http://www.amazon.com/Discrete-Structures-Logic-Computability-James/dp/0763772062">Discrete Structures, Logic, and Computability</a>. It's a question about finding a "bad coin" and goes as follows:</p>
 
@@ -279,7 +279,7 @@ So, the problem is that we have 8 coins, and one of them is a bad coin that weig
 
 <p>Next post I'll attempt some mathematical analysis on the algorithms, and see what we can say about how many steps it takes to sort through n coins. In the meantime, check out this <a href="https://secure.wikimedia.org/wikipedia/en/wiki/Binary_search_algorithm#Computer_use">interesting tidbit from Wikipedia's Binary Search article</a>. Despite its ubiquity and seeming simplicity, it's apparently quite difficult to implement!</p>
 
-<p><a rel="bookmark" href="http://blog.usrsb.in/blog/2011/08/17/a-search-algorithm-puzzle-finding-a-bad-coin/">&infin; Permalink</a></p>
+<p><a rel="bookmark" href="http://usrsb.in/blog/2011/08/17/a-search-algorithm-puzzle-finding-a-bad-coin/">&infin; Permalink</a></p>
 
 ]]></content>
     </entry>
