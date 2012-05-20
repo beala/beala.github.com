@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: bash | /usr/sbin/blog]]></title>
-  <link href="http://usrsb.in/" rel="self"/>
-  <link href="http://usrsb.in/"/>
-  <updated>2012-05-20T09:15:24-06:00</updated>
-  <id>http://usrsb.in/</id>
+  <link href="http://usrsb.in/blog/" rel="self"/>
+  <link href="http://usrsb.in/blog/"/>
+  <updated>2012-05-20T09:17:33-06:00</updated>
+  <id>http://usrsb.in/blog/</id>
   <author>
     <name><![CDATA[Alex Beal]]></name>
     
@@ -20,9 +20,9 @@
 
 
 <title type="html"><![CDATA[A Database Engine in 16 Lines]]></title>
-<link href="http://usrsb.in/blog/2011/08/15/a-database-engine-in-16-lines/"/>
+<link href="http://usrsb.in/blog/blog/2011/08/15/a-database-engine-in-16-lines/"/>
 <updated>2011-08-15T13:36:00-06:00</updated>
-<id>http://usrsb.in/blog/2011/08/15/a-database-engine-in-16-lines</id>
+<id>http://usrsb.in/blog/blog/2011/08/15/a-database-engine-in-16-lines</id>
 
       <content type="html"><![CDATA[<p>Recently I've been playing around with a neat command line utility called netcat. It makes it incredibly easy to add networking functionality to your scripts. What it does is allow you to open a port on your machine and listen for incoming connections. Should a connection occur, anything the remote machine sends is dumped to stdout, and anything written to stdin is sent out to the remote machine. As a demo, I decided to write a database engine with it, and I managed to do it in 16 lines.</p>
 
@@ -102,7 +102,7 @@ nc $1 $ANSWERPORT
 
 <p><a href="http://media.usrsb.in/db/db-scripts.zip">Download the scripts.</a></p>
 
-<p><a rel="bookmark" href="http://usrsb.in/blog/2011/08/15/a-database-engine-in-16-lines/">&infin; Permalink</a></p>
+<p><a rel="bookmark" href="http://usrsb.in/blog/blog/2011/08/15/a-database-engine-in-16-lines/">&infin; Permalink</a></p>
 
 ]]></content>
     </entry>
@@ -114,9 +114,9 @@ nc $1 $ANSWERPORT
 
 
 <title type="html"><![CDATA[Using 'trap' To Catch 'Ctrl + C's and Control How Your Script Exits]]></title>
-<link href="http://usrsb.in/blog/2011/04/02/using-trap-to-catch-ctrl-plus-cs-and-control-how-your-script-exits/"/>
+<link href="http://usrsb.in/blog/blog/2011/04/02/using-trap-to-catch-ctrl-plus-cs-and-control-how-your-script-exits/"/>
 <updated>2011-04-02T16:00:00-06:00</updated>
-<id>http://usrsb.in/blog/2011/04/02/using-trap-to-catch-ctrl-plus-cs-and-control-how-your-script-exits</id>
+<id>http://usrsb.in/blog/blog/2011/04/02/using-trap-to-catch-ctrl-plus-cs-and-control-how-your-script-exits</id>
 
       <content type="html"><![CDATA[<p>So you've written a script that creates all sorts of temporary files, and launches dozens of processes in the background, and, as is, the script runs indefinitely. The only way to quit is Ctrl + C, but once you fire off this hotkey combo, you're left with a mess of background processes and temp files. There are lots of reasons why your script might do this. For example, I'm currently writing a download manager that sends its wget processes to the background, and creates various temporary status files. It runs indefinitely because it polls a queue file, which contains the URLs of the files it's instructed to download. So, given all that, how is it that I get my script to clean up after itself once I deal it the fatal Ctrl + C blow (or more technically, a "signal interrupt" or "SIGINT" for short)? The trick here is to use the <code>trap</code> command along with some basic process manipulation. Here's the syntax:</p>
 
@@ -194,7 +194,7 @@ done
 
 <p>If <code>${FILES[$i]}</code> is empty, the statement short circuits, and does nothing. If it contains something, the <code>rm</code> command is executed.</p>
 
-<p>So, that's how it's done. Now you have no excuse for leaving garbage behind (if only BASH had some way of automagically collecting this so called garbage!), and, as always, if you have any tips regarding this, please share your BASH-fu with us in the comments!<p><a rel="bookmark" href="http://usrsb.in/blog/2011/04/02/using-trap-to-catch-ctrl-plus-cs-and-control-how-your-script-exits/">&infin; Permalink</a></p></p>
+<p>So, that's how it's done. Now you have no excuse for leaving garbage behind (if only BASH had some way of automagically collecting this so called garbage!), and, as always, if you have any tips regarding this, please share your BASH-fu with us in the comments!<p><a rel="bookmark" href="http://usrsb.in/blog/blog/2011/04/02/using-trap-to-catch-ctrl-plus-cs-and-control-how-your-script-exits/">&infin; Permalink</a></p></p>
 ]]></content>
     </entry>
   
@@ -205,9 +205,9 @@ done
 
 
 <title type="html"><![CDATA[Sending Emails and Texts from the Command Line]]></title>
-<link href="http://usrsb.in/blog/2011/03/24/sending-emails-and-texts-from-the-command-line/"/>
+<link href="http://usrsb.in/blog/blog/2011/03/24/sending-emails-and-texts-from-the-command-line/"/>
 <updated>2011-03-24T16:39:00-06:00</updated>
-<id>http://usrsb.in/blog/2011/03/24/sending-emails-and-texts-from-the-command-line</id>
+<id>http://usrsb.in/blog/blog/2011/03/24/sending-emails-and-texts-from-the-command-line</id>
 
       <content type="html"><![CDATA[<p>Here's a handy way to send emails from the command line:</p>
 
@@ -241,7 +241,7 @@ while :; do
 done
 </code></pre>
 
-<p>It's pretty simple. Every 15 minutes it scrapes the webpage <a href="http://doesbuyvmhavestock.com/">doesbuyvmhavestock.com</a> and sends me an email if it contains the word 'yes'. Obviously, the success of your own script depends on how well it can parse the webpage. As you can see, my parsing routine (the <code>grep</code> on line 5) is pretty primitive.<p><a rel="bookmark" href="http://usrsb.in/blog/2011/03/24/sending-emails-and-texts-from-the-command-line/">&infin; Permalink</a></p></p>
+<p>It's pretty simple. Every 15 minutes it scrapes the webpage <a href="http://doesbuyvmhavestock.com/">doesbuyvmhavestock.com</a> and sends me an email if it contains the word 'yes'. Obviously, the success of your own script depends on how well it can parse the webpage. As you can see, my parsing routine (the <code>grep</code> on line 5) is pretty primitive.<p><a rel="bookmark" href="http://usrsb.in/blog/blog/2011/03/24/sending-emails-and-texts-from-the-command-line/">&infin; Permalink</a></p></p>
 ]]></content>
     </entry>
   
@@ -252,9 +252,9 @@ done
 
 
 <title type="html"><![CDATA[Backing Up a Directory's Permissions]]></title>
-<link href="http://usrsb.in/blog/2011/03/17/backing-up-a-directorys-permissions/"/>
+<link href="http://usrsb.in/blog/blog/2011/03/17/backing-up-a-directorys-permissions/"/>
 <updated>2011-03-17T10:39:00-06:00</updated>
-<id>http://usrsb.in/blog/2011/03/17/backing-up-a-directorys-permissions</id>
+<id>http://usrsb.in/blog/blog/2011/03/17/backing-up-a-directorys-permissions</id>
 
       <content type="html"><![CDATA[<p>We've all done it before, and if it hasn't happened to you yet, it's only a matter of time. You're attempting to set the permissions on a directory and and you're doing something along the lines of <code>sudo chmod -R 660 ./foobar</code>. You execute the command only to realize that you're in the wrong directory or you've mistyped the directory's name, and now your permissions are totally clobbered. If you've kept good backups, this is annoying, but not devastating. Either you could completely restore the files, or perhaps you could write a script which would copy the old file permissions back over. An easier alternative would be to plan ahead and backup the file permissions before disaster strikes. Here's a script that will do that for you:</p>
 
@@ -303,7 +303,7 @@ done
 
 <p>The script itself is pretty straight forward. On line 4, we tell a relative path from an absolute path by seeing if it's prefixed with a forward slash. If it is, then it's absolute. If it isn't, then it's relative. We'll need this information later to build the absolute path to all the files. The next step is to loop through the files, which is a bit tricky. On line 28, we need to pipe the output of <code>find</code> to a <code>while read</code> because the more intuitive <code>for</code> loop construct doesn't handle spaces and newlines in filenames properly (of course, anyone who puts newlines in a filename needs to be thrown into the <a href="http://www.starwars.com/databank/creature/sarlacc/">sarlacc</a>). In fact, you may just want to memorize that line, as it's a common problem with a far from obvious solution. Finally, on line 30 and 31, we read the file's permission and owners with <code>stat</code>, which is a handy command that, among other things, outputs file information in a user definable format.</p>
 
-<p>So there you have it. <a href="http://media.usrsb.in/dir-perm/backupperm.sh">Download the script here.</a> Now go forth and make this a cron job.<p><a rel="bookmark" href="http://usrsb.in/blog/2011/03/17/backing-up-a-directorys-permissions/">&infin; Permalink</a></p></p>
+<p>So there you have it. <a href="http://media.usrsb.in/dir-perm/backupperm.sh">Download the script here.</a> Now go forth and make this a cron job.<p><a rel="bookmark" href="http://usrsb.in/blog/blog/2011/03/17/backing-up-a-directorys-permissions/">&infin; Permalink</a></p></p>
 ]]></content>
     </entry>
   
@@ -314,9 +314,9 @@ done
 
 
 <title type="html"><![CDATA[The First Spellchecker (In 6 Lines)]]></title>
-<link href="http://usrsb.in/blog/2011/03/12/the-first-spellchecker-in-6-lines/"/>
+<link href="http://usrsb.in/blog/blog/2011/03/12/the-first-spellchecker-in-6-lines/"/>
 <updated>2011-03-12T15:17:00-07:00</updated>
-<id>http://usrsb.in/blog/2011/03/12/the-first-spellchecker-in-6-lines</id>
+<id>http://usrsb.in/blog/blog/2011/03/12/the-first-spellchecker-in-6-lines</id>
 
       <content type="html"><![CDATA[<p>I recently came across this gem in a book called <a href="http://www.amazon.com/Classic-Shell-Scripting-Arnold-Robbins/dp/0596005954/">Classic Shell Scripting</a>. According to the authors, it's a modern port of the first spellchecker. The original version was written by Steve Johnson, and was then translated into the form you see here by Kernighan and Plauger. I assume the translation was necessary because the syntax of the original isn't compatible with modern shells. Without further ado, here it is:</p>
 
@@ -345,7 +345,7 @@ done
 50253 words
 </code></pre>
 
-<p>That's a lot of words! Try 'wamerican-insane' if you want a, well, insane number of words.<p><a rel="bookmark" href="http://usrsb.in/blog/2011/03/12/the-first-spellchecker-in-6-lines/">&infin; Permalink</a></p></p>
+<p>That's a lot of words! Try 'wamerican-insane' if you want a, well, insane number of words.<p><a rel="bookmark" href="http://usrsb.in/blog/blog/2011/03/12/the-first-spellchecker-in-6-lines/">&infin; Permalink</a></p></p>
 ]]></content>
     </entry>
   

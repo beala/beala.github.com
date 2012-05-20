@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: old school | /usr/sbin/blog]]></title>
-  <link href="http://usrsb.in/" rel="self"/>
-  <link href="http://usrsb.in/"/>
-  <updated>2012-05-20T09:15:24-06:00</updated>
-  <id>http://usrsb.in/</id>
+  <link href="http://usrsb.in/blog/" rel="self"/>
+  <link href="http://usrsb.in/blog/"/>
+  <updated>2012-05-20T09:17:33-06:00</updated>
+  <id>http://usrsb.in/blog/</id>
   <author>
     <name><![CDATA[Alex Beal]]></name>
     
@@ -20,9 +20,9 @@
 
 
 <title type="html"><![CDATA[How Old School C Programmers Process Arguments]]></title>
-<link href="http://usrsb.in/blog/2011/08/04/how-old-school-c-programmers-process-arguments/"/>
+<link href="http://usrsb.in/blog/blog/2011/08/04/how-old-school-c-programmers-process-arguments/"/>
 <updated>2011-08-04T16:39:00-06:00</updated>
-<id>http://usrsb.in/blog/2011/08/04/how-old-school-c-programmers-process-arguments</id>
+<id>http://usrsb.in/blog/blog/2011/08/04/how-old-school-c-programmers-process-arguments</id>
 
       <content type="html"><![CDATA[<p>Here's a bit of code from Kernighan's and Ritchie's seminal text, <a href="http://www.amazon.com/Programming-Language-2nd-Brian-Kernighan/dp/0131103628">The C Programming Language</a>. I'm not sure I'd actually recommend coding this way (as written in the book, the entire program has only one comment), but it's so darn clever and concise, I can't help but post it. This snippet is part of a larger program called <code>find</code> that searches text for patterns, but the details aren't important. I want to focus on the portion below that parses the arguments passed to the program. Don't worry about understanding it just yet. I'll step through it below:</p>
 
@@ -113,7 +113,7 @@ else
 
 <p>The last and final part is the if statement. It prints an error/usage message if <code>argc</code> is not equal to 1. Why? Because there should always be one argument left after the flags are processed (the <code>PATTERN</code> argument). The error will also be printed if the program is given an unrecognized flag and the default case in the switch is executed. If there aren't any problems, then it executes the else where the main part of the program is contained.</p>
 
-<p>So there you have it. That's how Kernigham and Ritchie did it in 1978. Nowadays they just haul in the software weenies with their fancy objects and methods. Lost is the subtle art of manipulating arrays of pointers to strings of characters. Alas. (Just kidding. After all, I'm probably one of those software weenies.)<p><a rel="bookmark" href="http://usrsb.in/blog/2011/08/04/how-old-school-c-programmers-process-arguments/">&infin; Permalink</a></p></p>
+<p>So there you have it. That's how Kernigham and Ritchie did it in 1978. Nowadays they just haul in the software weenies with their fancy objects and methods. Lost is the subtle art of manipulating arrays of pointers to strings of characters. Alas. (Just kidding. After all, I'm probably one of those software weenies.)<p><a rel="bookmark" href="http://usrsb.in/blog/blog/2011/08/04/how-old-school-c-programmers-process-arguments/">&infin; Permalink</a></p></p>
 ]]></content>
     </entry>
   
