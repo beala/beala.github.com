@@ -9,7 +9,7 @@
   <meta name="author" content="Alex Beal">
 
   
-  <meta name="description" content="There&#8217;s an article I came across a couple of years ago, which I filed away in the back of my brain, concerning the number of traffic accidents &hellip;">
+  <meta name="description" content="The Poisson process is a mathematical abstraction of random events happening over a stretch of time. It’s often used to model all sorts of &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -78,6 +78,215 @@
   <div id="main">
     <div id="content">
       <div class="blog-index">
+  
+    
+
+
+
+
+
+
+
+
+
+
+    <article >
+      
+  <header>
+    <h1 class="entry-title">
+
+<a href="/blog/blog/2012/07/07/testing-with-the-poisson-process/">Testing With the Poisson Process</a>
+
+</h1>
+
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-07-07T09:00:00-06:00" pubdate data-updated="true">Jul 7<span>th</span>, 2012</time>
+         &bull; <a rel="bookmark" href="/blog/blog/2012/07/07/testing-with-the-poisson-process/">&infin;</a>
+      </p>
+    
+  </header>
+
+<div class="entry-content"><p>The Poisson process is a mathematical abstraction of random events happening over a stretch of time. It’s often used to model all sorts of occurrences from particle emission due to radioactive decay, to natural disasters.<sup>1</sup> The process itself has several mathematical properties such as not allowing for simultaneous events, but these specifics aren’t important for our purposes. What makes it useful to software engineers is that it also turns out to be a good model for events like hits to a webpage<sup>2</sup> or requests to an API. For example, suppose you have written a new API for your web site, and you wanted to test it out under normal load. In order to simulate this with a Poisson process, all you’d need to know is the expected number of hits per hour (or minute or second). With this information, you could then generate random inter-arrival times (the times between events). That is, you could model the amount of time between requests to your API using this equation:<sup>3</sup></p>
+
+<p><img src="http://media.usrsb.in/poisson/0.png" alt="Exponentially distributed random variable" /></p>
+
+<p>This is the equation for an exponentially distributed random variable, where <code>U</code> is a random number between 0 and 1, and <code>1/α</code> is the expected value of the inter-arrival times. In English, this means that if you expect 100 hits per hours, then <code>1/α</code> would equal 1/100 (because you expect there to be a hit every 0.01 hours), and <code>U</code> would be some random number generated with a call to <code>Math.random()</code>. The number that pops out the other end would be a randomly generated inter-request time. If you wanted to simulate more than one request, you would evaluate this equation multiple times (using a new randomly generated <code>U</code> each time), and each result would be the time between two requests. So if you ended up with 0.04, 0.2, 0.1, then the second request would come in 0.04 hours after the first, and the third would come in 0.2 hours after the second, and so on.</p>
+
+<p>This technique can be automated using a simple Python script:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c"># Make a function iterable, by repeatedly calling it.</span>
+</span><span class='line'><span class="k">def</span> <span class="nf">make_iterable</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">try</span><span class="p">:</span>
+</span><span class='line'>        <span class="k">while</span> <span class="mi">1</span><span class="p">:</span>
+</span><span class='line'>            <span class="k">yield</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">except</span><span class="p">:</span>
+</span><span class='line'>        <span class="k">pass</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">uni_rand</span> <span class="o">=</span> <span class="n">make_iterable</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># A generator for inter arrival times.</span>
+</span><span class='line'><span class="n">inter_arrival</span> <span class="o">=</span> <span class="p">(</span> <span class="o">-</span><span class="p">(</span><span class="mf">1.</span><span class="o">/</span><span class="n">a</span><span class="p">)</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">u</span><span class="p">)</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">uni_rand</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This creates a generator <code>inter_arrival</code> which generates one inter-arrival time every time it&#8217;s iterated on. Using this to test an API is as simple as:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">import</span> <span class="nn">random</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">math</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">sys</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">time</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Expected number of arrivals per unit time.</span>
+</span><span class='line'><span class="n">a</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+</span><span class='line'><span class="c"># Number of events</span>
+</span><span class='line'><span class="n">count</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Function for testing API</span>
+</span><span class='line'><span class="k">def</span> <span class="nf">test_api</span><span class="p">():</span>
+</span><span class='line'>    <span class="k">print</span> <span class="s">&quot;Testing API...&quot;</span>
+</span><span class='line'>    <span class="c"># TODO: Make request to the API</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Make a function iterable, by repeatedly calling it.</span>
+</span><span class='line'><span class="k">def</span> <span class="nf">make_iterable</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">try</span><span class="p">:</span>
+</span><span class='line'>        <span class="k">while</span> <span class="mi">1</span><span class="p">:</span>
+</span><span class='line'>            <span class="k">yield</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">except</span><span class="p">:</span>
+</span><span class='line'>        <span class="k">pass</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">uni_rand</span> <span class="o">=</span> <span class="n">make_iterable</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># A generator for inter-arrival times.</span>
+</span><span class='line'><span class="n">inter_arrival</span> <span class="o">=</span> <span class="p">(</span> <span class="o">-</span><span class="p">(</span><span class="mf">1.</span><span class="o">/</span><span class="n">a</span><span class="p">)</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">u</span><span class="p">)</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">uni_rand</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Generate inter-arrival times, then sleep for that long.</span>
+</span><span class='line'><span class="n">inter_arrival_iter</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">inter_arrival</span><span class="p">)</span>
+</span><span class='line'><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">count</span><span class="p">):</span>
+</span><span class='line'>    <span class="n">inter_arrival_seconds</span> <span class="o">=</span> <span class="n">inter_arrival_iter</span><span class="o">.</span><span class="n">next</span><span class="p">()</span> <span class="o">*</span> <span class="mf">3600.</span>
+</span><span class='line'>    <span class="k">print</span> <span class="s">&quot;Sleeping for </span><span class="si">%f</span><span class="s"> seconds.&quot;</span> <span class="o">%</span> <span class="n">inter_arrival_seconds</span>
+</span><span class='line'>    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">inter_arrival_seconds</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">test_api</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This script takes in two arguments. The first is the expected number of events per hour, and the second is the number of events to generate. The last loop is where the testing occurs. It generates one inter-arrival time, sleeps for that long, and then calls the <code>test_api</code> function which would need to be filled in with the API test.</p>
+
+<p>Running this file with input <code>3600 10</code> generates 10 events, each one spaced by about 1 second:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="o">%</span> <span class="n">python</span> <span class="n">poisson</span><span class="o">.</span><span class="n">py</span> <span class="mi">3600</span> <span class="mi">10</span>
+</span><span class='line'><span class="n">Sleeping</span> <span class="k">for</span> <span class="mf">1.710953</span> <span class="n">seconds</span><span class="o">.</span>
+</span><span class='line'><span class="n">Testing</span> <span class="n">API</span><span class="o">...</span>
+</span><span class='line'><span class="n">Sleeping</span> <span class="k">for</span> <span class="mf">5.028327</span> <span class="n">seconds</span><span class="o">.</span>
+</span><span class='line'><span class="n">Testing</span> <span class="n">API</span><span class="o">...</span>
+</span><span class='line'><span class="n">Sleeping</span> <span class="k">for</span> <span class="mf">0.511307</span> <span class="n">seconds</span><span class="o">.</span>
+</span><span class='line'><span class="n">Testing</span> <span class="n">API</span><span class="o">...</span>
+</span><span class='line'><span class="n">Sleeping</span> <span class="k">for</span> <span class="mf">2.336480</span> <span class="n">seconds</span><span class="o">.</span>
+</span><span class='line'><span class="n">Testing</span> <span class="n">API</span><span class="o">...</span>
+</span><span class='line'><span class="n">Sleeping</span> <span class="k">for</span> <span class="mf">1.594504</span> <span class="n">seconds</span><span class="o">.</span>
+</span><span class='line'><span class="n">Testing</span> <span class="n">API</span><span class="o">...</span>
+</span><span class='line'><span class="n">Sleeping</span> <span class="k">for</span> <span class="mf">0.308939</span> <span class="n">seconds</span><span class="o">.</span>
+</span><span class='line'><span class="n">Testing</span> <span class="n">API</span><span class="o">...</span>
+</span><span class='line'><span class="n">Sleeping</span> <span class="k">for</span> <span class="mf">0.682607</span> <span class="n">seconds</span><span class="o">.</span>
+</span><span class='line'><span class="n">Testing</span> <span class="n">API</span><span class="o">...</span>
+</span><span class='line'><span class="p">[</span><span class="n">snip</span><span class="p">]</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>References</h3>
+
+<ol>
+<li>Tijms, Henk. Understanding Probability: Chance Rules in Everyday Life. 2nd ed. New York: Cambridge University Press, 2010. 118. Print.</li>
+<li>Arlitt, Martin F.; Williamson, Carey L. (1997). &#8220;Internet Web servers: Workload characterization and performance implications&#8221;. IEEE/ACM Transactions on Networking 5 (5): 631. DOI:10.1109/90.649565</li>
+<li>Ibid 1. Page 124</li>
+</ol>
+
+</div>
+
+  <footer>
+    
+    <p><a class="comments-link" href="/blog/blog/2012/07/07/testing-with-the-poisson-process/#disqus_thread">View comments &raquo;</a></p>
+    
+    
+  </footer>
+
+
+    </article>
   
     
 
@@ -585,239 +794,6 @@
 
     </article>
   
-    
-
-
-
-
-
-
-
-
-
-
-    <article >
-      
-  <header>
-    <h1 class="entry-title">
-
-<a href="/blog/blog/2012/02/05/super-bowl-probabilities/">Super Bowl Probabilities: The Coin Toss</a>
-
-</h1>
-
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2012-02-05T09:53:00-07:00" pubdate data-updated="true">Feb 5<span>th</span>, 2012</time>
-         &bull; <a rel="bookmark" href="/blog/blog/2012/02/05/super-bowl-probabilities/">&infin;</a>
-      </p>
-    
-  </header>
-
-<div class="entry-content"><p>Browsing through my Twitter stream, I came across a blog post discussing an allegedly 3.8-sigma event: <a href="http://blogs.discovermagazine.com/cosmicvariance/2012/02/04/a-3-8-sigma-anomaly/">Apparently the last 14 Super Bowl coin tosses have been won by the NFC</a>. What are the chances of this? The blog linked to above claims a probability of (1/2)<sup>13</sup>. Another <a href="http://www.outsidethebeltway.com/super-bowl-coin-flip/">blog</a> claims (1/2)<sup>14</sup>. Which is correct? Before I get into the mathematics, I&#8217;ll try to disentangle three different questions:</p>
-
-<ol>
-<li>Out of 14 tosses, what&#8217;s the probability that they all come up heads?</li>
-<li>Out of 14 tosses, what&#8217;s the probability that one team wins all of them?</li>
-<li>Out of 45 tosses (one for each Super Bowl), what&#8217;s the probability that one team wins a string of 14 of them?<sup>1</sup></li>
-</ol>
-
-
-<p><strong>(1/2)<sup>14</sup></strong> is the correct answer to question (1). There&#8217;s a 1 in 2 chance of getting heads. The probability of getting heads 14 times out of 14 tosses is therefore (1/2)<sup>14</sup>.</p>
-
-<p><strong>(1/2)<sup>13</sup></strong> is the correct answer to question (2). If you call a coin in the air, there&#8217;s 1 in 2 chance you&#8217;ll win the toss. Out of 14 tosses, the chance that <em>either</em> the NFC will win the toss 14 times <em>or</em> the AFC will win the toss 14 times is: (1/2)<sup>14</sup> + (1/2)<sup>14</sup> = (1/2)<sup>13</sup>.</p>
-
-<p>The last situation is much more difficult to calculate, and similar questions are often the cause for much surprise. For example, if you toss a coin 20 times, do you think it&#8217;s likely or unlikely that you&#8217;ll get a string of 5 heads in a row? It seems like this should be unlikely. After all, the probability of tossing a coin 5 times, and ending up with heads every time is quite small: (1/2)<sup>5</sup> = 1/32  (approx. 3%). Believe it or not, the actual probability is around 25%.<sup>2</sup></p>
-
-<p>How are these probabilities found? One solution is a rather nasty recursive formula.</p>
-
-<blockquote><p>  A similar recursion can be given to calculate the probability that in <em>n</em> fair coin tosses a run of <em>r</em> heads or <em>r</em> tails occurs. In this case, we say that the tossing process is in state <em>(i, k)</em> when there are <em>k</em> tosses still to go and the last <em>i</em> tosses all showed the same outcome but so far no run of <em>r</em> heads or <em>r</em> tails has occurred. The probability <em>v<sub>k</sub>(i)</em> is defined as</p>
-
-<p>  v<sub>k</sub>(i) = the probability of getting a run of <em>r</em> heads or <em>r</em> tails during <em>n</em> tosses when the current state of the tossing process is <em>(i, k)</em>.</p>
-
-<p>The probability <em>v<sub>n-1</sub>(1)</em> is being sought (why?). Verify for yourself that the following recursion applies for k = 1,2,&#8230;,<em>n</em>.</p>
-
-<p>  v<sub>k</sub> = 0.5*v<sub>k-1</sub>(i + 1) + 0.5*v<sub>k-1</sub>(1) for i =,&#8230;,r - 1.</p>
-
-<p>The boundary conditions are <em>v<sub>0</sub>(i) = 0</em> for <em>1 &lt;= i &lt;= r -1</em> and <em>v<sub>j</sub>(r) = 1</em> for <em>0 &lt;= j &lt;= n - 1</em>.<sup>3</sup></p></blockquote>
-
-<p>I&#8217;m actually not sure why we&#8217;re looking for <em>v<sub>n-1</sub>(1)</em> as opposed to <em>v<sub>n</sub>(0)</em>. I tested it for a few values, and those expressions seem to be equal.<sup>4</sup> In any case, the formula is dense, but you can see the logic behind it. If you&#8217;re in the midst of a streak of heads, and your next flip comes up heads, your state is now <em>(i+1, k-1)</em>. That is, your streak has increased, but your tosses to go has decreased. This explains the first half of the formula: <em>0.5*v<sub>k-1</sub>(i + 1)</em>. The other case is that you&#8217;re in the midst of a streak of heads, but then you get a tail, so your state becomes <em>(1, k-1)</em>. That is, you now have a streak of 1 tail, and your total number of tosses to go decrements by one. This explains the last half of the equation. The equation then branches out like a tree, solving for each possibility along the way. Here&#8217;s a bit of Scheme that implements this:</p>
-
-<figure class='code'><figcaption><span>An Exact Solution in Scheme</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='scheme'><span class='line'><span class="p">(</span><span class="k">define </span><span class="p">(</span><span class="nf">coin-streak</span> <span class="nv">n</span> <span class="nv">r</span><span class="p">)</span>
-</span><span class='line'>    <span class="p">(</span><span class="k">define </span><span class="p">(</span><span class="nf">cs-helper</span> <span class="nv">k</span> <span class="nv">i</span><span class="p">)</span>
-</span><span class='line'>      <span class="p">(</span><span class="k">cond </span><span class="p">((</span><span class="k">and </span><span class="p">(</span><span class="nb">&lt;= </span><span class="mi">1</span> <span class="nv">i</span><span class="p">)</span> <span class="p">(</span><span class="nb">&lt;= </span><span class="nv">i</span> <span class="p">(</span><span class="nb">- </span><span class="nv">r</span> <span class="mi">1</span><span class="p">))</span> <span class="p">(</span><span class="nb">= </span><span class="nv">k</span> <span class="mi">0</span><span class="p">))</span> <span class="mi">0</span><span class="p">)</span>
-</span><span class='line'>            <span class="p">((</span><span class="k">and </span><span class="p">(</span><span class="nb">&lt;= </span><span class="mi">0</span> <span class="nv">k</span><span class="p">)</span> <span class="p">(</span><span class="nb">&lt;= </span><span class="nv">k</span> <span class="p">(</span><span class="nb">- </span><span class="nv">n</span> <span class="mi">1</span><span class="p">))</span> <span class="p">(</span><span class="nb">= </span><span class="nv">i</span> <span class="nv">r</span><span class="p">))</span> <span class="mi">1</span><span class="p">)</span>
-</span><span class='line'>            <span class="p">(</span><span class="k">else </span><span class="p">(</span><span class="nf">+</span>
-</span><span class='line'>                   <span class="p">(</span><span class="nb">* </span><span class="p">(</span><span class="nb">/ </span><span class="mi">1</span> <span class="mi">2</span><span class="p">)</span> <span class="p">(</span><span class="nf">ct-string</span> <span class="nv">r</span> <span class="nv">n</span> <span class="p">(</span><span class="nb">- </span><span class="nv">k</span> <span class="mi">1</span><span class="p">)</span> <span class="p">(</span><span class="nb">+ </span><span class="nv">i</span> <span class="mi">1</span><span class="p">)))</span>
-</span><span class='line'>                   <span class="p">(</span><span class="nb">* </span><span class="p">(</span><span class="nb">/ </span><span class="mi">1</span> <span class="mi">2</span><span class="p">)</span> <span class="p">(</span><span class="nf">ct-string</span> <span class="nv">r</span> <span class="nv">n</span> <span class="p">(</span><span class="nb">- </span><span class="nv">k</span> <span class="mi">1</span><span class="p">)</span> <span class="mi">1</span> <span class="p">))))</span>
-</span><span class='line'>            <span class="p">))</span>
-</span><span class='line'>    <span class="p">(</span><span class="nf">cs-helper</span> <span class="p">(</span><span class="nb">- </span><span class="nv">n</span> <span class="mi">1</span><span class="p">)</span> <span class="mi">1</span><span class="p">))</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Notice that this problem quickly becomes intractable for large values of <em>n</em>. Each call branches into two different calls, giving an exponential growth (props to the first person who posts a tail recursive memoization). This is why I prefer solving this by simulation. What we need to do is simulate 45 coin flips, and check if we&#8217;ve encountered a string of 14 heads or 14 tails. Do this, say, 100,000 times and see how often this event occurs.</p>
-
-<figure class='code'><figcaption><span>ctsim.py: An Approximation by Simulation in Python</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-<span class='line-number'>48</span>
-<span class='line-number'>49</span>
-<span class='line-number'>50</span>
-<span class='line-number'>51</span>
-<span class='line-number'>52</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c">#!/usr/bin/python -O</span>
-</span><span class='line'>
-</span><span class='line'><span class="kn">import</span> <span class="nn">random</span>
-</span><span class='line'><span class="kn">import</span> <span class="nn">sys</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">STREAK_LEN</span>  <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-</span><span class='line'><span class="n">TOSSES</span>      <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
-</span><span class='line'><span class="n">TRIALS</span>      <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">def</span> <span class="nf">simulation</span><span class="p">(</span><span class="n">trials</span><span class="p">,</span> <span class="n">tosses</span><span class="p">,</span> <span class="n">streak</span><span class="p">):</span>
-</span><span class='line'>    <span class="sd">&#39;&#39;&#39; Simulates *trials* trials of *tosses* tosses and returns the</span>
-</span><span class='line'><span class="sd">        fraction of trials that contained at least one streak</span>
-</span><span class='line'><span class="sd">        of *streak* or higher.</span>
-</span><span class='line'><span class="sd">    &#39;&#39;&#39;</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">def</span> <span class="nf">run_trial</span><span class="p">():</span>
-</span><span class='line'>        <span class="sd">&#39;&#39;&#39; Flips a coin *tosses* times and returns True if a streak of</span>
-</span><span class='line'><span class="sd">            *streak* length is encountered.</span>
-</span><span class='line'><span class="sd">        &#39;&#39;&#39;</span>
-</span><span class='line'>        <span class="n">cur_streak</span> <span class="o">=</span> <span class="mi">1</span>      <span class="c"># Length of the current streak.</span>
-</span><span class='line'>        <span class="n">prev_outcome</span> <span class="o">=</span> <span class="bp">None</span> <span class="c"># Outcome of a previous toss.</span>
-</span><span class='line'>        <span class="c"># Simulate the tosses.</span>
-</span><span class='line'>        <span class="k">for</span> <span class="n">toss</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">tosses</span><span class="p">):</span>
-</span><span class='line'>            <span class="n">outcome</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
-</span><span class='line'>            <span class="c"># If the last toss is the same as the current toss,</span>
-</span><span class='line'>            <span class="c"># increment the length of the current streak.</span>
-</span><span class='line'>            <span class="k">if</span> <span class="n">outcome</span> <span class="o">==</span> <span class="n">prev_outcome</span><span class="p">:</span>
-</span><span class='line'>                <span class="n">cur_streak</span> <span class="o">+=</span> <span class="mi">1</span>
-</span><span class='line'>            <span class="k">else</span><span class="p">:</span>
-</span><span class='line'>                <span class="n">cur_streak</span> <span class="o">=</span> <span class="mi">1</span>
-</span><span class='line'>
-</span><span class='line'>            <span class="c"># If the current streak is equal to the target</span>
-</span><span class='line'>            <span class="c"># length, return True</span>
-</span><span class='line'>            <span class="k">if</span> <span class="n">cur_streak</span> <span class="o">==</span> <span class="n">streak</span><span class="p">:</span>
-</span><span class='line'>                <span class="k">return</span> <span class="bp">True</span>
-</span><span class='line'>
-</span><span class='line'>            <span class="n">prev_outcome</span> <span class="o">=</span> <span class="n">outcome</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="k">return</span> <span class="bp">False</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="n">streak_count</span> <span class="o">=</span> <span class="mi">0</span>
-</span><span class='line'>    <span class="c"># Simulate all the trials, and keep track of how many had</span>
-</span><span class='line'>    <span class="c"># a streak.</span>
-</span><span class='line'>    <span class="k">for</span> <span class="n">trial</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">trials</span><span class="p">):</span>
-</span><span class='line'>        <span class="n">had_a_streak</span> <span class="o">=</span> <span class="n">run_trial</span><span class="p">()</span>
-</span><span class='line'>        <span class="k">if</span> <span class="n">had_a_streak</span><span class="p">:</span>
-</span><span class='line'>            <span class="n">streak_count</span> <span class="o">+=</span> <span class="mi">1</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">return</span> <span class="n">streak_count</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">trials</span><span class="p">)</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&quot;__main__&quot;</span><span class="p">:</span>
-</span><span class='line'>    <span class="k">print</span> <span class="n">simulation</span><span class="p">(</span><span class="n">TRIALS</span><span class="p">,</span> <span class="n">TOSSES</span><span class="p">,</span> <span class="n">STREAK_LEN</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p></p>
-
-<p>We can now simulate the Super Bowl situation by looking for a streak of 14 wins out of 45 tosses with 100,000 simulations.</p>
-
-<figure class='code'><figcaption><span>ctsim.py Usage</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>% ./ctsim.py 14 45 100000
-</span><span class='line'>0.00202
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>So, the probability of this happening is <strong>0.00202</strong> or around <strong>0.2%</strong>. This is still tiny, but not as small as (1/2)<sup>13</sup> (approx. 0.00012 or 0.012%).</p>
-
-<h2>Notes:</h2>
-
-<ol>
-<li>Even this is slightly ambiguous. The exact question that we&#8217;ll be looking at is: What is the probability that one team will have at least one winning streak of at least 14 tosses.</li>
-<li>Tijms, H. (2010). Understanding probability: Chance rules in everyday life. (2 ed.). Cambridge, UK: Cambridge University Press.</li>
-<li>Ibid.</li>
-<li>Perhaps the equation <em>v<sub>n</sub>(0)</em> is technically undefined. That is, <em>i</em> cannot equal 0 because you must have a streak of at least 1 head or 1 tail. Nevertheless, it looks like the formula still works for this technically undefined state.</li>
-</ol>
-
-</div>
-
-  <footer>
-    
-    <p><a class="comments-link" href="/blog/blog/2012/02/05/super-bowl-probabilities/#disqus_thread">View comments &raquo;</a></p>
-    
-    
-  </footer>
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/blog/page/2/">&larr; Older</a>
@@ -833,6 +809,10 @@
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/blog/2012/07/07/testing-with-the-poisson-process/">Testing With The Poisson Process</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/blog/2012/05/20/did-the-boulder-pd-reduce-traffic-accidents/">Did the Boulder PD Reduce Traffic Accidents?</a>
       </li>
     
@@ -846,10 +826,6 @@
     
       <li class="post">
         <a href="/blog/blog/2012/04/01/building-data-structures-from-functions/">Building Data Structures from Functions</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/blog/2012/02/05/super-bowl-probabilities/">Super Bowl Probabilities: The Coin Toss</a>
       </li>
     
   </ul>

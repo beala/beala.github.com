@@ -9,7 +9,7 @@
   <meta name="author" content="Alex Beal">
 
   
-  <meta name="description" content="Here&#8217;s a fun little matrix: That generates the an and an+1 terms of the Fibonacci sequence.1 To see why, let&#8217;s look at a recursive &hellip;">
+  <meta name="description" content="The matrix equation in the last post can actually be whittled down a bit further to produce another equation that, in some ways, is easier to work &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -78,6 +78,125 @@
   <div id="main">
     <div id="content">
       <div class="blog-index">
+  
+    
+
+
+
+
+
+
+
+
+
+
+    <article >
+      
+  <header>
+    <h1 class="entry-title">
+
+<a href="/blog/blog/2011/08/03/fibonacci-sequence-part-ii/">Fibonacci Sequence, Part II</a>
+
+</h1>
+
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-08-03T16:49:00-06:00" pubdate data-updated="true">Aug 3<span>rd</span>, 2011</time>
+         &bull; <a rel="bookmark" href="/blog/blog/2011/08/03/fibonacci-sequence-part-ii/">&infin;</a>
+      </p>
+    
+  </header>
+
+<div class="entry-content"><p>The matrix equation in the last post can actually be whittled down a bit further to produce another equation that, in some ways, is easier to work with. The result is as follows:</p>
+
+<p><img src="http://media.usrsb.in/fib2/fib.png" alt="fib" /></p>
+
+<p>F<sub>k</sub> is, of course, the k<sup>th</sup> Fibonacci number. Now, before I go on, I want to point out that I stumbled upon these two equations and the proofs for these equations in <a href="http://www-math.mit.edu/~gs/">Gilbert Strang&#8217;s</a> excellent <a href="http://www.amazon.com/Linear-Algebra-Applications-Gilbert-Strang/dp/0030105676/ref=sr_1_2?s=books&amp;ie=UTF8&amp;qid=1312385275&amp;sr=1-2">Linear Algebra and Its Applications</a>. All credit goes to him for coming up with this, and I recommend his book for an even more in depth explanation.</p>
+
+<p>Anyway, back to the equation, which I found interesting for a few reasons:</p>
+
+<ol>
+<li>This equation allows you to easily find the kth term using only a pocket calculator. The last equation requires something that can deal with matrices.</li>
+<li>This also makes it easier to use in programming applications. There&#8217;s no need to write functions or import libraries to deal with matrices. It&#8217;s also probably faster than writing some sort of recursive function to compute the kth Fibonacci number.</li>
+<li>As Strang points out, that equation, amazingly, produces an integer, despite all the fractions and square roots.</li>
+<li>We can simplify that equation further for a very good approximation (so good that it&#8217;s not really an approximation).</li>
+</ol>
+
+
+<p>To see how we get that equation from the equation in the last post, let&#8217;s begin with the way Mr. Strang has it written in his book (it&#8217;s the same as mine, but flipped upside down).</p>
+
+<p><img src="http://media.usrsb.in/fib2/fibmat.png" alt="title" /></p>
+
+<p>Where F<sub>0</sub>=0, F<sub>1</sub>=1, F<sub>2</sub>=1, etc. Let&#8217;s now make some substitutions:</p>
+
+<p><img src="http://media.usrsb.in/fib2/subs.png" alt="title" /></p>
+
+<p>We now have:</p>
+
+<p><img src="http://media.usrsb.in/fib2/matform.png" alt="title" /></p>
+
+<p>This hasn&#8217;t changed the content of the equation at all. We&#8217;ve just substituted in new symbols to represent the different terms.</p>
+
+<p>The next step is to diagonalize the matrix A. Remember that diagonalizing A produces A = SΛS<sup>-1</sup> where S contains A&#8217;s eigenvectors and Λ contains A&#8217;s eigenvalues. Substituting A = SΛS<sup>-1</sup> into the previous equation yields:</p>
+
+<p><img src="http://media.usrsb.in/fib2/diag.png" alt="title" /></p>
+
+<p>Notice how everything but the first and last S and S<sup>-1</sup> cancel, giving the final form: SΛ<sup>k</sup>S<sup>-1</sup>u<sub>0</sub>. This is important, because Λ is a diagonal matrix, making Λ<sup>k</sup> very simple:</p>
+
+<p><img src="http://media.usrsb.in/fib2/lampow.png" alt="title" /></p>
+
+<p>λ<sub>1</sub> and λ<sub>2</sub> are, of course, the eigenvalues of A. Let&#8217;s now make one last substitution and put all this diagonalization stuff together. First we define c as</p>
+
+<p><img src="http://media.usrsb.in/fib2/csub.png" alt="title" /></p>
+
+<p>Then we substitute it into the equation:</p>
+
+<p><img src="http://media.usrsb.in/fib2/diag2.png" alt="title" /></p>
+
+<p>That might need some explaining. The first bit is simply the equation with c substituted in. Following that, the first matrix is S, but written to show that it contains x<sub>1</sub> and x<sub>2</sub>, which are the eigenvectors of A placed vertically in the two columns. The middle matrix is Λ<sup>k</sup> and the last is simply the matrix c. Finally, the matrices are multiplied out, yielding the final c<sub>1</sub>λ<sup>k</sup><sub>1</sub>x<sub>1</sub>+c<sub>2</sub>λ<sup>k</sup><sub>2</sub>x<sub>2</sub></p>
+
+<p>The final steps are simply to compute c, and A&#8217;s eigenvalues and eigenvectors. I&#8217;ll spare you the tedious algebra and simply tell you that:</p>
+
+<p><img src="http://media.usrsb.in/fib2/eigenvals.png" alt="title" /></p>
+
+<p><img src="http://media.usrsb.in/fib2/eigenvec.png" alt="title" /></p>
+
+<p>This can be computed the standard way, by solving: det(A-λI)=0.</p>
+
+<p>All the variables are then plugged into the equation for u<sub>k</sub>.</p>
+
+<p><img src="http://media.usrsb.in/fib2/almost-there.png" alt="title" /></p>
+
+<p>We want F<sub>k</sub>, so we multiply, factor, and take the bottom row, giving the equation we want:</p>
+
+<p><img src="http://media.usrsb.in/fib2/approx.png" alt="title" /></p>
+
+<p>That&#8217;s the full equation, but now notice that the second term is always less than 1/2. This mean we can simply drop it, yielding:</p>
+
+<p>In fact, since the second term is always less than 1/2 and the full equation always gives us an integer, we can take this a step further: <strong>Rounding the approximation to the nearest integer will always give you the exact value for F<sub>k</sub>.</strong> Cool.</p>
+</div>
+
+  <footer>
+    
+    <p><a class="comments-link" href="/blog/blog/2011/08/03/fibonacci-sequence-part-ii/#disqus_thread">View comments &raquo;</a></p>
+    
+    
+  </footer>
+
+
+    </article>
   
     
 
@@ -474,87 +593,9 @@ done
 
     </article>
   
-    
-
-
-
-
-
-
-
-
-
-
-    <article >
-      
-  <header>
-    <h1 class="entry-title">
-
-<a href="/blog/blog/2011/03/12/the-first-spellchecker-in-6-lines/">The First Spellchecker (in 6 Lines)</a>
-
-</h1>
-
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2011-03-12T15:17:00-07:00" pubdate data-updated="true">Mar 12<span>th</span>, 2011</time>
-         &bull; <a rel="bookmark" href="/blog/blog/2011/03/12/the-first-spellchecker-in-6-lines/">&infin;</a>
-      </p>
-    
-  </header>
-
-<div class="entry-content"><p>I recently came across this gem in a book called <a href="http://www.amazon.com/Classic-Shell-Scripting-Arnold-Robbins/dp/0596005954/">Classic Shell Scripting</a>. According to the authors, it&#8217;s a modern port of the first spellchecker. The original version was written by Steve Johnson, and was then translated into the form you see here by Kernighan and Plauger. I assume the translation was necessary because the syntax of the original isn&#8217;t compatible with modern shells. Without further ado, here it is:</p>
-
-<pre><code>cat filename | 
-  tr A-Z a-z | 
-    tr -c a-z '\n' | 
-      sort | 
-        uniq | 
-          comm -13 dictionary_file -
-</code></pre>
-
-<p>It&#8217;s a spellchecker, which, at 115 characters, fits within a tweet! Imagine that! To prove to you that it actually works, and to truly appreciate the cleverness of this code, let&#8217;s step through it line by line. The first command, &#8216;cat&#8217;, simply reads the file and sends it down the pipe. This is then processed by &#8216;tr&#8217; which converts all the uppercase characters to lower case. This is again piped to &#8216;tr&#8217;, but this time everything that&#8217;s not a lower case character is converted to a newline character. At this point, the original input has been processed down to a list of words separated by newline characters. This list is then sorted alphabetically with the &#8216;sort&#8217; command, and all the duplicate words are removed with the &#8216;uniq&#8217; command. Finally, this list of words is compared with a dictionary file. Any words that appear in the list, but not in the dictionary, are sent to standard output. The final result is a list of words that appear in your document, but not in the dictionary, and thus are probably misspelled. At this point, you may have noticed a rather serious problem with this script. It doesn&#8217;t do a very good job of handling apostrophes. The third line will remove all single quote characters, even if they&#8217;re functioning as apostrophes, and replace them with newline characters. One way to fix this is to replace line 3 with the following:</p>
-
-<pre><code>sed -r "s/('$|^'|\W'\b|\b'\W|\W'\W)/ /g" |
-  tr -c a-z\' '\n' |
-</code></pre>
-
-<p>That rather ugly &#8216;sed&#8217; command will remove all the single quote characters which aren&#8217;t in the middle of words, thereby preserving apostrophes, and the new &#8216;tr&#8217; command will ignore all single quote characters since &#8216;sed&#8217; has already dealt with them. The end result is that the apostrophe in, for example, <code>foobar's</code> will be preserved but the single quotes at the beginning and end of <code>'foobar's'</code> will be removed. Another improvement would be to keep it from removing hyphens in compound words, but I&#8217;ll leave that as an exercise to the reader. Also, If you need a dictionary file try:</p>
-
-<pre><code>sudo apt-get install wamerican-small
-</code></pre>
-
-<p>And look under /usr/share/dict/words.</p>
-
-<pre><code>beala@superfly:/usr/share/dict$ wc -l words
-50253 words
-</code></pre>
-
-<p>That&#8217;s a lot of words! Try &#8216;wamerican-insane&#8217; if you want a, well, insane number of words.</p>
-</div>
-
-  <footer>
-    
-    <p><a class="comments-link" href="/blog/blog/2011/03/12/the-first-spellchecker-in-6-lines/#disqus_thread">View comments &raquo;</a></p>
-    
-    
-  </footer>
-
-
-    </article>
-  
   <div class="pagination">
+    
+      <a class="prev" href="/blog/blog/page/6/">&larr; Older</a>
     
     <a href="/blog/blog/archives">Blog Archives</a>
     
@@ -567,6 +608,10 @@ done
     <section>
   <h1>Recent Posts</h1>
   <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/blog/2012/07/07/testing-with-the-poisson-process/">Testing With The Poisson Process</a>
+      </li>
     
       <li class="post">
         <a href="/blog/blog/2012/05/20/did-the-boulder-pd-reduce-traffic-accidents/">Did the Boulder PD Reduce Traffic Accidents?</a>
@@ -582,10 +627,6 @@ done
     
       <li class="post">
         <a href="/blog/blog/2012/04/01/building-data-structures-from-functions/">Building Data Structures from Functions</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/blog/2012/02/05/super-bowl-probabilities/">Super Bowl Probabilities: The Coin Toss</a>
       </li>
     
   </ul>

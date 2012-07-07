@@ -9,7 +9,7 @@
   <meta name="author" content="Alex Beal">
 
   
-  <meta name="description" content="I&#8217;ve slowly been making my way through An Overview of the Scala Programming Language [PDF], and was struck by this interesting implementation &hellip;">
+  <meta name="description" content="Browsing through my Twitter stream, I came across a blog post discussing an allegedly 3.8-sigma event: Apparently the last 14 Super Bowl coin tosses &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -78,6 +78,239 @@
   <div id="main">
     <div id="content">
       <div class="blog-index">
+  
+    
+
+
+
+
+
+
+
+
+
+
+    <article >
+      
+  <header>
+    <h1 class="entry-title">
+
+<a href="/blog/blog/2012/02/05/super-bowl-probabilities/">Super Bowl Probabilities: The Coin Toss</a>
+
+</h1>
+
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-02-05T09:53:00-07:00" pubdate data-updated="true">Feb 5<span>th</span>, 2012</time>
+         &bull; <a rel="bookmark" href="/blog/blog/2012/02/05/super-bowl-probabilities/">&infin;</a>
+      </p>
+    
+  </header>
+
+<div class="entry-content"><p>Browsing through my Twitter stream, I came across a blog post discussing an allegedly 3.8-sigma event: <a href="http://blogs.discovermagazine.com/cosmicvariance/2012/02/04/a-3-8-sigma-anomaly/">Apparently the last 14 Super Bowl coin tosses have been won by the NFC</a>. What are the chances of this? The blog linked to above claims a probability of (1/2)<sup>13</sup>. Another <a href="http://www.outsidethebeltway.com/super-bowl-coin-flip/">blog</a> claims (1/2)<sup>14</sup>. Which is correct? Before I get into the mathematics, I&#8217;ll try to disentangle three different questions:</p>
+
+<ol>
+<li>Out of 14 tosses, what&#8217;s the probability that they all come up heads?</li>
+<li>Out of 14 tosses, what&#8217;s the probability that one team wins all of them?</li>
+<li>Out of 45 tosses (one for each Super Bowl), what&#8217;s the probability that one team wins a string of 14 of them?<sup>1</sup></li>
+</ol>
+
+
+<p><strong>(1/2)<sup>14</sup></strong> is the correct answer to question (1). There&#8217;s a 1 in 2 chance of getting heads. The probability of getting heads 14 times out of 14 tosses is therefore (1/2)<sup>14</sup>.</p>
+
+<p><strong>(1/2)<sup>13</sup></strong> is the correct answer to question (2). If you call a coin in the air, there&#8217;s 1 in 2 chance you&#8217;ll win the toss. Out of 14 tosses, the chance that <em>either</em> the NFC will win the toss 14 times <em>or</em> the AFC will win the toss 14 times is: (1/2)<sup>14</sup> + (1/2)<sup>14</sup> = (1/2)<sup>13</sup>.</p>
+
+<p>The last situation is much more difficult to calculate, and similar questions are often the cause for much surprise. For example, if you toss a coin 20 times, do you think it&#8217;s likely or unlikely that you&#8217;ll get a string of 5 heads in a row? It seems like this should be unlikely. After all, the probability of tossing a coin 5 times, and ending up with heads every time is quite small: (1/2)<sup>5</sup> = 1/32  (approx. 3%). Believe it or not, the actual probability is around 25%.<sup>2</sup></p>
+
+<p>How are these probabilities found? One solution is a rather nasty recursive formula.</p>
+
+<blockquote><p>  A similar recursion can be given to calculate the probability that in <em>n</em> fair coin tosses a run of <em>r</em> heads or <em>r</em> tails occurs. In this case, we say that the tossing process is in state <em>(i, k)</em> when there are <em>k</em> tosses still to go and the last <em>i</em> tosses all showed the same outcome but so far no run of <em>r</em> heads or <em>r</em> tails has occurred. The probability <em>v<sub>k</sub>(i)</em> is defined as</p>
+
+<p>  v<sub>k</sub>(i) = the probability of getting a run of <em>r</em> heads or <em>r</em> tails during <em>n</em> tosses when the current state of the tossing process is <em>(i, k)</em>.</p>
+
+<p>The probability <em>v<sub>n-1</sub>(1)</em> is being sought (why?). Verify for yourself that the following recursion applies for k = 1,2,&#8230;,<em>n</em>.</p>
+
+<p>  v<sub>k</sub> = 0.5*v<sub>k-1</sub>(i + 1) + 0.5*v<sub>k-1</sub>(1) for i =,&#8230;,r - 1.</p>
+
+<p>The boundary conditions are <em>v<sub>0</sub>(i) = 0</em> for <em>1 &lt;= i &lt;= r -1</em> and <em>v<sub>j</sub>(r) = 1</em> for <em>0 &lt;= j &lt;= n - 1</em>.<sup>3</sup></p></blockquote>
+
+<p>I&#8217;m actually not sure why we&#8217;re looking for <em>v<sub>n-1</sub>(1)</em> as opposed to <em>v<sub>n</sub>(0)</em>. I tested it for a few values, and those expressions seem to be equal.<sup>4</sup> In any case, the formula is dense, but you can see the logic behind it. If you&#8217;re in the midst of a streak of heads, and your next flip comes up heads, your state is now <em>(i+1, k-1)</em>. That is, your streak has increased, but your tosses to go has decreased. This explains the first half of the formula: <em>0.5*v<sub>k-1</sub>(i + 1)</em>. The other case is that you&#8217;re in the midst of a streak of heads, but then you get a tail, so your state becomes <em>(1, k-1)</em>. That is, you now have a streak of 1 tail, and your total number of tosses to go decrements by one. This explains the last half of the equation. The equation then branches out like a tree, solving for each possibility along the way. Here&#8217;s a bit of Scheme that implements this:</p>
+
+<figure class='code'><figcaption><span>An Exact Solution in Scheme</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='scheme'><span class='line'><span class="p">(</span><span class="k">define </span><span class="p">(</span><span class="nf">coin-streak</span> <span class="nv">n</span> <span class="nv">r</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">(</span><span class="k">define </span><span class="p">(</span><span class="nf">cs-helper</span> <span class="nv">k</span> <span class="nv">i</span><span class="p">)</span>
+</span><span class='line'>      <span class="p">(</span><span class="k">cond </span><span class="p">((</span><span class="k">and </span><span class="p">(</span><span class="nb">&lt;= </span><span class="mi">1</span> <span class="nv">i</span><span class="p">)</span> <span class="p">(</span><span class="nb">&lt;= </span><span class="nv">i</span> <span class="p">(</span><span class="nb">- </span><span class="nv">r</span> <span class="mi">1</span><span class="p">))</span> <span class="p">(</span><span class="nb">= </span><span class="nv">k</span> <span class="mi">0</span><span class="p">))</span> <span class="mi">0</span><span class="p">)</span>
+</span><span class='line'>            <span class="p">((</span><span class="k">and </span><span class="p">(</span><span class="nb">&lt;= </span><span class="mi">0</span> <span class="nv">k</span><span class="p">)</span> <span class="p">(</span><span class="nb">&lt;= </span><span class="nv">k</span> <span class="p">(</span><span class="nb">- </span><span class="nv">n</span> <span class="mi">1</span><span class="p">))</span> <span class="p">(</span><span class="nb">= </span><span class="nv">i</span> <span class="nv">r</span><span class="p">))</span> <span class="mi">1</span><span class="p">)</span>
+</span><span class='line'>            <span class="p">(</span><span class="k">else </span><span class="p">(</span><span class="nf">+</span>
+</span><span class='line'>                   <span class="p">(</span><span class="nb">* </span><span class="p">(</span><span class="nb">/ </span><span class="mi">1</span> <span class="mi">2</span><span class="p">)</span> <span class="p">(</span><span class="nf">ct-string</span> <span class="nv">r</span> <span class="nv">n</span> <span class="p">(</span><span class="nb">- </span><span class="nv">k</span> <span class="mi">1</span><span class="p">)</span> <span class="p">(</span><span class="nb">+ </span><span class="nv">i</span> <span class="mi">1</span><span class="p">)))</span>
+</span><span class='line'>                   <span class="p">(</span><span class="nb">* </span><span class="p">(</span><span class="nb">/ </span><span class="mi">1</span> <span class="mi">2</span><span class="p">)</span> <span class="p">(</span><span class="nf">ct-string</span> <span class="nv">r</span> <span class="nv">n</span> <span class="p">(</span><span class="nb">- </span><span class="nv">k</span> <span class="mi">1</span><span class="p">)</span> <span class="mi">1</span> <span class="p">))))</span>
+</span><span class='line'>            <span class="p">))</span>
+</span><span class='line'>    <span class="p">(</span><span class="nf">cs-helper</span> <span class="p">(</span><span class="nb">- </span><span class="nv">n</span> <span class="mi">1</span><span class="p">)</span> <span class="mi">1</span><span class="p">))</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Notice that this problem quickly becomes intractable for large values of <em>n</em>. Each call branches into two different calls, giving an exponential growth (props to the first person who posts a tail recursive memoization). This is why I prefer solving this by simulation. What we need to do is simulate 45 coin flips, and check if we&#8217;ve encountered a string of 14 heads or 14 tails. Do this, say, 100,000 times and see how often this event occurs.</p>
+
+<figure class='code'><figcaption><span>ctsim.py: An Approximation by Simulation in Python</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c">#!/usr/bin/python -O</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="nn">random</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">sys</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">STREAK_LEN</span>  <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+</span><span class='line'><span class="n">TOSSES</span>      <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+</span><span class='line'><span class="n">TRIALS</span>      <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">def</span> <span class="nf">simulation</span><span class="p">(</span><span class="n">trials</span><span class="p">,</span> <span class="n">tosses</span><span class="p">,</span> <span class="n">streak</span><span class="p">):</span>
+</span><span class='line'>    <span class="sd">&#39;&#39;&#39; Simulates *trials* trials of *tosses* tosses and returns the</span>
+</span><span class='line'><span class="sd">        fraction of trials that contained at least one streak</span>
+</span><span class='line'><span class="sd">        of *streak* or higher.</span>
+</span><span class='line'><span class="sd">    &#39;&#39;&#39;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">run_trial</span><span class="p">():</span>
+</span><span class='line'>        <span class="sd">&#39;&#39;&#39; Flips a coin *tosses* times and returns True if a streak of</span>
+</span><span class='line'><span class="sd">            *streak* length is encountered.</span>
+</span><span class='line'><span class="sd">        &#39;&#39;&#39;</span>
+</span><span class='line'>        <span class="n">cur_streak</span> <span class="o">=</span> <span class="mi">1</span>      <span class="c"># Length of the current streak.</span>
+</span><span class='line'>        <span class="n">prev_outcome</span> <span class="o">=</span> <span class="bp">None</span> <span class="c"># Outcome of a previous toss.</span>
+</span><span class='line'>        <span class="c"># Simulate the tosses.</span>
+</span><span class='line'>        <span class="k">for</span> <span class="n">toss</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">tosses</span><span class="p">):</span>
+</span><span class='line'>            <span class="n">outcome</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+</span><span class='line'>            <span class="c"># If the last toss is the same as the current toss,</span>
+</span><span class='line'>            <span class="c"># increment the length of the current streak.</span>
+</span><span class='line'>            <span class="k">if</span> <span class="n">outcome</span> <span class="o">==</span> <span class="n">prev_outcome</span><span class="p">:</span>
+</span><span class='line'>                <span class="n">cur_streak</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span class='line'>            <span class="k">else</span><span class="p">:</span>
+</span><span class='line'>                <span class="n">cur_streak</span> <span class="o">=</span> <span class="mi">1</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="c"># If the current streak is equal to the target</span>
+</span><span class='line'>            <span class="c"># length, return True</span>
+</span><span class='line'>            <span class="k">if</span> <span class="n">cur_streak</span> <span class="o">==</span> <span class="n">streak</span><span class="p">:</span>
+</span><span class='line'>                <span class="k">return</span> <span class="bp">True</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="n">prev_outcome</span> <span class="o">=</span> <span class="n">outcome</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="k">return</span> <span class="bp">False</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">streak_count</span> <span class="o">=</span> <span class="mi">0</span>
+</span><span class='line'>    <span class="c"># Simulate all the trials, and keep track of how many had</span>
+</span><span class='line'>    <span class="c"># a streak.</span>
+</span><span class='line'>    <span class="k">for</span> <span class="n">trial</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">trials</span><span class="p">):</span>
+</span><span class='line'>        <span class="n">had_a_streak</span> <span class="o">=</span> <span class="n">run_trial</span><span class="p">()</span>
+</span><span class='line'>        <span class="k">if</span> <span class="n">had_a_streak</span><span class="p">:</span>
+</span><span class='line'>            <span class="n">streak_count</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="n">streak_count</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">trials</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&quot;__main__&quot;</span><span class="p">:</span>
+</span><span class='line'>    <span class="k">print</span> <span class="n">simulation</span><span class="p">(</span><span class="n">TRIALS</span><span class="p">,</span> <span class="n">TOSSES</span><span class="p">,</span> <span class="n">STREAK_LEN</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<p>We can now simulate the Super Bowl situation by looking for a streak of 14 wins out of 45 tosses with 100,000 simulations.</p>
+
+<figure class='code'><figcaption><span>ctsim.py Usage</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>% ./ctsim.py 14 45 100000
+</span><span class='line'>0.00202
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>So, the probability of this happening is <strong>0.00202</strong> or around <strong>0.2%</strong>. This is still tiny, but not as small as (1/2)<sup>13</sup> (approx. 0.00012 or 0.012%).</p>
+
+<h2>Notes:</h2>
+
+<ol>
+<li>Even this is slightly ambiguous. The exact question that we&#8217;ll be looking at is: What is the probability that one team will have at least one winning streak of at least 14 tosses.</li>
+<li>Tijms, H. (2010). Understanding probability: Chance rules in everyday life. (2 ed.). Cambridge, UK: Cambridge University Press.</li>
+<li>Ibid.</li>
+<li>Perhaps the equation <em>v<sub>n</sub>(0)</em> is technically undefined. That is, <em>i</em> cannot equal 0 because you must have a streak of at least 1 head or 1 tail. Nevertheless, it looks like the formula still works for this technically undefined state.</li>
+</ol>
+
+</div>
+
+  <footer>
+    
+    <p><a class="comments-link" href="/blog/blog/2012/02/05/super-bowl-probabilities/#disqus_thread">View comments &raquo;</a></p>
+    
+    
+  </footer>
+
+
+    </article>
   
     
 
@@ -1013,128 +1246,6 @@
 
     </article>
   
-    
-
-
-
-
-
-
-
-
-
-
-    <article >
-      
-  <header>
-    <h1 class="entry-title">
-
-<a href="/blog/blog/2011/12/29/implementing-switches-with-dictionaries/">Implementing Switches With Dictionaries (Python)</a>
-
-</h1>
-
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2011-12-29T10:55:00-07:00" pubdate data-updated="true">Dec 29<span>th</span>, 2011</time>
-         &bull; <a rel="bookmark" href="/blog/blog/2011/12/29/implementing-switches-with-dictionaries/">&infin;</a>
-      </p>
-    
-  </header>
-
-<div class="entry-content"><p>One thing I like about Python is that it lets you do just about anything. Classes can be modified at runtime, lists can contain a mix of types, and functions are first-class. The built in dictionaries are especially powerful. They are fast, and can hash and contain just about any immutable datatype, including functions. This allows for a novel use: fast <code>switch</code> statements. Consider the following bit of C, which adds, subtracts, or multiplies two numbers based on the value of <code>op</code>:</p>
-
-<figure class='code'><figcaption><span>A C Calculator</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="k">switch</span><span class="p">(</span><span class="n">op</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>  <span class="k">case</span> <span class="sc">&#39;+&#39;</span>:
-</span><span class='line'>      <span class="n">c</span> <span class="o">=</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">;</span>
-</span><span class='line'>      <span class="k">break</span><span class="p">;</span>
-</span><span class='line'>  <span class="k">case</span> <span class="sc">&#39;-&#39;</span>:
-</span><span class='line'>      <span class="n">c</span> <span class="o">=</span> <span class="n">a</span> <span class="o">-</span> <span class="n">b</span><span class="p">;</span>
-</span><span class='line'>      <span class="k">break</span><span class="p">;</span>
-</span><span class='line'>  <span class="nl">default:</span>
-</span><span class='line'>      <span class="n">c</span> <span class="o">=</span> <span class="n">a</span> <span class="o">*</span> <span class="n">b</span><span class="p">;</span>
-</span><span class='line'>      <span class="k">break</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>This behavior could be duplicated in Python using an <code>if ... elif ... elif ...</code> sequence,<sup>1</sup> or we could use the following dictionary:</p>
-
-<figure class='code'><figcaption><span>A Python Calculator</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">add</span><span class="p">():</span>
-</span><span class='line'>  <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span>
-</span><span class='line'><span class="k">def</span> <span class="nf">sub</span><span class="p">():</span>
-</span><span class='line'>  <span class="k">return</span> <span class="n">a</span> <span class="o">-</span> <span class="n">b</span>
-</span><span class='line'><span class="k">def</span> <span class="nf">mult</span><span class="p">():</span>
-</span><span class='line'>  <span class="k">return</span> <span class="n">a</span> <span class="o">*</span> <span class="n">b</span>
-</span><span class='line'>  
-</span><span class='line'><span class="n">switch_substitute</span> <span class="o">=</span> <span class="p">{</span>
-</span><span class='line'>  <span class="s">&#39;+&#39;</span> <span class="p">:</span> <span class="n">add</span><span class="p">,</span>
-</span><span class='line'>  <span class="s">&#39;-&#39;</span> <span class="p">:</span> <span class="n">sub</span> <span class="p">}</span>
-</span><span class='line'>  
-</span><span class='line'><span class="n">c</span> <span class="o">=</span> <span class="n">switch_substitute</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">mult</span><span class="p">)()</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>There, the three operations are wrapped in functions, and added as values to the dictionary. The <code>get()</code> method looks for the function associated with the value of <code>op</code> and returns the <code>mult</code> function if the key is not in the dictionary, mimicking the action of the <code>default</code> case.<sup>2</sup> Once one of the functions is retrieved, it&#8217;s immediately called, and the appropriate value gets assigned to <code>c</code>.</p>
-
-<p>The advantage of this method is that it&#8217;s fast. Dictionaries are implemented as hash tables, so the lookup happens in constant time.<sup>3</sup> <code>elif</code>s and <code>switch</code>es probably take linear time, but would depend on the implementation.</p>
-
-<p>It&#8217;s also worth thinking about how something similar could be built using a class and Python&#8217;s <a href="http://docs.python.org/library/functions.html#getattr">getattr</a> function.</p>
-
-<h2>Footnotes:</h2>
-
-<ol>
-<li><a href="http://docs.python.org/tutorial/controlflow.html#if-statements">http://docs.python.org/tutorial/controlflow.html#if-statements</a></li>
-<li><a href="http://docs.python.org/library/stdtypes.html#dict.get">http://docs.python.org/library/stdtypes.html#dict.get</a></li>
-<li><a href="http://docs.python.org/library/stdtypes.html#mapping-types-dict">http://docs.python.org/library/stdtypes.html#mapping-types-dict</a></li>
-</ol>
-
-</div>
-
-  <footer>
-    
-    <p><a class="comments-link" href="/blog/blog/2011/12/29/implementing-switches-with-dictionaries/#disqus_thread">View comments &raquo;</a></p>
-    
-    
-  </footer>
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/blog/page/3/">&larr; Older</a>
@@ -1152,6 +1263,10 @@
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/blog/2012/07/07/testing-with-the-poisson-process/">Testing With The Poisson Process</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/blog/2012/05/20/did-the-boulder-pd-reduce-traffic-accidents/">Did the Boulder PD Reduce Traffic Accidents?</a>
       </li>
     
@@ -1165,10 +1280,6 @@
     
       <li class="post">
         <a href="/blog/blog/2012/04/01/building-data-structures-from-functions/">Building Data Structures from Functions</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/blog/2012/02/05/super-bowl-probabilities/">Super Bowl Probabilities: The Coin Toss</a>
       </li>
     
   </ul>

@@ -3,7 +3,7 @@
   <title><![CDATA[/usr/sbin/blog]]></title>
   <link href="http://usrsb.in/blog/atom.xml" rel="self"/>
   <link href="http://usrsb.in/blog/"/>
-  <updated>2012-05-20T09:19:26-06:00</updated>
+  <updated>2012-07-07T10:58:06-06:00</updated>
   <id>http://usrsb.in/blog/</id>
   <author>
     <name><![CDATA[Alex Beal]]></name>
@@ -11,6 +11,177 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+    <entry>
+      
+
+
+
+
+<title type="html"><![CDATA[Testing With The Poisson Process]]></title>
+<link href="http://usrsb.in/blog/blog/2012/07/07/testing-with-the-poisson-process/"/>
+<updated>2012-07-07T09:00:00-06:00</updated>
+<id>http://usrsb.in/blog/blog/2012/07/07/testing-with-the-poisson-process</id>
+
+      <content type="html"><![CDATA[<p>The Poisson process is a mathematical abstraction of random events happening over a stretch of time. It’s often used to model all sorts of occurrences from particle emission due to radioactive decay, to natural disasters.<sup>1</sup> The process itself has several mathematical properties such as not allowing for simultaneous events, but these specifics aren’t important for our purposes. What makes it useful to software engineers is that it also turns out to be a good model for events like hits to a webpage<sup>2</sup> or requests to an API. For example, suppose you have written a new API for your web site, and you wanted to test it out under normal load. In order to simulate this with a Poisson process, all you’d need to know is the expected number of hits per hour (or minute or second). With this information, you could then generate random inter-arrival times (the times between events). That is, you could model the amount of time between requests to your API using this equation:<sup>3</sup></p>
+
+<p><img src="http://media.usrsb.in/poisson/0.png" alt="Exponentially distributed random variable" /></p>
+
+<p>This is the equation for an exponentially distributed random variable, where <code>U</code> is a random number between 0 and 1, and <code>1/α</code> is the expected value of the inter-arrival times. In English, this means that if you expect 100 hits per hours, then <code>1/α</code> would equal 1/100 (because you expect there to be a hit every 0.01 hours), and <code>U</code> would be some random number generated with a call to <code>Math.random()</code>. The number that pops out the other end would be a randomly generated inter-request time. If you wanted to simulate more than one request, you would evaluate this equation multiple times (using a new randomly generated <code>U</code> each time), and each result would be the time between two requests. So if you ended up with 0.04, 0.2, 0.1, then the second request would come in 0.04 hours after the first, and the third would come in 0.2 hours after the second, and so on.</p>
+
+<p>This technique can be automated using a simple Python script:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c"># Make a function iterable, by repeatedly calling it.</span>
+</span><span class='line'><span class="k">def</span> <span class="nf">make_iterable</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">try</span><span class="p">:</span>
+</span><span class='line'>        <span class="k">while</span> <span class="mi">1</span><span class="p">:</span>
+</span><span class='line'>            <span class="k">yield</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">except</span><span class="p">:</span>
+</span><span class='line'>        <span class="k">pass</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">uni_rand</span> <span class="o">=</span> <span class="n">make_iterable</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># A generator for inter arrival times.</span>
+</span><span class='line'><span class="n">inter_arrival</span> <span class="o">=</span> <span class="p">(</span> <span class="o">-</span><span class="p">(</span><span class="mf">1.</span><span class="o">/</span><span class="n">a</span><span class="p">)</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">u</span><span class="p">)</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">uni_rand</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This creates a generator <code>inter_arrival</code> which generates one inter-arrival time every time it&#8217;s iterated on. Using this to test an API is as simple as:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">import</span> <span class="nn">random</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">math</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">sys</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">time</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Expected number of arrivals per unit time.</span>
+</span><span class='line'><span class="n">a</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+</span><span class='line'><span class="c"># Number of events</span>
+</span><span class='line'><span class="n">count</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Function for testing API</span>
+</span><span class='line'><span class="k">def</span> <span class="nf">test_api</span><span class="p">():</span>
+</span><span class='line'>    <span class="k">print</span> <span class="s">&quot;Testing API...&quot;</span>
+</span><span class='line'>    <span class="c"># TODO: Make request to the API</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Make a function iterable, by repeatedly calling it.</span>
+</span><span class='line'><span class="k">def</span> <span class="nf">make_iterable</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">try</span><span class="p">:</span>
+</span><span class='line'>        <span class="k">while</span> <span class="mi">1</span><span class="p">:</span>
+</span><span class='line'>            <span class="k">yield</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">except</span><span class="p">:</span>
+</span><span class='line'>        <span class="k">pass</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">uni_rand</span> <span class="o">=</span> <span class="n">make_iterable</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># A generator for inter-arrival times.</span>
+</span><span class='line'><span class="n">inter_arrival</span> <span class="o">=</span> <span class="p">(</span> <span class="o">-</span><span class="p">(</span><span class="mf">1.</span><span class="o">/</span><span class="n">a</span><span class="p">)</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">u</span><span class="p">)</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">uni_rand</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Generate inter-arrival times, then sleep for that long.</span>
+</span><span class='line'><span class="n">inter_arrival_iter</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">inter_arrival</span><span class="p">)</span>
+</span><span class='line'><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">count</span><span class="p">):</span>
+</span><span class='line'>    <span class="n">inter_arrival_seconds</span> <span class="o">=</span> <span class="n">inter_arrival_iter</span><span class="o">.</span><span class="n">next</span><span class="p">()</span> <span class="o">*</span> <span class="mf">3600.</span>
+</span><span class='line'>    <span class="k">print</span> <span class="s">&quot;Sleeping for </span><span class="si">%f</span><span class="s"> seconds.&quot;</span> <span class="o">%</span> <span class="n">inter_arrival_seconds</span>
+</span><span class='line'>    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">inter_arrival_seconds</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">test_api</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This script takes in two arguments. The first is the expected number of events per hour, and the second is the number of events to generate. The last loop is where the testing occurs. It generates one inter-arrival time, sleeps for that long, and then calls the <code>test_api</code> function which would need to be filled in with the API test.</p>
+
+<p>Running this file with input <code>3600 10</code> generates 10 events, each one spaced by about 1 second:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="o">%</span> <span class="n">python</span> <span class="n">poisson</span><span class="o">.</span><span class="n">py</span> <span class="mi">3600</span> <span class="mi">10</span>
+</span><span class='line'><span class="n">Sleeping</span> <span class="k">for</span> <span class="mf">1.710953</span> <span class="n">seconds</span><span class="o">.</span>
+</span><span class='line'><span class="n">Testing</span> <span class="n">API</span><span class="o">...</span>
+</span><span class='line'><span class="n">Sleeping</span> <span class="k">for</span> <span class="mf">5.028327</span> <span class="n">seconds</span><span class="o">.</span>
+</span><span class='line'><span class="n">Testing</span> <span class="n">API</span><span class="o">...</span>
+</span><span class='line'><span class="n">Sleeping</span> <span class="k">for</span> <span class="mf">0.511307</span> <span class="n">seconds</span><span class="o">.</span>
+</span><span class='line'><span class="n">Testing</span> <span class="n">API</span><span class="o">...</span>
+</span><span class='line'><span class="n">Sleeping</span> <span class="k">for</span> <span class="mf">2.336480</span> <span class="n">seconds</span><span class="o">.</span>
+</span><span class='line'><span class="n">Testing</span> <span class="n">API</span><span class="o">...</span>
+</span><span class='line'><span class="n">Sleeping</span> <span class="k">for</span> <span class="mf">1.594504</span> <span class="n">seconds</span><span class="o">.</span>
+</span><span class='line'><span class="n">Testing</span> <span class="n">API</span><span class="o">...</span>
+</span><span class='line'><span class="n">Sleeping</span> <span class="k">for</span> <span class="mf">0.308939</span> <span class="n">seconds</span><span class="o">.</span>
+</span><span class='line'><span class="n">Testing</span> <span class="n">API</span><span class="o">...</span>
+</span><span class='line'><span class="n">Sleeping</span> <span class="k">for</span> <span class="mf">0.682607</span> <span class="n">seconds</span><span class="o">.</span>
+</span><span class='line'><span class="n">Testing</span> <span class="n">API</span><span class="o">...</span>
+</span><span class='line'><span class="p">[</span><span class="n">snip</span><span class="p">]</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>References</h3>
+
+<ol>
+<li>Tijms, Henk. Understanding Probability: Chance Rules in Everyday Life. 2nd ed. New York: Cambridge University Press, 2010. 118. Print.</li>
+<li>Arlitt, Martin F.; Williamson, Carey L. (1997). &#8220;Internet Web servers: Workload characterization and performance implications&#8221;. IEEE/ACM Transactions on Networking 5 (5): 631. DOI:10.1109/90.649565</li>
+<li>Ibid 1. Page 124</li>
+</ol>
+
+<p><a rel="bookmark" href="http://usrsb.in/blog/blog/2012/07/07/testing-with-the-poisson-process/">&infin; Permalink</a></p>]]></content>
+    </entry>
   
     <entry>
       
@@ -2169,87 +2340,6 @@ else
 
 <p>So there you have it. That&#8217;s how Kernigham and Ritchie did it in 1978. Nowadays they just haul in the software weenies with their fancy objects and methods. Lost is the subtle art of manipulating arrays of pointers to strings of characters. Alas. (Just kidding. After all, I&#8217;m probably one of those software weenies.)</p>
 <p><a rel="bookmark" href="http://usrsb.in/blog/blog/2011/08/04/how-old-school-c-programmers-process-arguments/">&infin; Permalink</a></p>]]></content>
-    </entry>
-  
-    <entry>
-      
-
-
-
-
-<title type="html"><![CDATA[Fibonacci Sequence, Part II]]></title>
-<link href="http://usrsb.in/blog/blog/2011/08/03/fibonacci-sequence-part-ii/"/>
-<updated>2011-08-03T16:49:00-06:00</updated>
-<id>http://usrsb.in/blog/blog/2011/08/03/fibonacci-sequence-part-ii</id>
-
-      <content type="html"><![CDATA[<p>The matrix equation in the last post can actually be whittled down a bit further to produce another equation that, in some ways, is easier to work with. The result is as follows:</p>
-
-<p><img src="http://media.usrsb.in/fib2/fib.png" alt="fib" /></p>
-
-<p>F<sub>k</sub> is, of course, the k<sup>th</sup> Fibonacci number. Now, before I go on, I want to point out that I stumbled upon these two equations and the proofs for these equations in <a href="http://www-math.mit.edu/~gs/">Gilbert Strang&#8217;s</a> excellent <a href="http://www.amazon.com/Linear-Algebra-Applications-Gilbert-Strang/dp/0030105676/ref=sr_1_2?s=books&amp;ie=UTF8&amp;qid=1312385275&amp;sr=1-2">Linear Algebra and Its Applications</a>. All credit goes to him for coming up with this, and I recommend his book for an even more in depth explanation.</p>
-
-<p>Anyway, back to the equation, which I found interesting for a few reasons:</p>
-
-<ol>
-<li>This equation allows you to easily find the kth term using only a pocket calculator. The last equation requires something that can deal with matrices.</li>
-<li>This also makes it easier to use in programming applications. There&#8217;s no need to write functions or import libraries to deal with matrices. It&#8217;s also probably faster than writing some sort of recursive function to compute the kth Fibonacci number.</li>
-<li>As Strang points out, that equation, amazingly, produces an integer, despite all the fractions and square roots.</li>
-<li>We can simplify that equation further for a very good approximation (so good that it&#8217;s not really an approximation).</li>
-</ol>
-
-
-<p>To see how we get that equation from the equation in the last post, let&#8217;s begin with the way Mr. Strang has it written in his book (it&#8217;s the same as mine, but flipped upside down).</p>
-
-<p><img src="http://media.usrsb.in/fib2/fibmat.png" alt="title" /></p>
-
-<p>Where F<sub>0</sub>=0, F<sub>1</sub>=1, F<sub>2</sub>=1, etc. Let&#8217;s now make some substitutions:</p>
-
-<p><img src="http://media.usrsb.in/fib2/subs.png" alt="title" /></p>
-
-<p>We now have:</p>
-
-<p><img src="http://media.usrsb.in/fib2/matform.png" alt="title" /></p>
-
-<p>This hasn&#8217;t changed the content of the equation at all. We&#8217;ve just substituted in new symbols to represent the different terms.</p>
-
-<p>The next step is to diagonalize the matrix A. Remember that diagonalizing A produces A = SΛS<sup>-1</sup> where S contains A&#8217;s eigenvectors and Λ contains A&#8217;s eigenvalues. Substituting A = SΛS<sup>-1</sup> into the previous equation yields:</p>
-
-<p><img src="http://media.usrsb.in/fib2/diag.png" alt="title" /></p>
-
-<p>Notice how everything but the first and last S and S<sup>-1</sup> cancel, giving the final form: SΛ<sup>k</sup>S<sup>-1</sup>u<sub>0</sub>. This is important, because Λ is a diagonal matrix, making Λ<sup>k</sup> very simple:</p>
-
-<p><img src="http://media.usrsb.in/fib2/lampow.png" alt="title" /></p>
-
-<p>λ<sub>1</sub> and λ<sub>2</sub> are, of course, the eigenvalues of A. Let&#8217;s now make one last substitution and put all this diagonalization stuff together. First we define c as</p>
-
-<p><img src="http://media.usrsb.in/fib2/csub.png" alt="title" /></p>
-
-<p>Then we substitute it into the equation:</p>
-
-<p><img src="http://media.usrsb.in/fib2/diag2.png" alt="title" /></p>
-
-<p>That might need some explaining. The first bit is simply the equation with c substituted in. Following that, the first matrix is S, but written to show that it contains x<sub>1</sub> and x<sub>2</sub>, which are the eigenvectors of A placed vertically in the two columns. The middle matrix is Λ<sup>k</sup> and the last is simply the matrix c. Finally, the matrices are multiplied out, yielding the final c<sub>1</sub>λ<sup>k</sup><sub>1</sub>x<sub>1</sub>+c<sub>2</sub>λ<sup>k</sup><sub>2</sub>x<sub>2</sub></p>
-
-<p>The final steps are simply to compute c, and A&#8217;s eigenvalues and eigenvectors. I&#8217;ll spare you the tedious algebra and simply tell you that:</p>
-
-<p><img src="http://media.usrsb.in/fib2/eigenvals.png" alt="title" /></p>
-
-<p><img src="http://media.usrsb.in/fib2/eigenvec.png" alt="title" /></p>
-
-<p>This can be computed the standard way, by solving: det(A-λI)=0.</p>
-
-<p>All the variables are then plugged into the equation for u<sub>k</sub>.</p>
-
-<p><img src="http://media.usrsb.in/fib2/almost-there.png" alt="title" /></p>
-
-<p>We want F<sub>k</sub>, so we multiply, factor, and take the bottom row, giving the equation we want:</p>
-
-<p><img src="http://media.usrsb.in/fib2/approx.png" alt="title" /></p>
-
-<p>That&#8217;s the full equation, but now notice that the second term is always less than 1/2. This mean we can simply drop it, yielding:</p>
-
-<p>In fact, since the second term is always less than 1/2 and the full equation always gives us an integer, we can take this a step further: <strong>Rounding the approximation to the nearest integer will always give you the exact value for F<sub>k</sub>.</strong> Cool.</p>
-<p><a rel="bookmark" href="http://usrsb.in/blog/blog/2011/08/03/fibonacci-sequence-part-ii/">&infin; Permalink</a></p>]]></content>
     </entry>
   
 </feed>

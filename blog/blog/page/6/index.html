@@ -5,11 +5,11 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>Backing Up a Directory's Permissions - /usr/sbin/blog</title>
+  <title>/usr/sbin/blog</title>
   <meta name="author" content="Alex Beal">
 
   
-  <meta name="description" content="We&#8217;ve all done it before, and if it hasn&#8217;t happened to you yet, it&#8217;s only a matter of time. You&#8217;re attempting to set the &hellip;">
+  <meta name="description" content="I recently came across this gem in a book called Classic Shell Scripting. According to the authors, it&#8217;s a modern port of the first &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -18,7 +18,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://usrsb.in/blog/blog/2011/03/17/backing-up-a-directorys-permissions">
+  <link rel="canonical" href="http://usrsb.in/blog/blog/page/6">
   <link href="/blog/favicon.png" rel="icon">
   <link href="/blog/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
   <script src="/blog/javascripts/modernizr-2.0.js"></script>
@@ -77,24 +77,25 @@
 </nav>
   <div id="main">
     <div id="content">
-      <div>
-
-
-
-
-
-
-
-
-
-
-
-<article class="hentry" role="article" >
+      <div class="blog-index">
   
+    
+
+
+
+
+
+
+
+
+
+
+    <article >
+      
   <header>
     <h1 class="entry-title">
 
-Backing Up a Directory's Permissions
+<a href="/blog/blog/2011/03/12/the-first-spellchecker-in-6-lines/">The First Spellchecker (in 6 Lines)</a>
 
 </h1>
 
@@ -112,126 +113,60 @@ Backing Up a Directory's Permissions
   
 
 
-<time datetime="2011-03-17T10:39:00-06:00" pubdate data-updated="true">Mar 17<span>th</span>, 2011</time>
-         &bull; <a rel="bookmark" href="/blog/blog/2011/03/17/backing-up-a-directorys-permissions/">&infin;</a>
+<time datetime="2011-03-12T15:17:00-07:00" pubdate data-updated="true">Mar 12<span>th</span>, 2011</time>
+         &bull; <a rel="bookmark" href="/blog/blog/2011/03/12/the-first-spellchecker-in-6-lines/">&infin;</a>
       </p>
     
   </header>
 
-<div class="entry-content"><p>We&#8217;ve all done it before, and if it hasn&#8217;t happened to you yet, it&#8217;s only a matter of time. You&#8217;re attempting to set the permissions on a directory and and you&#8217;re doing something along the lines of <code>sudo chmod -R 660 ./foobar</code>. You execute the command only to realize that you&#8217;re in the wrong directory or you&#8217;ve mistyped the directory&#8217;s name, and now your permissions are totally clobbered. If you&#8217;ve kept good backups, this is annoying, but not devastating. Either you could completely restore the files, or perhaps you could write a script which would copy the old file permissions back over. An easier alternative would be to plan ahead and backup the file permissions before disaster strikes. Here&#8217;s a script that will do that for you:</p>
+<div class="entry-content"><p>I recently came across this gem in a book called <a href="http://www.amazon.com/Classic-Shell-Scripting-Arnold-Robbins/dp/0596005954/">Classic Shell Scripting</a>. According to the authors, it&#8217;s a modern port of the first spellchecker. The original version was written by Steve Johnson, and was then translated into the form you see here by Kernighan and Plauger. I assume the translation was necessary because the syntax of the original isn&#8217;t compatible with modern shells. Without further ado, here it is:</p>
 
-<pre><code>#!/bin/bash
-
-#Check that we've been passed a directory.
-if [ ! -d "$1" ]; then
-   echo "$1 is not a directory. Exiting."
-   exit 1
-fi
-
-#Check if we've been passed a relative or absolute
-#path. If it's relative, store $PWD in $DIR. We'll need
-#this later to build the absolute path.
-echo "$1" | grep -q '^/'
-if [ $? == 0 ]; then
-   DIR='' 
-else
-   DIR="$PWD/"
-fi
-
-#Generate the header comments for the script.
-echo "#!/bin/bash"
-echo "#"
-echo "#This script will restore permissions under $DIR$1"
-echo "#to how they were on `date`"
-echo "#"
-
-#Loop through the given directory's tree and 
-#echo the commands to restore the permissions and owner.
-find "$1" -print0 | while read -d $'\0' i
-do
-   echo chmod `stat -c %a "$i"` \"$DIR$i\"
-   echo chown `stat -c "%U:%G" "$i"` \"$DIR$i\"
-done
+<pre><code>cat filename | 
+  tr A-Z a-z | 
+    tr -c a-z '\n' | 
+      sort | 
+        uniq | 
+          comm -13 dictionary_file -
 </code></pre>
 
-<p>What this script does is generate another script, which, when run, will restore a directory&#8217;s permissions, owner, and group (and also the permissions, owner, and group of any files and directories under it). Suppose you drop this script into a file called <code>backup.sh</code> and you want to backup the permissions of a directory called <code>/home/you/mystuff</code>. Here&#8217;s how you&#8217;d do it:</p>
+<p>It&#8217;s a spellchecker, which, at 115 characters, fits within a tweet! Imagine that! To prove to you that it actually works, and to truly appreciate the cleverness of this code, let&#8217;s step through it line by line. The first command, &#8216;cat&#8217;, simply reads the file and sends it down the pipe. This is then processed by &#8216;tr&#8217; which converts all the uppercase characters to lower case. This is again piped to &#8216;tr&#8217;, but this time everything that&#8217;s not a lower case character is converted to a newline character. At this point, the original input has been processed down to a list of words separated by newline characters. This list is then sorted alphabetically with the &#8216;sort&#8217; command, and all the duplicate words are removed with the &#8216;uniq&#8217; command. Finally, this list of words is compared with a dictionary file. Any words that appear in the list, but not in the dictionary, are sent to standard output. The final result is a list of words that appear in your document, but not in the dictionary, and thus are probably misspelled. At this point, you may have noticed a rather serious problem with this script. It doesn&#8217;t do a very good job of handling apostrophes. The third line will remove all single quote characters, even if they&#8217;re functioning as apostrophes, and replace them with newline characters. One way to fix this is to replace line 3 with the following:</p>
 
-<pre><code>./backup.sh /home/you/mystuff &gt; mystuff-backup.sh
+<pre><code>sed -r "s/('$|^'|\W'\b|\b'\W|\W'\W)/ /g" |
+  tr -c a-z\' '\n' |
 </code></pre>
 
-<p>Now when you execute <code>mystuff-backup.sh</code>, all of <code>/home/you/mystuff</code>&#8217;s permissions will be restored. Easy.</p>
+<p>That rather ugly &#8216;sed&#8217; command will remove all the single quote characters which aren&#8217;t in the middle of words, thereby preserving apostrophes, and the new &#8216;tr&#8217; command will ignore all single quote characters since &#8216;sed&#8217; has already dealt with them. The end result is that the apostrophe in, for example, <code>foobar's</code> will be preserved but the single quotes at the beginning and end of <code>'foobar's'</code> will be removed. Another improvement would be to keep it from removing hyphens in compound words, but I&#8217;ll leave that as an exercise to the reader. Also, If you need a dictionary file try:</p>
 
-<p>There is one security caveat you should keep in mind. The resultant script will contain the names of all the files and subdirectories in the directory tree. The upshot is that anyone who has read access to the script will be able to see this information. If this is a problem, you should adjust the script&#8217;s permissions accordingly.</p>
+<pre><code>sudo apt-get install wamerican-small
+</code></pre>
 
-<p>The script itself is pretty straight forward. On line 4, we tell a relative path from an absolute path by seeing if it&#8217;s prefixed with a forward slash. If it is, then it&#8217;s absolute. If it isn&#8217;t, then it&#8217;s relative. We&#8217;ll need this information later to build the absolute path to all the files. The next step is to loop through the files, which is a bit tricky. On line 28, we need to pipe the output of <code>find</code> to a <code>while read</code> because the more intuitive <code>for</code> loop construct doesn&#8217;t handle spaces and newlines in filenames properly (of course, anyone who puts newlines in a filename needs to be thrown into the <a href="http://www.starwars.com/databank/creature/sarlacc/">sarlacc</a>). In fact, you may just want to memorize that line, as it&#8217;s a common problem with a far from obvious solution. Finally, on line 30 and 31, we read the file&#8217;s permission and owners with <code>stat</code>, which is a handy command that, among other things, outputs file information in a user definable format.</p>
+<p>And look under /usr/share/dict/words.</p>
 
-<p>So there you have it. <a href="http://media.usrsb.in/dir-perm/backupperm.sh">Download the script here.</a> Now go forth and make this a cron job.</p>
+<pre><code>beala@superfly:/usr/share/dict$ wc -l words
+50253 words
+</code></pre>
+
+<p>That&#8217;s a lot of words! Try &#8216;wamerican-insane&#8217; if you want a, well, insane number of words.</p>
 </div>
-
 
   <footer>
-    <p class="meta">
-      
-  
-
-<span class="byline author vcard">Posted by <span class="fn">Alex Beal</span></span>
-
-      
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2011-03-17T10:39:00-06:00" pubdate data-updated="true">Mar 17<span>th</span>, 2011</time>
-      
-
-<span class="categories">
-  
-    <a class='category' href='/blog/blog/categories/bash/'>bash</a>, <a class='category' href='/blog/blog/categories/linux/'>linux</a>, <a class='category' href='/blog/blog/categories/scripting/'>scripting</a>
-  
-</span>
-
-
-    </p>
     
-      <div class="sharing">
-  
-  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://usrsb.in/blog/blog/2011/03/17/backing-up-a-directorys-permissions/" data-via="beala" data-counturl="http://usrsb.in/blog/blog/2011/03/17/backing-up-a-directorys-permissions/" >Tweet</a>
-  
-  
-  <div class="g-plusone" data-size="medium"></div>
-  
-  
-    <div class="fb-like" data-send="true" data-width="450" data-show-faces="false"></div>
-  
-</div>
-
+    <p><a class="comments-link" href="/blog/blog/2011/03/12/the-first-spellchecker-in-6-lines/#disqus_thread">View comments &raquo;</a></p>
     
-    <p class="meta">
-      
-        <a class="basic-alignment left" href="/blog/blog/2011/03/12/the-first-spellchecker-in-6-lines/" title="Previous Post: The First Spellchecker (In 6 Lines)">&laquo; The First Spellchecker (In 6 Lines)</a>
-      
-      
-        <a class="basic-alignment right" href="/blog/blog/2011/03/24/sending-emails-and-texts-from-the-command-line/" title="Next Post: Sending Emails and Texts from the Command Line">Sending Emails and Texts from the Command Line &raquo;</a>
-      
-    </p>
+    
   </footer>
-</article>
 
-  <section>
-    <h1>Comments</h1>
-    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+    </article>
+  
+  <div class="pagination">
+    
+    <a href="/blog/blog/archives">Blog Archives</a>
+    
+    <a class="next" href="/blog/blog/page/5/">Newer &rarr;</a>
+    
+  </div>
 </div>
-  </section>
-
-</div>
-
 <aside class="sidebar">
   
     <section>
@@ -264,7 +199,7 @@ done
 <section>
   <h1>GitHub Repos</h1>
   <ul id="gh_repos">
-    <li class="loading">Status updating...</li>
+    <li class="loading">Status updating&#8230;</li>
   </ul>
   
   <a href="https://github.com/beala">@beala</a> on GitHub
@@ -294,7 +229,7 @@ done
 <section>
   <h1>Latest Tweets</h1>
   <ul id="tweets">
-    <li class="loading">Status updating...</li>
+    <li class="loading">Status updating&#8230;</li>
   </ul>
   <script type="text/javascript">
     $.domReady(function(){
@@ -310,7 +245,7 @@ done
 
 <section>
   <h1>My Pinboard</h1>
-  <ul id="pinboard_linkroll">Fetching linkroll...</ul>
+  <ul id="pinboard_linkroll">Fetching linkroll&#8230;</ul>
   <p><a href="http://pinboard.in/u:beala">My Pinboard Bookmarks &raquo;</a></p>
 </section>
 <script type="text/javascript">
@@ -332,8 +267,6 @@ done
   
 </aside>
 
-
-
     </div>
   </div>
   <footer role="contentinfo"><p>
@@ -348,10 +281,7 @@ done
       var disqus_shortname = 'usrsbin';
       
         
-        // var disqus_developer = 1;
-        var disqus_identifier = 'http://usrsb.in/blog/blog/2011/03/17/backing-up-a-directorys-permissions/';
-        var disqus_url = 'http://usrsb.in/blog/blog/2011/03/17/backing-up-a-directorys-permissions/';
-        var disqus_script = 'embed.js';
+        var disqus_script = 'count.js';
       
     (function () {
       var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
