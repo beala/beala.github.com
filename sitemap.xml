@@ -1,151 +1,151 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <urlset xmlns='http://www.sitemaps.org/schemas/sitemap/0.9'>
     <url>
-        <loc>http://blog.usrsb.in/blog/2011/03/12/the-first-spellchecker-in-6-lines/</loc>
+        <loc>http://usrsb.in/blog/blog/2011/03/12/the-first-spellchecker-in-6-lines/</loc>
         <lastmod>2012-07-29T20:09:19-06:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.usrsb.in/blog/2011/03/17/backing-up-a-directorys-permissions/</loc>
+        <loc>http://usrsb.in/blog/blog/2011/03/17/backing-up-a-directorys-permissions/</loc>
         <lastmod>2012-07-29T20:09:19-06:00</lastmod>
     </url>
     <url>
         <loc>
-            http://blog.usrsb.in/blog/2011/03/24/sending-emails-and-texts-from-the-command-line/
+            http://usrsb.in/blog/blog/2011/03/24/sending-emails-and-texts-from-the-command-line/
         </loc>
         <lastmod>2012-07-29T20:09:19-06:00</lastmod>
     </url>
     <url>
         <loc>
-            http://blog.usrsb.in/blog/2011/04/02/using-trap-to-catch-ctrl-plus-cs-and-control-how-your-script-exits/
+            http://usrsb.in/blog/blog/2011/04/02/using-trap-to-catch-ctrl-plus-cs-and-control-how-your-script-exits/
         </loc>
         <lastmod>2012-07-29T20:09:19-06:00</lastmod>
     </url>
     <url>
         <loc>
-            http://blog.usrsb.in/blog/2011/04/10/using-matrices-to-generate-the-fibonacci-sequence/
+            http://usrsb.in/blog/blog/2011/04/10/using-matrices-to-generate-the-fibonacci-sequence/
         </loc>
         <lastmod>2012-07-29T20:09:19-06:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.usrsb.in/blog/2011/08/03/fibonacci-sequence-part-ii/</loc>
+        <loc>http://usrsb.in/blog/blog/2011/08/03/fibonacci-sequence-part-ii/</loc>
         <lastmod>2012-07-29T20:09:19-06:00</lastmod>
     </url>
     <url>
         <loc>
-            http://blog.usrsb.in/blog/2011/08/04/how-old-school-c-programmers-process-arguments/
-        </loc>
-        <lastmod>2012-07-29T20:09:19-06:00</lastmod>
-    </url>
-    <url>
-        <loc>
-            http://blog.usrsb.in/blog/2011/08/05/1-minus-1-equals-what-fun-with-sums-and-limits/
-        </loc>
-        <lastmod>2012-07-29T20:09:19-06:00</lastmod>
-    </url>
-    <url>
-        <loc>http://blog.usrsb.in/blog/2011/08/06/copying-strings-in-one-line-c-programming/</loc>
-        <lastmod>2012-07-29T20:09:19-06:00</lastmod>
-    </url>
-    <url>
-        <loc>
-            http://blog.usrsb.in/blog/2011/08/11/the-surface-area-of-a-sphere-between-parallel-planes/
+            http://usrsb.in/blog/blog/2011/08/04/how-old-school-c-programmers-process-arguments/
         </loc>
         <lastmod>2012-07-29T20:09:19-06:00</lastmod>
     </url>
     <url>
         <loc>
-            http://blog.usrsb.in/blog/2011/08/13/secure-versioned-remote-backups-with-rdiff-backup/
+            http://usrsb.in/blog/blog/2011/08/05/1-minus-1-equals-what-fun-with-sums-and-limits/
         </loc>
         <lastmod>2012-07-29T20:09:19-06:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.usrsb.in/blog/2011/08/15/a-database-engine-in-16-lines/</loc>
+        <loc>http://usrsb.in/blog/blog/2011/08/06/copying-strings-in-one-line-c-programming/</loc>
         <lastmod>2012-07-29T20:09:19-06:00</lastmod>
     </url>
     <url>
         <loc>
-            http://blog.usrsb.in/blog/2011/08/17/a-search-algorithm-puzzle-finding-a-bad-coin/
+            http://usrsb.in/blog/blog/2011/08/11/the-surface-area-of-a-sphere-between-parallel-planes/
         </loc>
         <lastmod>2012-07-29T20:09:19-06:00</lastmod>
     </url>
     <url>
         <loc>
-            http://blog.usrsb.in/blog/2011/08/18/search-algorithms-finding-a-bad-coin-part-ii/
+            http://usrsb.in/blog/blog/2011/08/13/secure-versioned-remote-backups-with-rdiff-backup/
         </loc>
         <lastmod>2012-07-29T20:09:19-06:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.usrsb.in/blog/2011/12/16/a-zero-knowledge-file-exchange/</loc>
-        <lastmod>2012-07-29T20:09:19-06:00</lastmod>
-    </url>
-    <url>
-        <loc>http://blog.usrsb.in/blog/2011/12/29/implementing-switches-with-dictionaries/</loc>
+        <loc>http://usrsb.in/blog/blog/2011/08/15/a-database-engine-in-16-lines/</loc>
         <lastmod>2012-07-29T20:09:19-06:00</lastmod>
     </url>
     <url>
         <loc>
-            http://blog.usrsb.in/blog/2012/01/03/a-program-analysis-for-tail-call-optimization/
+            http://usrsb.in/blog/blog/2011/08/17/a-search-algorithm-puzzle-finding-a-bad-coin/
         </loc>
-        <lastmod>2012-07-29T20:09:19-06:00</lastmod>
-    </url>
-    <url>
-        <loc>http://blog.usrsb.in/blog/2012/01/11/picking-random-items-from-a-file/</loc>
-        <lastmod>2012-07-29T20:09:19-06:00</lastmod>
-    </url>
-    <url>
-        <loc>http://blog.usrsb.in/blog/2012/01/14/picking-random-items-take-2/</loc>
         <lastmod>2012-07-29T20:09:19-06:00</lastmod>
     </url>
     <url>
         <loc>
-            http://blog.usrsb.in/blog/2012/01/28/implementing-a-logic-evaluator-without-if-expressions/
+            http://usrsb.in/blog/blog/2011/08/18/search-algorithms-finding-a-bad-coin-part-ii/
         </loc>
         <lastmod>2012-07-29T20:09:19-06:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.usrsb.in/blog/2012/02/05/super-bowl-probabilities/</loc>
+        <loc>http://usrsb.in/blog/blog/2011/12/16/a-zero-knowledge-file-exchange/</loc>
         <lastmod>2012-07-29T20:09:19-06:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.usrsb.in/blog/2012/04/01/building-data-structures-from-functions/</loc>
-        <lastmod>2012-07-29T20:09:19-06:00</lastmod>
-    </url>
-    <url>
-        <loc>http://blog.usrsb.in/blog/2012/04/07/look-ma-no-loops/</loc>
-        <lastmod>2012-07-29T20:09:19-06:00</lastmod>
-    </url>
-    <url>
-        <loc>http://blog.usrsb.in/blog/2012/05/05/permutations-an-interview-question/</loc>
+        <loc>http://usrsb.in/blog/blog/2011/12/29/implementing-switches-with-dictionaries/</loc>
         <lastmod>2012-07-29T20:09:19-06:00</lastmod>
     </url>
     <url>
         <loc>
-            http://blog.usrsb.in/blog/2012/05/20/did-the-boulder-pd-reduce-traffic-accidents/
+            http://usrsb.in/blog/blog/2012/01/03/a-program-analysis-for-tail-call-optimization/
         </loc>
         <lastmod>2012-07-29T20:09:19-06:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.usrsb.in/blog/2012/07/07/testing-with-the-poisson-process/</loc>
+        <loc>http://usrsb.in/blog/blog/2012/01/11/picking-random-items-from-a-file/</loc>
         <lastmod>2012-07-29T20:09:19-06:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.usrsb.in/about/</loc>
+        <loc>http://usrsb.in/blog/blog/2012/01/14/picking-random-items-take-2/</loc>
+        <lastmod>2012-07-29T20:09:19-06:00</lastmod>
+    </url>
+    <url>
+        <loc>
+            http://usrsb.in/blog/blog/2012/01/28/implementing-a-logic-evaluator-without-if-expressions/
+        </loc>
+        <lastmod>2012-07-29T20:09:19-06:00</lastmod>
+    </url>
+    <url>
+        <loc>http://usrsb.in/blog/blog/2012/02/05/super-bowl-probabilities/</loc>
+        <lastmod>2012-07-29T20:09:19-06:00</lastmod>
+    </url>
+    <url>
+        <loc>http://usrsb.in/blog/blog/2012/04/01/building-data-structures-from-functions/</loc>
+        <lastmod>2012-07-29T20:09:19-06:00</lastmod>
+    </url>
+    <url>
+        <loc>http://usrsb.in/blog/blog/2012/04/07/look-ma-no-loops/</loc>
+        <lastmod>2012-07-29T20:09:19-06:00</lastmod>
+    </url>
+    <url>
+        <loc>http://usrsb.in/blog/blog/2012/05/05/permutations-an-interview-question/</loc>
+        <lastmod>2012-07-29T20:09:19-06:00</lastmod>
+    </url>
+    <url>
+        <loc>
+            http://usrsb.in/blog/blog/2012/05/20/did-the-boulder-pd-reduce-traffic-accidents/
+        </loc>
+        <lastmod>2012-07-29T20:09:19-06:00</lastmod>
+    </url>
+    <url>
+        <loc>http://usrsb.in/blog/blog/2012/07/07/testing-with-the-poisson-process/</loc>
+        <lastmod>2012-07-29T20:09:19-06:00</lastmod>
+    </url>
+    <url>
+        <loc>http://usrsb.in/blog/about/</loc>
         <lastmod>2012-05-11T12:59:18-06:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.usrsb.in/blog/archives/</loc>
+        <loc>http://usrsb.in/blog/blog/archives/</loc>
         <lastmod>2012-07-29T20:09:19-06:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.usrsb.in/</loc>
+        <loc>http://usrsb.in/blog/</loc>
         <lastmod>2012-07-29T20:09:19-06:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.usrsb.in/resume/</loc>
+        <loc>http://usrsb.in/blog/resume/</loc>
         <lastmod>2012-05-11T12:59:18-06:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.usrsb.in/tools/</loc>
+        <loc>http://usrsb.in/blog/tools/</loc>
         <lastmod>2012-05-11T12:59:18-06:00</lastmod>
     </url>
 </urlset>

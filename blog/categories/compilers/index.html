@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: compilers | /usr/sbin/blog]]></title>
-  <link href="http://blog.usrsb.in/" rel="self"/>
-  <link href="http://blog.usrsb.in/"/>
-  <updated>2012-08-02T19:21:19-06:00</updated>
-  <id>http://blog.usrsb.in/</id>
+  <link href="http://usrsb.in/blog/" rel="self"/>
+  <link href="http://usrsb.in/blog/"/>
+  <updated>2012-08-02T19:24:53-06:00</updated>
+  <id>http://usrsb.in/blog/</id>
   <author>
     <name><![CDATA[Alex Beal]]></name>
     
@@ -20,9 +20,9 @@
 
 
 <title type="html"><![CDATA[A Program Analysis For Tail Call Optimization]]></title>
-<link href="http://blog.usrsb.in/blog/2012/01/03/a-program-analysis-for-tail-call-optimization/"/>
+<link href="http://usrsb.in/blog/blog/2012/01/03/a-program-analysis-for-tail-call-optimization/"/>
 <updated>2012-01-03T12:08:00-07:00</updated>
-<id>http://blog.usrsb.in/blog/2012/01/03/a-program-analysis-for-tail-call-optimization</id>
+<id>http://usrsb.in/blog/blog/2012/01/03/a-program-analysis-for-tail-call-optimization</id>
 
       <content type="html"><![CDATA[<p>In this post I will outline a method <a href="http://jwepman.com">Josh Wepman</a> and I have developed for detecting tail calls in programs constructed from a subset of Python. Its original purpose was a Python to x86 compiler we worked on together for a compiler construction course at CU.<sup>1</sup> The approach probably isn't new, but it is straightforward and understandable, and might help other novice compiler writers understand a fundamental optimization.</p>
 
@@ -404,7 +404,7 @@ return y
 <li>AST: Abstract Syntax Tree. A tree representation of the structure (syntax) of a program. <a href="http://en.wikipedia.org/wiki/Abstract_syntax_tree">Wiki</a>.</li>
 <li>This is one reason dynamic languages can be slow, but most compilers perform additional optimizations to cut down on so called "dispatch code" by detecting variables types at compile time. This is possible when, for example, an integer is explicitly assigned to a variable: <code>x = 1</code>. In that case, it's guaranteed that <code>x</code> contains an integer.</li>
 <li>Dead code elimination. (2011, October 20). In Wikipedia, The Free Encyclopedia. Retrieved 16:56, December 24, 2011, from <a href="http://en.wikipedia.org/w/index.php?title=Dead_code_elimination&amp;oldid=456578651">http://en.wikipedia.org/w/index.php?title=Dead_code_elimination&amp;oldid=456578651</a></li>
-<li>At first blush, this doesn't look nested, but it is: <code>x = (((input()) + 1) + g())</code>. The infix notation is deceptive, but, as demonstrated by the parenthesized version, there are actually 2 levels of addition that roughly correspond to the structure of the flattened code.<p><a rel="bookmark" href="http://blog.usrsb.in/blog/2012/01/03/a-program-analysis-for-tail-call-optimization/">&infin; Permalink</a></p></li>
+<li>At first blush, this doesn't look nested, but it is: <code>x = (((input()) + 1) + g())</code>. The infix notation is deceptive, but, as demonstrated by the parenthesized version, there are actually 2 levels of addition that roughly correspond to the structure of the flattened code.<p><a rel="bookmark" href="http://usrsb.in/blog/blog/2012/01/03/a-program-analysis-for-tail-call-optimization/">&infin; Permalink</a></p></li>
 </ol>
 
 ]]></content>
