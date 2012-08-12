@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: limits | /usr/sbin/blog]]></title>
+  <link href="http://usrsb.in/blog/blog/categories/limits/atom.xml" rel="self"/>
+  <link href="http://usrsb.in/blog/"/>
+  <updated>2012-08-12T10:39:34-06:00</updated>
+  <id>http://usrsb.in/blog/</id>
+  <author>
+    <name><![CDATA[Alex Beal]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[1 Minus 1 Equals What? (Fun with sums and limits)]]></title>
+    <link href="http://usrsb.in/blog/blog/2011/08/05/1-minus-1-equals-what-fun-with-sums-and-limits/"/>
+    <updated>2011-08-05T16:10:00-06:00</updated>
+    <id>http://usrsb.in/blog/blog/2011/08/05/1-minus-1-equals-what-fun-with-sums-and-limits</id>
+    <content type="html"><![CDATA[<p>Here's a cool problem I came across when reviewing for one of my calculus exams:</p>
+
+<p><img src="http://media.usrsb.in/sum-paradox/question.png" alt="The Question" /></p>
+
+<p>You begin with the numbers 0 through 1. Every iteration removes 1/3 from the remaining segments. As stated above, the expression for the total amount removed after m iterations is:</p>
+
+<p><img src="http://media.usrsb.in/sum-paradox/sum.png" alt="title" /></p>
+
+<p>The first iteration removes 1/3. The second removes 1/3 from the remaining two segments. The remaining segments are 1/3 long, and 1/3 of that is 1/9. We do that once for each remaining segment, so 2/9 is removed. And so on.</p>
+
+<p><img src="http://media.usrsb.in/sum-paradox/sum2.png" alt="title" /></p>
+
+<p>What if we iterate an infinite number of times? Then we have a convergent geometric series. Finding the sum is easy:</p>
+
+<p><img src="http://media.usrsb.in/sum-paradox/sol.png" alt="title" /></p>
+
+<p>So, what's the total amount or length of numbers removed? 1. That's the entire length. It seems like we've removed the entire segment. But wait a minute. If we look at the image of the original question above, we see that after every iteration, there are 2<sup>n+1</sup> segments remaining. When n=0, there are 2 segments. When n=1, there are 4 segments, etc. As we remove more and more, 2<sup>n+1</sup> approaches infinity. In other words, the limit does not exist, and the number of segments goes to infinity.</p>
+
+<p><img src="http://media.usrsb.in/sum-paradox/limit-dne.png" alt="title" /></p>
+
+<p><strong>So, even though we've seemingly removed the entire length, there are an infinite number of segments remaining.</strong> That's weird.</p>
+
+<p>Hopefully by now I have you a bit puzzled. This is the point in the post where I'm supposed to resolve the paradox. I have bad news, though: I don't have much for you. I'm definitely not a mathematician (I just play one on the internets), but if I had to speculate, I'd say there are two things going on here:</p>
+
+<ol>
+<li>Limits!</li>
+<li>We're taking the math too literally.</li>
+</ol>
+
+
+<p>What I mean by that is, (1) as we've learned from limits, an infinite number of really small things (in this case, segments) can add to a finite number. This doesn't quite resolve the paradox though. Usually an infinite number of small things adds to something greater than 0. Here it looks like all the segments add to nothing. There are an infinite number of segments, but we still have nothing left. Hopefully this is where point (2) saves the day.</p>
+
+<p>We're taking the math too literally. When we take this sum to infinity, what we're really saying is that as we get closer and closer to infinity, we're getting closer and closer to removing a length of 1, <em>but we never actually get there.</em> Similarly, when we take the limit, what we're really saying is that as we remove more and more segments, we get closer and closer to having an infinite number of segments left over, <em>but we never actually get there either.</em> <strong>As long as we never actually get to either of these points, we haven't contradicted ourselves.</strong> I think. If you have a deeper insight into this, definitely be sure to post it in the comments!</p>
+]]></content>
+  </entry>
+  
+</feed>

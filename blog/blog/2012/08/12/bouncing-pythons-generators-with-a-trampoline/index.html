@@ -1,0 +1,597 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Bouncing Python's Generators With A Trampoline - /usr/sbin/blog</title>
+  <meta name="author" content="Alex Beal">
+
+  
+  <meta name="description" content="In this post, I&#8217;m going to combine two of my favorite topics: recursion and Python&#8217;s generators. My aim is to address a real pain point &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://usrsb.in/blog/blog/2012/08/12/bouncing-pythons-generators-with-a-trampoline/">
+  <link href="/blog/favicon.png" rel="icon">
+  <link href="/blog/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/blog/javascripts/modernizr-2.0.js"></script>
+  <script src="/blog/javascripts/ender.js"></script>
+  <script src="/blog/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/blog/atom.xml" rel="alternate" title="/usr/sbin/blog" type="application/atom+xml">
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-27836693-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/blog/">/usr/sbin/blog</a></h1>
+  
+    <h2>Alex's Geekery Journal.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/blog/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:usrsb.in/blog" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="http://usrsb.in">Home</a></li>
+  <li><a href="/blog/">Blog</a></li>
+  <li><a href="/blog/tools">Tools</a></li>
+  <li><a href="/blog/about">About</a></li>
+  <li><a href="/blog/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+
+
+
+
+
+
+
+
+
+
+
+<article class="hentry" role="article" >
+  
+  <header>
+    <h1 class="entry-title">
+
+Bouncing Python's Generators With a Trampoline
+
+</h1>
+
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-08-12T10:06:00-06:00" pubdate data-updated="true">Aug 12<span>th</span>, 2012</time>
+         &bull; <a rel="bookmark" href="/blog/blog/2012/08/12/bouncing-pythons-generators-with-a-trampoline/">&infin;</a>
+        
+      </p>
+    
+  </header>
+
+<div class="entry-content"><p>In this post, I&#8217;m going to combine two of my favorite topics: recursion and Python&#8217;s generators. My aim is to address a real pain point in Python: its lack of tail call optimization. Let&#8217;s start with a simple <code>countdown</code> function that counts from <code>start</code> to <code>0</code> using recursion:</p>
+
+<figure class='code'><figcaption><span>Recursive Countdown</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">countdown</span><span class="p">(</span><span class="n">start</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">print</span> <span class="n">start</span>
+</span><span class='line'>    <span class="k">if</span> <span class="n">start</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+</span><span class='line'>        <span class="k">return</span> <span class="mi">0</span>
+</span><span class='line'>    <span class="k">else</span><span class="p">:</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">countdown</span><span class="p">(</span><span class="n">start</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This function needs no explanation. It simply prints <code>start</code> and then calls itself with <code>start - 1</code>. The issue here is that for large values of <code>start</code>, we can easily blow Python&#8217;s stack:</p>
+
+<figure class='code'><figcaption><span>Countdown Demo</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="o">%</span> <span class="n">countdown</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span>
+</span><span class='line'><span class="mi">1000</span>
+</span><span class='line'><span class="mi">999</span>
+</span><span class='line'><span class="p">[</span><span class="o">...</span><span class="p">]</span>
+</span><span class='line'><span class="mi">3</span>
+</span><span class='line'><span class="mi">2</span>
+</span><span class='line'><span class="n">Traceback</span> <span class="p">(</span><span class="n">most</span> <span class="n">recent</span> <span class="n">call</span> <span class="n">last</span><span class="p">):</span>
+</span><span class='line'>  <span class="n">File</span> <span class="s">&quot;&lt;stdin&gt;&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">1</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
+</span><span class='line'>  <span class="n">File</span> <span class="s">&quot;&lt;stdin&gt;&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">6</span><span class="p">,</span> <span class="ow">in</span> <span class="n">countdown</span>
+</span><span class='line'><span class="p">[</span><span class="o">...</span><span class="p">]</span>
+</span><span class='line'><span class="ne">RuntimeError</span><span class="p">:</span> <span class="n">maximum</span> <span class="n">recursion</span> <span class="n">depth</span> <span class="n">exceeded</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Of course, one option is to just loop:</p>
+
+<figure class='code'><figcaption><span>For Loop Countdown</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">print</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">)])</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>But I didn&#8217;t write this post just to tell you that recursive functions can be translated into loops (duh). Instead, I&#8217;m going to use a technique called trampolining to convert tail-recursive functions into tail-recursive generators, which won&#8217;t blow the stack.</p>
+
+<p>Returning to the countdown example, let&#8217;s think about why the recursive call is a problem in the first place. The issue is that in <code>return countdown(start - 1)</code>, the call to <code>countdown</code> must complete before its value can be returned, thus increasing the call stack. &#8220;Well, of course,&#8221; you say. &#8220;That&#8217;s how recursive functions work.&#8221; But wait a minute. Is that really necessary? What if, rather than <code>countdown</code> calling itself, it simply <em>returned the next recursive call in the sequence</em> for its caller to execute. Hey, I think we might be on to something:</p>
+
+<figure class='code'><figcaption><span>A Tail-Recursive Generator</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">countdown</span><span class="p">(</span><span class="n">start</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">print</span> <span class="n">start</span>
+</span><span class='line'>    <span class="k">if</span> <span class="n">start</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+</span><span class='line'>        <span class="k">yield</span> <span class="mi">0</span>
+</span><span class='line'>    <span class="k">else</span><span class="p">:</span>
+</span><span class='line'>        <span class="k">yield</span> <span class="n">countdown</span><span class="p">(</span><span class="n">start</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>So now <code>countdown</code> is a generator which calls itself. That&#8217;s kind of wacky. Let&#8217;s call it and see what happens.</p>
+
+<figure class='code'><figcaption><span>Trying It Out</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="o">%</span> <span class="n">countdown</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">generator</span> <span class="nb">object</span> <span class="n">countdown</span> <span class="n">at</span> <span class="mh">0x100492550</span><span class="o">&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>That&#8217;s interesting. We now have a generator. Think about that for a moment. What does this generator represent? Ah, that&#8217;s right. <em>It&#8217;s the next recursive call in the sequence.</em> It just hasn&#8217;t been executed yet. Let&#8217;s execute it:</p>
+
+<figure class='code'><figcaption><span>Sweet</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="o">%</span> <span class="n">g</span> <span class="o">=</span> <span class="n">countdown</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+</span><span class='line'><span class="o">%</span> <span class="n">g</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
+</span><span class='line'><span class="mi">5</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>We&#8217;re getting somewhere.</p>
+
+<figure class='code'><figcaption><span>Manual Trampoline</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="o">%</span> <span class="n">g</span> <span class="o">=</span> <span class="n">countdown</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+</span><span class='line'><span class="o">%</span> <span class="n">g</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
+</span><span class='line'><span class="mi">5</span>
+</span><span class='line'><span class="o">%</span> <span class="n">g</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
+</span><span class='line'><span class="mi">4</span>
+</span><span class='line'><span class="o">%</span> <span class="n">g</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
+</span><span class='line'><span class="mi">3</span>
+</span><span class='line'><span class="o">%</span> <span class="n">g</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
+</span><span class='line'><span class="mi">2</span>
+</span><span class='line'><span class="o">%</span> <span class="n">g</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
+</span><span class='line'><span class="mi">1</span>
+</span><span class='line'><span class="o">%</span> <span class="n">g</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
+</span><span class='line'><span class="mi">0</span>
+</span><span class='line'><span class="o">%</span> <span class="n">g</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
+</span><span class='line'><span class="n">Traceback</span> <span class="p">(</span><span class="n">most</span> <span class="n">recent</span> <span class="n">call</span> <span class="n">last</span><span class="p">):</span>
+</span><span class='line'>  <span class="n">File</span> <span class="s">&quot;&lt;stdin&gt;&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">1</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
+</span><span class='line'><span class="ne">AttributeError</span><span class="p">:</span> <span class="s">&#39;int&#39;</span> <span class="nb">object</span> <span class="n">has</span> <span class="n">no</span> <span class="n">attribute</span> <span class="s">&#39;next&#39;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Well, that&#8217;s really neat. Each generator represents one recursive call, and a generator&#8217;s return value is the next recursive call in the sequence, except for the last call. What happened there? We reached the base case, and the last generator returned <code>0</code>.</p>
+
+<p>We now have a general pattern. Let&#8217;s write a function which executes these tail-recursive generators automatically:</p>
+
+<figure class='code'><figcaption><span>Trampoline Function</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">import</span> <span class="nn">types</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">def</span> <span class="nf">tramp</span><span class="p">(</span><span class="n">gen</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</span><span class='line'>    <span class="n">g</span> <span class="o">=</span> <span class="n">gen</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">while</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">GeneratorType</span><span class="p">):</span>
+</span><span class='line'>        <span class="n">g</span><span class="o">=</span><span class="n">g</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">g</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>So, a generator function is passed in, which is then used to create the generator <code>g</code>. <code>g.next()</code> is repeatedly called, and the next recursive call is stored back to <code>g</code>. We keep doing this until <code>g</code> no longer returns a generator. If <code>g</code> is not a generator, then we&#8217;ve reached the base case, and we return it (if the base case is a generator, you&#8217;ll have to use something like exceptions to signal that you&#8217;ve reached the base case).</p>
+
+<p><strong>Note:</strong> It&#8217;s about time that I explained where the word &#8220;trampoline&#8221; comes from. The idea is that each recursive call is &#8220;trampolined&#8221; off the trampoline runner (the <code>tramp</code> function in this case). That is, each recursive call is returned to <code>tramp</code> and is bounced off of it. I also like to think that each recursive call bounces higher (just like on a trampoline) because the &#8220;virtual&#8221; recursion depth increases, but it&#8217;s very possible that I made that up in my head.</p>
+
+<p>Let&#8217;s try this with countdown, and a large <code>start</code> value:</p>
+
+<figure class='code'><figcaption><span>Trampoline Test</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="o">%</span> <span class="n">tramp</span><span class="p">(</span><span class="n">countdown</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span>
+</span><span class='line'><span class="mi">1000</span>
+</span><span class='line'><span class="mi">999</span>
+</span><span class='line'><span class="p">[</span><span class="o">...</span><span class="p">]</span>
+</span><span class='line'><span class="mi">2</span>
+</span><span class='line'><span class="mi">1</span>
+</span><span class='line'><span class="mi">0</span>
+</span><span class='line'><span class="mi">0</span>   <span class="o">&lt;---</span> <span class="n">Since</span> <span class="n">we</span> <span class="n">executed</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">interactive</span> <span class="n">interp</span><span class="p">,</span>
+</span><span class='line'>         <span class="n">this</span> <span class="ow">is</span> <span class="n">the</span> <span class="k">return</span> <span class="n">val</span> <span class="n">of</span> <span class="sb">`tramp`</span><span class="o">.</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Excellent! The original function blew the stack, but the trampolined generator does just fine. Furthermore, we&#8217;ve written a general trampoline runner to execute these trampolined generators. But, before we call it a day, we have to write a trampolined version of the Fibonacci function, otherwise, <em>what&#8217;s even the point of recursion?</em></p>
+
+<figure class='code'><figcaption><span>Trampolined Fibonacci</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">fib</span><span class="p">(</span><span class="n">count</span><span class="p">,</span> <span class="n">cur</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">next_</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">if</span> <span class="n">count</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+</span><span class='line'>        <span class="k">yield</span> <span class="n">cur</span>
+</span><span class='line'>    <span class="k">else</span><span class="p">:</span>
+</span><span class='line'>        <span class="c"># Notice that this is the tail-recursive version</span>
+</span><span class='line'>        <span class="c"># of fib.</span>
+</span><span class='line'>        <span class="k">yield</span> <span class="n">fib</span><span class="p">(</span><span class="n">count</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">next_</span><span class="p">,</span> <span class="n">cur</span> <span class="o">+</span> <span class="n">next_</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Let&#8217;s take this for a test drive:</p>
+
+<figure class='code'><figcaption><span>The First 10 Fib Numbers</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c"># Print the first 10 Fibonacci numbers.</span>
+</span><span class='line'><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">11</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">print</span> <span class="n">tramp</span><span class="p">(</span><span class="n">fib</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">Output</span><span class="p">:</span>
+</span><span class='line'><span class="mi">0</span>
+</span><span class='line'><span class="mi">1</span>
+</span><span class='line'><span class="mi">1</span>
+</span><span class='line'><span class="mi">2</span>
+</span><span class='line'><span class="mi">3</span>
+</span><span class='line'><span class="mi">5</span>
+</span><span class='line'><span class="mi">8</span>
+</span><span class='line'><span class="mi">13</span>
+</span><span class='line'><span class="mi">21</span>
+</span><span class='line'><span class="mi">34</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Well, that&#8217;s terrific. Not only is the tail-recursive version just as efficient as the <code>for-loop</code> version (except, of course, for function calling, and generator overhead), it also won&#8217;t blow the stack.</p>
+
+<p>So, this is yet another example of the power of Python&#8217;s generators (Python&#8217;s most under appreciated feature, as David Beazley argues). What are the takeaways?</p>
+
+<ol>
+<li>This technique only works for <em>tail-recursive</em> functions. The recursive call must be the last thing the function does.</li>
+<li>The translation to a trampolined generator is easy! Just turn the <code>return</code> statements into <code>yield</code> expression.</li>
+<li>Although this will protect your stack, creating a generator for each call is probably slow.</li>
+</ol>
+
+
+<p>If this was fun for you, then definitely check out David Beazley&#8217;s <a href="http://www.dabeaz.com/coroutines/index.html">presentation on coroutines and concurrency</a>. He uses trampolining, generators, and coroutines to write an OS in Python, complete with a task scheduler, sys calls, and blocking and non-block IO. This man is a wizard.</p>
+
+<p>Eli Bendersky also has a couple great articles on using generators for <a href="http://eli.thegreenplace.net/2012/08/09/using-sub-generators-for-lexical-scanning-in-python/">lexical scanning</a> and <a href="http://eli.thegreenplace.net/2009/08/29/co-routines-as-an-alternative-to-state-machines/">state machines</a>. Those posts inspired me to write a <a href="https://gist.github.com/3325354">command line argument parser</a> using coroutines, which can process a stream of characters and handles all the usual suspects, like quotes and escape characters. As you can tell, I&#8217;ve been getting quite a bit of mileage out of these techniques.</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Alex Beal</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-08-12T10:06:00-06:00" pubdate data-updated="true">Aug 12<span>th</span>, 2012</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/blog/categories/programming/'>programming</a>, <a class='category' href='/blog/blog/categories/python/'>python</a>, <a class='category' href='/blog/blog/categories/recursion/'>recursion</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://usrsb.in/blog/blog/2012/08/12/bouncing-pythons-generators-with-a-trampoline/" data-via="beala" data-counturl="http://usrsb.in/blog/blog/2012/08/12/bouncing-pythons-generators-with-a-trampoline/" >Tweet</a>
+  
+  
+  <div class="g-plusone" data-size="medium"></div>
+  
+  
+    <div class="fb-like" data-send="true" data-width="450" data-show-faces="false"></div>
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/blog/2012/07/07/testing-with-the-poisson-process/" title="Previous Post: Testing With The Poisson Process">&laquo; Testing With The Poisson Process</a>
+      
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/blog/2012/08/12/bouncing-pythons-generators-with-a-trampoline/">Bouncing Python's Generators With A Trampoline</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/blog/2012/07/07/testing-with-the-poisson-process/">Testing With The Poisson Process</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/blog/2012/05/20/did-the-boulder-pd-reduce-traffic-accidents/">Did the Boulder PD Reduce Traffic Accidents?</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/blog/2012/05/05/permutations-an-interview-question/">Permutations: An Interview Question</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/blog/2012/04/07/look-ma-no-loops/">Look, Ma! No Loops: Reversing Word Order</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/beala">@beala</a> on GitHub
+  
+  <script type="text/javascript">
+    $.domReady(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'beala',
+            count: 0,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/blog/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+<section>
+  <h1>Latest Tweets</h1>
+  <ul id="tweets">
+    <li class="loading">Status updating...</li>
+  </ul>
+  <script type="text/javascript">
+    $.domReady(function(){
+      getTwitterFeed("beala", 4, false);
+    });
+  </script>
+  <script src="/blog/javascripts/twitter.js" type="text/javascript"> </script>
+  
+    <a href="http://twitter.com/beala" class="twitter-follow-button" data-show-count="false">Follow @beala</a>
+  
+</section>
+
+
+<section>
+  <h1>My Pinboard</h1>
+  <ul id="pinboard_linkroll">Fetching linkroll...</ul>
+  <p><a href="http://pinboard.in/u:beala">My Pinboard Bookmarks &raquo;</a></p>
+</section>
+<script type="text/javascript">
+  var linkroll = 'pinboard_linkroll'; //id target for pinboard list
+  var pinboard_user = "beala"; //id target for pinboard list
+  var pinboard_count = 3; //id target for pinboard list
+  (function(){
+    var pinboardInit = document.createElement('script');
+    pinboardInit.type = 'text/javascript';
+    pinboardInit.async = true;
+    pinboardInit.src = '/javascripts/pinboard.js';
+    document.getElementsByTagName('head')[0].appendChild(pinboardInit);
+  })();
+</script>
+
+
+
+
+  
+</aside>
+
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2012 - Alex Beal -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'usrsbin';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://usrsb.in/blog/blog/2012/08/12/bouncing-pythons-generators-with-a-trampoline/';
+        var disqus_url = 'http://usrsb.in/blog/blog/2012/08/12/bouncing-pythons-generators-with-a-trampoline/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) {return;}
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/all.js#appId=212934732101925&xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var script = document.createElement('script'); script.type = 'text/javascript'; script.async = true;
+      script.src = 'https://apis.google.com/js/plusone.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script, s);
+    })();
+  </script>
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

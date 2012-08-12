@@ -1,0 +1,561 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: python | /usr/sbin/blog]]></title>
+  <link href="http://usrsb.in/blog/blog/categories/python/atom.xml" rel="self"/>
+  <link href="http://usrsb.in/blog/"/>
+  <updated>2012-08-12T10:39:34-06:00</updated>
+  <id>http://usrsb.in/blog/</id>
+  <author>
+    <name><![CDATA[Alex Beal]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Bouncing Python's Generators With A Trampoline]]></title>
+    <link href="http://usrsb.in/blog/blog/2012/08/12/bouncing-pythons-generators-with-a-trampoline/"/>
+    <updated>2012-08-12T10:06:00-06:00</updated>
+    <id>http://usrsb.in/blog/blog/2012/08/12/bouncing-pythons-generators-with-a-trampoline</id>
+    <content type="html"><![CDATA[<p>In this post, I'm going to combine two of my favorite topics: recursion and Python's generators. My aim is to address a real pain point in Python: its lack of tail call optimization. Let's start with a simple <code>countdown</code> function that counts from <code>start</code> to <code>0</code> using recursion:</p>
+
+<p>``` python Recursive Countdown
+def countdown(start):</p>
+
+<pre><code>print start
+if start == 0:
+    return 0
+else:
+    return countdown(start - 1)
+</code></pre>
+
+<p>```</p>
+
+<p>This function needs no explanation. It simply prints <code>start</code> and then calls itself with <code>start - 1</code>. The issue here is that for large values of <code>start</code>, we can easily blow Python's stack:</p>
+
+<p><code>python Countdown Demo
+% countdown(1000)
+1000
+999
+[...]
+3
+2
+Traceback (most recent call last):
+  File "&lt;stdin&gt;", line 1, in &lt;module&gt;
+  File "&lt;stdin&gt;", line 6, in countdown
+[...]
+RuntimeError: maximum recursion depth exceeded
+</code></p>
+
+<p>Of course, one option is to just loop:</p>
+
+<p><code>python For Loop Countdown
+print "\n".join([str(i) for i in xrange(1000,-1,-1)])
+</code></p>
+
+<p>But I didn't write this post just to tell you that recursive functions can be translated into loops (duh). Instead, I'm going to use a technique called trampolining to convert tail-recursive functions into tail-recursive generators, which won't blow the stack.</p>
+
+<p>Returning to the countdown example, let's think about why the recursive call is a problem in the first place. The issue is that in <code>return countdown(start - 1)</code>, the call to <code>countdown</code> must complete before its value can be returned, thus increasing the call stack. "Well, of course," you say. "That's how recursive functions work." But wait a minute. Is that really necessary? What if, rather than <code>countdown</code> calling itself, it simply <em>returned the next recursive call in the sequence</em> for its caller to execute. Hey, I think we might be on to something:</p>
+
+<p>``` python A Tail-Recursive Generator
+def countdown(start):</p>
+
+<pre><code>print start
+if start == 0:
+    yield 0
+else:
+    yield countdown(start - 1)
+</code></pre>
+
+<p>```</p>
+
+<p>So now <code>countdown</code> is a generator which calls itself. That's kind of wacky. Let's call it and see what happens.</p>
+
+<p><code>python Trying It Out
+% countdown(5)
+&lt;generator object countdown at 0x100492550&gt;
+</code></p>
+
+<p>That's interesting. We now have a generator. Think about that for a moment. What does this generator represent? Ah, that's right. <em>It's the next recursive call in the sequence.</em> It just hasn't been executed yet. Let's execute it:</p>
+
+<p><code>python Sweet
+% g = countdown(5)
+% g = g.next()
+5
+</code></p>
+
+<p>We're getting somewhere.</p>
+
+<p><code>python Manual Trampoline
+% g = countdown(5)
+% g = g.next()
+5
+% g = g.next()
+4
+% g = g.next()
+3
+% g = g.next()
+2
+% g = g.next()
+1
+% g = g.next()
+0
+% g = g.next()
+Traceback (most recent call last):
+  File "&lt;stdin&gt;", line 1, in &lt;module&gt;
+AttributeError: 'int' object has no attribute 'next'
+</code></p>
+
+<p>Well, that's really neat. Each generator represents one recursive call, and a generator's return value is the next recursive call in the sequence, except for the last call. What happened there? We reached the base case, and the last generator returned <code>0</code>.</p>
+
+<p>We now have a general pattern. Let's write a function which executes these tail-recursive generators automatically:</p>
+
+<p>``` python Trampoline Function
+import types</p>
+
+<p>def tramp(gen, *args, **kwargs):</p>
+
+<pre><code>g = gen(*args, **kwargs)
+while isinstance(g, types.GeneratorType):
+    g=g.next()
+return g
+</code></pre>
+
+<p>```</p>
+
+<p>So, a generator function is passed in, which is then used to create the generator <code>g</code>. <code>g.next()</code> is repeatedly called, and the next recursive call is stored back to <code>g</code>. We keep doing this until <code>g</code> no longer returns a generator. If <code>g</code> is not a generator, then we've reached the base case, and we return it (if the base case is a generator, you'll have to use something like exceptions to signal that you've reached the base case).</p>
+
+<p><strong>Note:</strong> It's about time that I explained where the word "trampoline" comes from. The idea is that each recursive call is "trampolined" off the trampoline runner (the <code>tramp</code> function in this case). That is, each recursive call is returned to <code>tramp</code> and is bounced off of it. I also like to think that each recursive call bounces higher (just like on a trampoline) because the "virtual" recursion depth increases, but it's very possible that I made that up in my head.</p>
+
+<p>Let's try this with countdown, and a large <code>start</code> value:</p>
+
+<p>``` python Trampoline Test
+% tramp(countdown, 1000)
+1000
+999
+[...]
+2
+1
+0
+0   &lt;--- Since we executed in the interactive interp,</p>
+
+<pre><code>     this is the return val of `tramp`.
+</code></pre>
+
+<p>```</p>
+
+<p>Excellent! The original function blew the stack, but the trampolined generator does just fine. Furthermore, we've written a general trampoline runner to execute these trampolined generators. But, before we call it a day, we have to write a trampolined version of the Fibonacci function, otherwise, <em>what's even the point of recursion?</em></p>
+
+<p>``` python Trampolined Fibonacci
+def fib(count, cur=0, next_=1):</p>
+
+<pre><code>if count &lt;= 1:
+    yield cur
+else:
+    # Notice that this is the tail-recursive version
+    # of fib.
+    yield fib(count-1, next_, cur + next_)
+</code></pre>
+
+<p>```</p>
+
+<p>Let's take this for a test drive:</p>
+
+<p>``` python The First 10 Fib Numbers</p>
+
+<h1>Print the first 10 Fibonacci numbers.</h1>
+
+<p>for i in xrange(1,11):</p>
+
+<pre><code>print tramp(fib, i)
+</code></pre>
+
+<p>Output:
+0
+1
+1
+2
+3
+5
+8
+13
+21
+34
+```</p>
+
+<p>Well, that's terrific. Not only is the tail-recursive version just as efficient as the <code>for-loop</code> version (except, of course, for function calling, and generator overhead), it also won't blow the stack.</p>
+
+<p>So, this is yet another example of the power of Python's generators (Python's most under appreciated feature, as David Beazley argues). What are the takeaways?</p>
+
+<ol>
+<li>This technique only works for <em>tail-recursive</em> functions. The recursive call must be the last thing the function does.</li>
+<li>The translation to a trampolined generator is easy! Just turn the <code>return</code> statements into <code>yield</code> expression.</li>
+<li>Although this will protect your stack, creating a generator for each call is probably slow.</li>
+</ol>
+
+
+<p>If this was fun for you, then definitely check out David Beazley's <a href="http://www.dabeaz.com/coroutines/index.html">presentation on coroutines and concurrency</a>. He uses trampolining, generators, and coroutines to write an OS in Python, complete with a task scheduler, sys calls, and blocking and non-block IO. This man is a wizard.</p>
+
+<p>Eli Bendersky also has a couple great articles on using generators for <a href="http://eli.thegreenplace.net/2012/08/09/using-sub-generators-for-lexical-scanning-in-python/">lexical scanning</a> and <a href="http://eli.thegreenplace.net/2009/08/29/co-routines-as-an-alternative-to-state-machines/">state machines</a>. Those posts inspired me to write a <a href="https://gist.github.com/3325354">command line argument parser</a> using coroutines, which can process a stream of characters and handles all the usual suspects, like quotes and escape characters. As you can tell, I've been getting quite a bit of mileage out of these techniques.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Permutations: An Interview Question]]></title>
+    <link href="http://usrsb.in/blog/blog/2012/05/05/permutations-an-interview-question/"/>
+    <updated>2012-05-05T13:41:00-06:00</updated>
+    <id>http://usrsb.in/blog/blog/2012/05/05/permutations-an-interview-question</id>
+    <content type="html"><![CDATA[<p>Here I go over a coding question I was recently asked during an interview.</p>
+
+<iframe width="853" height="480" src="http://www.youtube.com/embed/wIPcruaQ3Sg" frameborder="0" allowfullscreen></iframe>
+
+
+<p>You can find the source here: <a href="https://gist.github.com/2604992">https://gist.github.com/2604992</a></p>
+
+<h3>Notes</h3>
+
+<ol>
+<li>In some languages, prepending to a list is faster than appending. In Python it doesn't matter.</li>
+<li>The weird characters in the Vim session are whitespace characters. <code>$</code> is a newline character.</li>
+</ol>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Look, Ma! No Loops: Reversing Word Order]]></title>
+    <link href="http://usrsb.in/blog/blog/2012/04/07/look-ma-no-loops/"/>
+    <updated>2012-04-07T17:08:00-06:00</updated>
+    <id>http://usrsb.in/blog/blog/2012/04/07/look-ma-no-loops</id>
+    <content type="html"><![CDATA[<p>Here's a classic interview question:</p>
+
+<blockquote><p>Write a function that takes a string and reverses its word order. So, "Reverse this string" results in "string this Reverse".</p></blockquote>
+
+<p>Notice that the task isn't to reverse the string, but rather to reverse the order of the string's words. So the first word becomes the last. The second word becomes the second to last, and so on.</p>
+
+<p>Whenever I come across puzzles like this, I shudder when I start to think about the nested loops and pointer arithmetic. Unfortunately, that describes the classic solution pretty well. The common wisdom is that first you should reverse the entire string. Then you should go back and reverse each word. So:</p>
+
+<ol>
+<li>"Reverse this"</li>
+<li>"siht esreveR"</li>
+<li>"this Reverse"</li>
+</ol>
+
+
+<p>The first step isn't bad, but reversing each word will require at least one nested loop, and some careful thinking about how to deal with the spaces. Instead, let's think through a functional solution that doesn't involve any loops. It will necessarily be recursive, so the first step will be to come up with each of the cases we'll encouter as we walk the string.</p>
+
+<ul>
+<li>Recursive Case 1: We're in the midst of a word. Add the current letter to the end of some word accumulator.</li>
+<li>Recursive Case 2: We're at the end of a word (a space). Add the current word accumulator to the beginning of some string accumulator, then clear the word accumulator.</li>
+<li>Base Case: The string is empty. Return the word accumulator prepended to the string accumulator.</li>
+</ul>
+
+
+<p>So, there are two accumulators. One grabs the letters of each word as we walk the string and keeps the letters <em>in order</em> (the word accumulator). Then, once an entire word has been read into the word accumulator, it's prepended to the string accumulator. Prepending, reverses the word order. Once it's prepended, the word accumulator is cleared in preparation for the next word. Let's translate this case by case.</p>
+
+<p>The base case is the easiest. Let's start there:</p>
+
+<p>```python Base Case
+if len(s) == 0:</p>
+
+<pre><code>return word_acc + str_acc
+</code></pre>
+
+<p>```</p>
+
+<p>Start by testing if the input string, <code>s</code>, is empty. If it is, then we've reached the end of the string, so we return the contents of the <code>word_acc</code>, prepended to the <code>str_acc</code>. <code>word_acc</code> contains the last word in the string, and we're prepending it to the rest of the string that has already been reversed.</p>
+
+<p>Now let's deal with the second recursive case:</p>
+
+<p>```python 2nd Recursive Case
+elif s[0] == " ":</p>
+
+<pre><code>return helper(s[1:], "", " " + word_acc + str_acc)
+</code></pre>
+
+<p>```</p>
+
+<p>If we've gotten this far, the input string must have some length, so we check if the first character is a space. If it is, we've reached the end of a word, so we need to prepend <code>str_acc</code> with the word that's just been read in (<code>word_acc</code>). We then clear out the <code>word_acc</code> in preparation for the next word, and recursively call the function with the rest of the input string, <code>s</code>. The recursive call is to <code>helper</code> because this will be nested inside a convenience wrapper that only takes one argument.</p>
+
+<p>Finally, the last case:</p>
+
+<p>```python 1st Recursive Case
+else:</p>
+
+<pre><code>return helper(s[1:], word_acc + s[0], str_acc)
+</code></pre>
+
+<p>```</p>
+
+<p>If we've gotten this far, we're in the midst of a word (the string isn't empty, and the current character isn't a space). In this case, we add the current character onto the <code>word_acc</code> and then recurse with the rest of the string. Remember, the <code>word_acc</code> is building up each word character by character as we walk the input string.</p>
+
+<p>Finally, we can simply throw these cases into a function, and it should just work. Ahh, the magic of recursion.</p>
+
+<p>```python Reversing Word Order
+def rev_words(s):</p>
+
+<pre><code>'''Returns the string `s` with its words in the reverse order.
+   Example: rev_words("Reverse this!") #"this! Reverse"
+'''
+def helper(s, word_acc, str_acc):
+    # Base case: Return word accumulator plus whatever words
+    # you have in the string acc
+    if len(s) == 0:
+        return word_acc + str_acc
+    # This is the end of a word. Clear `word_acc`, and start with
+    # the next word.
+    elif s[0] == " ":
+        return helper(s[1:], "", " " + word_acc + str_acc)
+    # In the middle of a word. Add the letter to `word_acc`, and continue
+    else:
+        return helper(s[1:], word_acc + s[0], str_acc)
+return helper(s, "", "")
+</code></pre>
+
+<p>```</p>
+
+<p>As much as I like this solution, it's not without its drawbacks. The most significant is that Python's string methods are very slow. Each concatenation causes both strings to be copied, and at least one concat is happening for each character in the string. Possible solutions include turning the string into a list of characters (list methods are much faster), or using a language that better supports the functional paradigm.<sup>1</sup> But really, if speed is your highest priority, the imperative solution of swapping characters in place is your best bet, warts and all.</p>
+
+<p>If you'd like to play with this code yourself, I've posted <a href="https://gist.github.com/2331327">a gist here</a>, along with some tests.</p>
+
+<h3>Notes</h3>
+
+<ol>
+<li>If Python had a constant time prepend function ('cons' in the functional world), I suspect a better solution would be possible.</li>
+</ol>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Building Data Structures from Functions]]></title>
+    <link href="http://usrsb.in/blog/blog/2012/04/01/building-data-structures-from-functions/"/>
+    <updated>2012-04-01T09:00:00-06:00</updated>
+    <id>http://usrsb.in/blog/blog/2012/04/01/building-data-structures-from-functions</id>
+    <content type="html"><![CDATA[<p>Here's a puzzle I've adapted from <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-14.html#%_sec_2.1.3">exercise 2.4</a> of SICP.</p>
+
+<blockquote><p>Suppose you are programming in a language that only supports function application. That is, defining functions and applying arguments to these functions are the only things this language supports. Using only these building blocks, could you construct a linked list?</p></blockquote>
+
+<p>Surprisingly, the answer is yes, and the exercise linked to above provides a partial solution. Below, I've translated that solution into Python, and completed the exercise:</p>
+
+<p>```python Solution in Python</p>
+
+<h1>Create a pair from l and r</h1>
+
+<p>def cons(l, r):</p>
+
+<pre><code>return lambda get: get(l, r)
+</code></pre>
+
+<h1>Given a pair, return the head (left) value.</h1>
+
+<p>def head(pair):</p>
+
+<pre><code>return pair(lambda l, r: l)
+</code></pre>
+
+<h1>Give a pair, return the tail (right) value.</h1>
+
+<p>def tail(pair):</p>
+
+<pre><code>return pair(lambda l, r: r)
+</code></pre>
+
+<p>```</p>
+
+<p>First, let's examine how these functions can be used, and then I'll explain how they work. Consider the snippet below:</p>
+
+<p><code>python Usage Example
+l1 = cons(1, 2)
+print head(l1)       # Prints 1
+print tail(l1)       # Prints 2
+l2 = cons(0, l1)
+print head(l2)       # Prints 0
+print head(tail(l2)) # Prints 1
+print tail(tail(l2)) # Prints 2
+</code></p>
+
+<p>As can be seen, <code>cons()</code> is the constructor for this pair type. Give it two values, and it will create a pair of those two values. <code>head()</code> and <code>tail()</code> are the basic operators that let us access values inside these pairs; they return the left and right element of the pair, respectively. Also notice that we can create pairs of pairs. The last half of the example creates a pair composed of <code>0</code> and <code>(1,2)</code>. Why is this significant? Well, we've just made a linked list! Linked lists are simply pairs of pairs. The list <code>[1,2,3,4]</code> can, for example, be represented as <code>cons(1,cons(2,cons(3,cons(4,None))))</code>. What's <code>None</code> doing at the end of the list? You can think of it like the <code>NULL</code> pointer at the end of a linked list in C. If a function were traversing the list, <code>None</code> would signify to the function that it has reached the end. Mathematically, you can think of a linked list as an inductively defined data structure, where <code>None</code> is the base case. <code>None</code> is referred to as the <em>empty list</em>.</p>
+
+<p>Now for the interesting part. How do these functions work? First let's look at the <code>cons()</code> function:</p>
+
+<p>```python cons()</p>
+
+<h1>Create a pair from l and r</h1>
+
+<p>def cons(l, r):</p>
+
+<pre><code>return lambda get: get(l, r)
+</code></pre>
+
+<p>```</p>
+
+<p>This takes in two parameters (<code>l</code> and <code>r</code>) and returns a function.<sup>1</sup> This returned function takes yet another function, which it applies to <code>l</code> and <code>r</code> and returns the result. So, if we call <code>cons(1,2)</code>, we are returned a function, which takes a function and applies that function to the arguments <code>1</code> and <code>2</code>. If, for example, I called <code>cons(1,2)(lambda x, y: x+y)</code> I'd get <code>3</code>, because the addition function would be applied to <code>1</code> and <code>2</code>.</p>
+
+<p>Now suppose that we didn't want to add <code>l</code> and <code>r</code>. Instead, we wanted to pull either <code>l</code> or <code>r</code> out of a pair that was already constructed. In other words, given <code>list = cons(1,2)</code>, how could we pull the <code>1</code> or <code>2</code> out of the function stored in <code>list</code>? Well, all we need to do is pass it a function that returns only the left or right parameter. So, <code>cons(1,2)(lambda l, r: l)</code> would give us back <code>1</code>, and <code>cons(1,2)(lambda l,r: r)</code> would give us back <code>2</code>. This is almost exactly what the <code>head()</code> and <code>tail()</code> functions are doing! They take in a function (presumably produced by the <code>cons()</code> function), and apply either <code>lambda l,r: l</code> or <code>lambda l,r: r</code>. Just to cement this all together, below I step through the evaluation for the example <code>head(cons(1,2))</code>.</p>
+
+<p><code>python Evaluation Steps for head(cons(1,2,))
+head(cons(1,2))
+-&gt; head(lambda get: get(1, 2))
+-&gt; (lambda get: get(1, 2))(lambda l,r: l)
+-&gt; (lambda l,r: l)(1,2)
+-&gt; 1
+</code></p>
+
+<p>And here is a bit of code that uses these new functions to add the elements of a list:</p>
+
+<p>```python Sum Function
+def sum_list(l):</p>
+
+<pre><code>return head(l) if tail(l) == None else head(l) + sum_list(tail(l))
+</code></pre>
+
+<p>sum_list(cons(1,cons(2,cons(3,None)))) # Returns 6
+```</p>
+
+<p>In the end, this might strike you as nothing more than a useless programming trick. In a sense that's right. I'd never use this in my own code. What makes this technique so valuable is that it actually fits into the broader context of lambda calculus, which is a mathematical abstraction of computation. In the language of lambda calculus, you're given only a very basic set of tools. Essentially all you have are simple one parameter functions (it doesn't even have integers!). Incredibly, it turns out that that's all you need for a Turing complete language. It's possible to build integers, conditionals, loops, arithmetic operations, and (as you've seen here) data structures out of these simple building blocks. As a next step, and to see this for yourself, it might be fun to take a minute and see how the code presented here could be modified to give you binary trees, or even graphs. After that, you could check out this incredible article on writing the infamous <a href="http://www.codinghorror.com/blog/2007/02/why-cant-programmers-program.html">FizzBuzz</a> exercise <a href="http://experthuman.com/programming-with-nothing">in Ruby using only functions</a>.</p>
+
+<h3>Notes</h3>
+
+<ol>
+<li>Technically, this is really a closure, which is a function with some of its variables already set. In the terminology of the PL world, it's a function bundled with its environment (the set of variables in its outer scope).</li>
+</ol>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Super Bowl Probabilities: The Coin Toss]]></title>
+    <link href="http://usrsb.in/blog/blog/2012/02/05/super-bowl-probabilities/"/>
+    <updated>2012-02-05T09:53:00-07:00</updated>
+    <id>http://usrsb.in/blog/blog/2012/02/05/super-bowl-probabilities</id>
+    <content type="html"><![CDATA[<p>Browsing through my Twitter stream, I came across a blog post discussing an allegedly 3.8-sigma event: <a href="http://blogs.discovermagazine.com/cosmicvariance/2012/02/04/a-3-8-sigma-anomaly/">Apparently the last 14 Super Bowl coin tosses have been won by the NFC</a>. What are the chances of this? The blog linked to above claims a probability of (1/2)<sup>13</sup>. Another <a href="http://www.outsidethebeltway.com/super-bowl-coin-flip/">blog</a> claims (1/2)<sup>14</sup>. Which is correct? Before I get into the mathematics, I'll try to disentangle three different questions:</p>
+
+<ol>
+<li>Out of 14 tosses, what's the probability that they all come up heads?</li>
+<li>Out of 14 tosses, what's the probability that one team wins all of them?</li>
+<li>Out of 45 tosses (one for each Super Bowl), what's the probability that one team wins a string of 14 of them?<sup>1</sup></li>
+</ol>
+
+
+<p><strong>(1/2)<sup>14</sup></strong> is the correct answer to question (1). There's a 1 in 2 chance of getting heads. The probability of getting heads 14 times out of 14 tosses is therefore (1/2)<sup>14</sup>.</p>
+
+<p><strong>(1/2)<sup>13</sup></strong> is the correct answer to question (2). If you call a coin in the air, there's 1 in 2 chance you'll win the toss. Out of 14 tosses, the chance that <em>either</em> the NFC will win the toss 14 times <em>or</em> the AFC will win the toss 14 times is: (1/2)<sup>14</sup> + (1/2)<sup>14</sup> = (1/2)<sup>13</sup>.</p>
+
+<p>The last situation is much more difficult to calculate, and similar questions are often the cause for much surprise. For example, if you toss a coin 20 times, do you think it's likely or unlikely that you'll get a string of 5 heads in a row? It seems like this should be unlikely. After all, the probability of tossing a coin 5 times, and ending up with heads every time is quite small: (1/2)<sup>5</sup> = 1/32  (approx. 3%). Believe it or not, the actual probability is around 25%.<sup>2</sup></p>
+
+<p>How are these probabilities found? One solution is a rather nasty recursive formula.</p>
+
+<blockquote><p>  A similar recursion can be given to calculate the probability that in <em>n</em> fair coin tosses a run of <em>r</em> heads or <em>r</em> tails occurs. In this case, we say that the tossing process is in state <em>(i, k)</em> when there are <em>k</em> tosses still to go and the last <em>i</em> tosses all showed the same outcome but so far no run of <em>r</em> heads or <em>r</em> tails has occurred. The probability <em>v<sub>k</sub>(i)</em> is defined as</p>
+
+<p>  v<sub>k</sub>(i) = the probability of getting a run of <em>r</em> heads or <em>r</em> tails during <em>n</em> tosses when the current state of the tossing process is <em>(i, k)</em>.</p>
+
+<p>The probability <em>v<sub>n-1</sub>(1)</em> is being sought (why?). Verify for yourself that the following recursion applies for k = 1,2,...,<em>n</em>.</p>
+
+<p>  v<sub>k</sub> = 0.5*v<sub>k-1</sub>(i + 1) + 0.5*v<sub>k-1</sub>(1) for i =,...,r - 1.</p>
+
+<p>The boundary conditions are <em>v<sub>0</sub>(i) = 0</em> for <em>1 &lt;= i &lt;= r -1</em> and <em>v<sub>j</sub>(r) = 1</em> for <em>0 &lt;= j &lt;= n - 1</em>.<sup>3</sup></p></blockquote>
+
+<p>I'm actually not sure why we're looking for <em>v<sub>n-1</sub>(1)</em> as opposed to <em>v<sub>n</sub>(0)</em>. I tested it for a few values, and those expressions seem to be equal.<sup>4</sup> In any case, the formula is dense, but you can see the logic behind it. If you're in the midst of a streak of heads, and your next flip comes up heads, your state is now <em>(i+1, k-1)</em>. That is, your streak has increased, but your tosses to go has decreased. This explains the first half of the formula: <em>0.5*v<sub>k-1</sub>(i + 1)</em>. The other case is that you're in the midst of a streak of heads, but then you get a tail, so your state becomes <em>(1, k-1)</em>. That is, you now have a streak of 1 tail, and your total number of tosses to go decrements by one. This explains the last half of the equation. The equation then branches out like a tree, solving for each possibility along the way. Here's a bit of Scheme that implements this:</p>
+
+<p>``` scheme An Exact Solution in Scheme
+(define (coin-streak n r)</p>
+
+<pre><code>(define (cs-helper k i)
+  (cond ((and (&lt;= 1 i) (&lt;= i (- r 1)) (= k 0)) 0)
+        ((and (&lt;= 0 k) (&lt;= k (- n 1)) (= i r)) 1)
+        (else (+
+               (* (/ 1 2) (ct-string r n (- k 1) (+ i 1)))
+               (* (/ 1 2) (ct-string r n (- k 1) 1 ))))
+        ))
+(cs-helper (- n 1) 1))
+</code></pre>
+
+<p>```</p>
+
+<p>Notice that this problem quickly becomes intractable for large values of <em>n</em>. Each call branches into two different calls, giving an exponential growth (props to the first person who posts a tail recursive memoization). This is why I prefer solving this by simulation. What we need to do is simulate 45 coin flips, and check if we've encountered a string of 14 heads or 14 tails. Do this, say, 100,000 times and see how often this event occurs.</p>
+
+<p>``` python ctsim.py: An Approximation by Simulation in Python</p>
+
+<h1>!/usr/bin/python -O</h1>
+
+<p>import random
+import sys</p>
+
+<p>STREAK_LEN  = int(sys.argv[1])
+TOSSES      = int(sys.argv[2])
+TRIALS      = int(sys.argv[3])</p>
+
+<p>def simulation(trials, tosses, streak):</p>
+
+<pre><code>''' Simulates *trials* trials of *tosses* tosses and returns the
+    fraction of trials that contained at least one streak
+    of *streak* or higher.
+'''
+
+def run_trial():
+    ''' Flips a coin *tosses* times and returns True if a streak of
+        *streak* length is encountered.
+    '''
+    cur_streak = 1      # Length of the current streak.
+    prev_outcome = None # Outcome of a previous toss.
+    # Simulate the tosses.
+    for toss in range(tosses):
+        outcome = random.randint(0,1)
+        # If the last toss is the same as the current toss,
+        # increment the length of the current streak.
+        if outcome == prev_outcome:
+            cur_streak += 1
+        else:
+            cur_streak = 1
+
+        # If the current streak is equal to the target
+        # length, return True
+        if cur_streak == streak:
+            return True
+
+        prev_outcome = outcome
+
+    return False
+
+streak_count = 0
+# Simulate all the trials, and keep track of how many had
+# a streak.
+for trial in range(trials):
+    had_a_streak = run_trial()
+    if had_a_streak:
+        streak_count += 1
+
+return streak_count / float(trials)
+</code></pre>
+
+<p>if <strong>name</strong> == "<strong>main</strong>":</p>
+
+<pre><code>print simulation(TRIALS, TOSSES, STREAK_LEN)
+</code></pre>
+
+<p>```</p>
+
+<p>We can now simulate the Super Bowl situation by looking for a streak of 14 wins out of 45 tosses with 100,000 simulations.</p>
+
+<p><code>bash ctsim.py Usage
+% ./ctsim.py 14 45 100000
+0.00202
+</code></p>
+
+<p>So, the probability of this happening is <strong>0.00202</strong> or around <strong>0.2%</strong>. This is still tiny, but not as small as (1/2)<sup>13</sup> (approx. 0.00012 or 0.012%).</p>
+
+<h2>Notes:</h2>
+
+<ol>
+<li>Even this is slightly ambiguous. The exact question that we'll be looking at is: What is the probability that one team will have at least one winning streak of at least 14 tosses.</li>
+<li>Tijms, H. (2010). Understanding probability: Chance rules in everyday life. (2 ed.). Cambridge, UK: Cambridge University Press.</li>
+<li>Ibid.</li>
+<li>Perhaps the equation <em>v<sub>n</sub>(0)</em> is technically undefined. That is, <em>i</em> cannot equal 0 because you must have a streak of at least 1 head or 1 tail. Nevertheless, it looks like the formula still works for this technically undefined state.</li>
+</ol>
+
+]]></content>
+  </entry>
+  
+</feed>

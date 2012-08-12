@@ -3,7 +3,7 @@
   <title><![CDATA[/usr/sbin/blog]]></title>
   <link href="http://usrsb.in/blog/atom.xml" rel="self"/>
   <link href="http://usrsb.in/blog/"/>
-  <updated>2012-08-05T11:20:21-06:00</updated>
+  <updated>2012-08-12T10:39:34-06:00</updated>
   <id>http://usrsb.in/blog/</id>
   <author>
     <name><![CDATA[Alex Beal]]></name>
@@ -11,6 +11,265 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+    <entry>
+      
+
+
+
+
+<title type="html"><![CDATA[Bouncing Python's Generators With A Trampoline]]></title>
+<link href="http://usrsb.in/blog/blog/2012/08/12/bouncing-pythons-generators-with-a-trampoline/"/>
+<updated>2012-08-12T10:06:00-06:00</updated>
+<id>http://usrsb.in/blog/blog/2012/08/12/bouncing-pythons-generators-with-a-trampoline</id>
+
+      <content type="html"><![CDATA[<p>In this post, I&#8217;m going to combine two of my favorite topics: recursion and Python&#8217;s generators. My aim is to address a real pain point in Python: its lack of tail call optimization. Let&#8217;s start with a simple <code>countdown</code> function that counts from <code>start</code> to <code>0</code> using recursion:</p>
+
+<figure class='code'><figcaption><span>Recursive Countdown</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">countdown</span><span class="p">(</span><span class="n">start</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">print</span> <span class="n">start</span>
+</span><span class='line'>    <span class="k">if</span> <span class="n">start</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+</span><span class='line'>        <span class="k">return</span> <span class="mi">0</span>
+</span><span class='line'>    <span class="k">else</span><span class="p">:</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">countdown</span><span class="p">(</span><span class="n">start</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This function needs no explanation. It simply prints <code>start</code> and then calls itself with <code>start - 1</code>. The issue here is that for large values of <code>start</code>, we can easily blow Python&#8217;s stack:</p>
+
+<figure class='code'><figcaption><span>Countdown Demo</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="o">%</span> <span class="n">countdown</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span>
+</span><span class='line'><span class="mi">1000</span>
+</span><span class='line'><span class="mi">999</span>
+</span><span class='line'><span class="p">[</span><span class="o">...</span><span class="p">]</span>
+</span><span class='line'><span class="mi">3</span>
+</span><span class='line'><span class="mi">2</span>
+</span><span class='line'><span class="n">Traceback</span> <span class="p">(</span><span class="n">most</span> <span class="n">recent</span> <span class="n">call</span> <span class="n">last</span><span class="p">):</span>
+</span><span class='line'>  <span class="n">File</span> <span class="s">&quot;&lt;stdin&gt;&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">1</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
+</span><span class='line'>  <span class="n">File</span> <span class="s">&quot;&lt;stdin&gt;&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">6</span><span class="p">,</span> <span class="ow">in</span> <span class="n">countdown</span>
+</span><span class='line'><span class="p">[</span><span class="o">...</span><span class="p">]</span>
+</span><span class='line'><span class="ne">RuntimeError</span><span class="p">:</span> <span class="n">maximum</span> <span class="n">recursion</span> <span class="n">depth</span> <span class="n">exceeded</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Of course, one option is to just loop:</p>
+
+<figure class='code'><figcaption><span>For Loop Countdown</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">print</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">)])</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>But I didn&#8217;t write this post just to tell you that recursive functions can be translated into loops (duh). Instead, I&#8217;m going to use a technique called trampolining to convert tail-recursive functions into tail-recursive generators, which won&#8217;t blow the stack.</p>
+
+<p>Returning to the countdown example, let&#8217;s think about why the recursive call is a problem in the first place. The issue is that in <code>return countdown(start - 1)</code>, the call to <code>countdown</code> must complete before its value can be returned, thus increasing the call stack. &#8220;Well, of course,&#8221; you say. &#8220;That&#8217;s how recursive functions work.&#8221; But wait a minute. Is that really necessary? What if, rather than <code>countdown</code> calling itself, it simply <em>returned the next recursive call in the sequence</em> for its caller to execute. Hey, I think we might be on to something:</p>
+
+<figure class='code'><figcaption><span>A Tail-Recursive Generator</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">countdown</span><span class="p">(</span><span class="n">start</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">print</span> <span class="n">start</span>
+</span><span class='line'>    <span class="k">if</span> <span class="n">start</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+</span><span class='line'>        <span class="k">yield</span> <span class="mi">0</span>
+</span><span class='line'>    <span class="k">else</span><span class="p">:</span>
+</span><span class='line'>        <span class="k">yield</span> <span class="n">countdown</span><span class="p">(</span><span class="n">start</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>So now <code>countdown</code> is a generator which calls itself. That&#8217;s kind of wacky. Let&#8217;s call it and see what happens.</p>
+
+<figure class='code'><figcaption><span>Trying It Out</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="o">%</span> <span class="n">countdown</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">generator</span> <span class="nb">object</span> <span class="n">countdown</span> <span class="n">at</span> <span class="mh">0x100492550</span><span class="o">&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>That&#8217;s interesting. We now have a generator. Think about that for a moment. What does this generator represent? Ah, that&#8217;s right. <em>It&#8217;s the next recursive call in the sequence.</em> It just hasn&#8217;t been executed yet. Let&#8217;s execute it:</p>
+
+<figure class='code'><figcaption><span>Sweet</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="o">%</span> <span class="n">g</span> <span class="o">=</span> <span class="n">countdown</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+</span><span class='line'><span class="o">%</span> <span class="n">g</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
+</span><span class='line'><span class="mi">5</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>We&#8217;re getting somewhere.</p>
+
+<figure class='code'><figcaption><span>Manual Trampoline</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="o">%</span> <span class="n">g</span> <span class="o">=</span> <span class="n">countdown</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+</span><span class='line'><span class="o">%</span> <span class="n">g</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
+</span><span class='line'><span class="mi">5</span>
+</span><span class='line'><span class="o">%</span> <span class="n">g</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
+</span><span class='line'><span class="mi">4</span>
+</span><span class='line'><span class="o">%</span> <span class="n">g</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
+</span><span class='line'><span class="mi">3</span>
+</span><span class='line'><span class="o">%</span> <span class="n">g</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
+</span><span class='line'><span class="mi">2</span>
+</span><span class='line'><span class="o">%</span> <span class="n">g</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
+</span><span class='line'><span class="mi">1</span>
+</span><span class='line'><span class="o">%</span> <span class="n">g</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
+</span><span class='line'><span class="mi">0</span>
+</span><span class='line'><span class="o">%</span> <span class="n">g</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
+</span><span class='line'><span class="n">Traceback</span> <span class="p">(</span><span class="n">most</span> <span class="n">recent</span> <span class="n">call</span> <span class="n">last</span><span class="p">):</span>
+</span><span class='line'>  <span class="n">File</span> <span class="s">&quot;&lt;stdin&gt;&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">1</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
+</span><span class='line'><span class="ne">AttributeError</span><span class="p">:</span> <span class="s">&#39;int&#39;</span> <span class="nb">object</span> <span class="n">has</span> <span class="n">no</span> <span class="n">attribute</span> <span class="s">&#39;next&#39;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Well, that&#8217;s really neat. Each generator represents one recursive call, and a generator&#8217;s return value is the next recursive call in the sequence, except for the last call. What happened there? We reached the base case, and the last generator returned <code>0</code>.</p>
+
+<p>We now have a general pattern. Let&#8217;s write a function which executes these tail-recursive generators automatically:</p>
+
+<figure class='code'><figcaption><span>Trampoline Function</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">import</span> <span class="nn">types</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">def</span> <span class="nf">tramp</span><span class="p">(</span><span class="n">gen</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</span><span class='line'>    <span class="n">g</span> <span class="o">=</span> <span class="n">gen</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">while</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">GeneratorType</span><span class="p">):</span>
+</span><span class='line'>        <span class="n">g</span><span class="o">=</span><span class="n">g</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">g</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>So, a generator function is passed in, which is then used to create the generator <code>g</code>. <code>g.next()</code> is repeatedly called, and the next recursive call is stored back to <code>g</code>. We keep doing this until <code>g</code> no longer returns a generator. If <code>g</code> is not a generator, then we&#8217;ve reached the base case, and we return it (if the base case is a generator, you&#8217;ll have to use something like exceptions to signal that you&#8217;ve reached the base case).</p>
+
+<p><strong>Note:</strong> It&#8217;s about time that I explained where the word &#8220;trampoline&#8221; comes from. The idea is that each recursive call is &#8220;trampolined&#8221; off the trampoline runner (the <code>tramp</code> function in this case). That is, each recursive call is returned to <code>tramp</code> and is bounced off of it. I also like to think that each recursive call bounces higher (just like on a trampoline) because the &#8220;virtual&#8221; recursion depth increases, but it&#8217;s very possible that I made that up in my head.</p>
+
+<p>Let&#8217;s try this with countdown, and a large <code>start</code> value:</p>
+
+<figure class='code'><figcaption><span>Trampoline Test</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="o">%</span> <span class="n">tramp</span><span class="p">(</span><span class="n">countdown</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span>
+</span><span class='line'><span class="mi">1000</span>
+</span><span class='line'><span class="mi">999</span>
+</span><span class='line'><span class="p">[</span><span class="o">...</span><span class="p">]</span>
+</span><span class='line'><span class="mi">2</span>
+</span><span class='line'><span class="mi">1</span>
+</span><span class='line'><span class="mi">0</span>
+</span><span class='line'><span class="mi">0</span>   <span class="o">&lt;---</span> <span class="n">Since</span> <span class="n">we</span> <span class="n">executed</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">interactive</span> <span class="n">interp</span><span class="p">,</span>
+</span><span class='line'>         <span class="n">this</span> <span class="ow">is</span> <span class="n">the</span> <span class="k">return</span> <span class="n">val</span> <span class="n">of</span> <span class="sb">`tramp`</span><span class="o">.</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Excellent! The original function blew the stack, but the trampolined generator does just fine. Furthermore, we&#8217;ve written a general trampoline runner to execute these trampolined generators. But, before we call it a day, we have to write a trampolined version of the Fibonacci function, otherwise, <em>what&#8217;s even the point of recursion?</em></p>
+
+<figure class='code'><figcaption><span>Trampolined Fibonacci</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">fib</span><span class="p">(</span><span class="n">count</span><span class="p">,</span> <span class="n">cur</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">next_</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">if</span> <span class="n">count</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+</span><span class='line'>        <span class="k">yield</span> <span class="n">cur</span>
+</span><span class='line'>    <span class="k">else</span><span class="p">:</span>
+</span><span class='line'>        <span class="c"># Notice that this is the tail-recursive version</span>
+</span><span class='line'>        <span class="c"># of fib.</span>
+</span><span class='line'>        <span class="k">yield</span> <span class="n">fib</span><span class="p">(</span><span class="n">count</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">next_</span><span class="p">,</span> <span class="n">cur</span> <span class="o">+</span> <span class="n">next_</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Let&#8217;s take this for a test drive:</p>
+
+<figure class='code'><figcaption><span>The First 10 Fib Numbers</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c"># Print the first 10 Fibonacci numbers.</span>
+</span><span class='line'><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">11</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">print</span> <span class="n">tramp</span><span class="p">(</span><span class="n">fib</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">Output</span><span class="p">:</span>
+</span><span class='line'><span class="mi">0</span>
+</span><span class='line'><span class="mi">1</span>
+</span><span class='line'><span class="mi">1</span>
+</span><span class='line'><span class="mi">2</span>
+</span><span class='line'><span class="mi">3</span>
+</span><span class='line'><span class="mi">5</span>
+</span><span class='line'><span class="mi">8</span>
+</span><span class='line'><span class="mi">13</span>
+</span><span class='line'><span class="mi">21</span>
+</span><span class='line'><span class="mi">34</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Well, that&#8217;s terrific. Not only is the tail-recursive version just as efficient as the <code>for-loop</code> version (except, of course, for function calling, and generator overhead), it also won&#8217;t blow the stack.</p>
+
+<p>So, this is yet another example of the power of Python&#8217;s generators (Python&#8217;s most under appreciated feature, as David Beazley argues). What are the takeaways?</p>
+
+<ol>
+<li>This technique only works for <em>tail-recursive</em> functions. The recursive call must be the last thing the function does.</li>
+<li>The translation to a trampolined generator is easy! Just turn the <code>return</code> statements into <code>yield</code> expression.</li>
+<li>Although this will protect your stack, creating a generator for each call is probably slow.</li>
+</ol>
+
+
+<p>If this was fun for you, then definitely check out David Beazley&#8217;s <a href="http://www.dabeaz.com/coroutines/index.html">presentation on coroutines and concurrency</a>. He uses trampolining, generators, and coroutines to write an OS in Python, complete with a task scheduler, sys calls, and blocking and non-block IO. This man is a wizard.</p>
+
+<p>Eli Bendersky also has a couple great articles on using generators for <a href="http://eli.thegreenplace.net/2012/08/09/using-sub-generators-for-lexical-scanning-in-python/">lexical scanning</a> and <a href="http://eli.thegreenplace.net/2009/08/29/co-routines-as-an-alternative-to-state-machines/">state machines</a>. Those posts inspired me to write a <a href="https://gist.github.com/3325354">command line argument parser</a> using coroutines, which can process a stream of characters and handles all the usual suspects, like quotes and escape characters. As you can tell, I&#8217;ve been getting quite a bit of mileage out of these techniques.</p>
+<p><a rel="bookmark" href="http://usrsb.in/blog/blog/2012/08/12/bouncing-pythons-generators-with-a-trampoline/">&infin; Permalink</a></p>]]></content>
+    </entry>
   
     <entry>
       
@@ -2236,110 +2495,6 @@ char *s, *t;
 
 <p>We&#8217;re taking the math too literally. When we take this sum to infinity, what we&#8217;re really saying is that as we get closer and closer to infinity, we&#8217;re getting closer and closer to removing a length of 1, <em>but we never actually get there.</em> Similarly, when we take the limit, what we&#8217;re really saying is that as we remove more and more segments, we get closer and closer to having an infinite number of segments left over, <em>but we never actually get there either.</em> <strong>As long as we never actually get to either of these points, we haven&#8217;t contradicted ourselves.</strong> I think. If you have a deeper insight into this, definitely be sure to post it in the comments!</p>
 <p><a rel="bookmark" href="http://usrsb.in/blog/blog/2011/08/05/1-minus-1-equals-what-fun-with-sums-and-limits/">&infin; Permalink</a></p>]]></content>
-    </entry>
-  
-    <entry>
-      
-
-
-
-
-<title type="html"><![CDATA[How Old School C Programmers Process Arguments]]></title>
-<link href="http://usrsb.in/blog/blog/2011/08/04/how-old-school-c-programmers-process-arguments/"/>
-<updated>2011-08-04T16:39:00-06:00</updated>
-<id>http://usrsb.in/blog/blog/2011/08/04/how-old-school-c-programmers-process-arguments</id>
-
-      <content type="html"><![CDATA[<p>Here&#8217;s a bit of code from Kernighan&#8217;s and Ritchie&#8217;s seminal text, <a href="http://www.amazon.com/Programming-Language-2nd-Brian-Kernighan/dp/0131103628">The C Programming Language</a>. I&#8217;m not sure I&#8217;d actually recommend coding this way (as written in the book, the entire program has only one comment), but it&#8217;s so darn clever and concise, I can&#8217;t help but post it. This snippet is part of a larger program called <code>find</code> that searches text for patterns, but the details aren&#8217;t important. I want to focus on the portion below that parses the arguments passed to the program. Don&#8217;t worry about understanding it just yet. I&#8217;ll step through it below:</p>
-
-<pre><code>char *s;
-while (--argc &gt; 0 &amp;&amp; (*++argv)[0] == '-')
-    for(s = argv[0]+1; *s != '\0'; s++)
-        switch(*s) {
-            case 'x':
-                /* Set appropriate flags for 'x' option */
-                break;
-            case 'n':
-                /* Set appropriate flags for 'n' option */
-                break;
-            default:
-                printf("Illegal option %c\n", *s);
-                argc = 0;
-                break;
-        }
-if( argc != 1)
-    printf("Usage: find -x -n pattern\n");
-else
-    /* Main program logic goes here */
-</code></pre>
-
-<p>What&#8217;s so cool about this is its flexibility. Those two nested loops can process all of the following (and more):</p>
-
-<pre><code>find -xn hello
-find -nx hello
-find -x -n hello
-find -n -x hello
-find hello
-find -x hello
-...
-</code></pre>
-
-<p>As you can see, the usage is <code>find [-x] [-n] PATTERN</code>. The nested loops above process the flags, <code>-x</code> and <code>-n</code>, in any order, and either separated or concatenated. Hopefully you&#8217;re as impressed as I was.
-Anyway, let&#8217;s dive into the code and begin by looking at the while statement.</p>
-
-<h2>The while Loop</h2>
-
-<pre><code>while (--argc &gt; 0 &amp;&amp; (*++argv)[0] == '-')
-</code></pre>
-
-<p>What&#8217;s going on here? First, the while loop decrements <code>argc</code> and checks that it&#8217;s greater than 0 (as dictated by convention, <code>argc</code> holds the number of arguments passed to the program). Whenever a flag is processed, <code>argc</code> is decremented, thus making it a running count of how many flags there are left to process. If it&#8217;s 0, then there&#8217;s nothing left to do. Notice that the decrement always occurs before the &#8216;>&#8217; is evaluated. This would be true even if it were postfix (i.e., <code>argc-- &gt; 0</code>).</p>
-
-<p>If argc checks out, then we move on to <code>(*++argv)[0]=='-'</code>. Yikes. That&#8217;s a doozy. First remember that <code>argv</code> is a pointer to the strings that contain the arguments. So, <code>argv</code> points to the string containing the program name and <code>(argv+1)</code> points to the string containing the first argument. That means that <code>(*argv)[0]</code> is the first character of the program name and <code>(*argv)[1]</code> is the first character of the first argument. Putting that together, <code>(*++argv)[0]</code> increments <code>argv</code>, dereferences it to a string, and then gets the first character of that string. In other words, if <code>argv</code> was originally pointing to the string containing the program&#8217;s name, it&#8217;s now pointing to the string containing the first argument, and then grabbing the first character of that string and comparing it to &#8216;-&#8216;. Why&#8217;s it doing that? Because it wants to make sure it&#8217;s looking at a string containing a flag, and flags begin with the &#8216;-&#8217; character.</p>
-
-<p>Extra Credit: How is <code>*++argv[0] == '-'</code> different than <code>(*++argv)[0] == '-'</code>?</p>
-
-<p>By the end of all of this, <code>argc</code> represents the number of arguments remaining and <code>argv</code> is pointing to the string containing the first argument. Wow.</p>
-
-<p>That was a bit of a slog, but we&#8217;re not done yet. Let&#8217;s look at the for loop.</p>
-
-<h2>The for Loop</h2>
-
-<pre><code>char *s;
-for(s = argv[0]+1; *s != '\0'; s++)
-</code></pre>
-
-<p>Oh boy. More pointer arithmetic on arrays of arrays. Well, what&#8217;s going on here? Remember that now <code>argv</code> is pointing to the string containing the first argument. Therefore, <code>argv[0]</code> is the pointer to the first character of that string and <code>argv[0]+1</code> is the pointer to the second character of that string. <code>argv[0]+1</code> is then assigned to <code>s</code>. The result is that, if <code>argv</code> was pointing to &#8220;-xn&#8221;, then s is now pointing to the &#8220;x&#8221; in that string.
-Lucky for us, the last half is much simpler. <code>*s != '\0'</code> checks to make sure that it hasn&#8217;t reached the end of the string yet, and <code>s++</code> increments the pointer (after the loop has finished its first run, of course). If the first run processed the &#8220;x&#8221; in &#8220;-xn&#8221;, then <code>s</code> is incremented and the &#8220;n&#8221; is processed. The third iterations sees the &#8220;\0&#8221; at the end of the string and exits. So, to bring this all together, the for loop traverses concatenated flags (i.e., it moves the pointer from the &#8220;x&#8221; to the &#8220;n&#8221; in &#8220;-xn&#8221;) and the while loop traverses separated flags (i.e., it moves the pointer from the &#8220;-x&#8221; to the &#8220;-n&#8221; in &#8220;-x -n&#8221;).</p>
-
-<h1>The switch Statement</h1>
-
-<pre><code>switch(*s) {
-      case 'x':
-        /* Set appropriate flags for 'x' option */
-        break;
-    case 'n':
-         /* Set appropriate flags for 'n' option */
-        break;
-    default:
-        printf("Illegal option %c\n", *s);
-        argc = 0;
-        break;
-}
-</code></pre>
-
-<p>The switch is simple enough. It tests if <code>*s</code> is equal to one of the flags, and then does the necessary processing for that flag. Most likely it just sets an internal flag, which will be taken into account when the main part of the program runs (this is how it&#8217;s set up in the full program).</p>
-
-<h2>The if Statement</h2>
-
-<pre><code>if( argc != 1)
-    printf("Usage: find -x -n pattern\n");
-else
-    /* Main program logic goes here */
-</code></pre>
-
-<p>The last and final part is the if statement. It prints an error/usage message if <code>argc</code> is not equal to 1. Why? Because there should always be one argument left after the flags are processed (the <code>PATTERN</code> argument). The error will also be printed if the program is given an unrecognized flag and the default case in the switch is executed. If there aren&#8217;t any problems, then it executes the else where the main part of the program is contained.</p>
-
-<p>So there you have it. That&#8217;s how Kernigham and Ritchie did it in 1978. Nowadays they just haul in the software weenies with their fancy objects and methods. Lost is the subtle art of manipulating arrays of pointers to strings of characters. Alas. (Just kidding. After all, I&#8217;m probably one of those software weenies.)</p>
-<p><a rel="bookmark" href="http://usrsb.in/blog/blog/2011/08/04/how-old-school-c-programmers-process-arguments/">&infin; Permalink</a></p>]]></content>
     </entry>
   
 </feed>

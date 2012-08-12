@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: algorithm | /usr/sbin/blog]]></title>
+  <link href="http://usrsb.in/blog/blog/categories/algorithm/atom.xml" rel="self"/>
+  <link href="http://usrsb.in/blog/"/>
+  <updated>2012-08-12T10:39:34-06:00</updated>
+  <id>http://usrsb.in/blog/</id>
+  <author>
+    <name><![CDATA[Alex Beal]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Picking Random Items: Take Two (Hacking Python's Generators)]]></title>
+    <link href="http://usrsb.in/blog/blog/2012/01/14/picking-random-items-take-2/"/>
+    <updated>2012-01-14T10:29:00-07:00</updated>
+    <id>http://usrsb.in/blog/blog/2012/01/14/picking-random-items-take-2</id>
+    <content type="html"><![CDATA[<p>Earlier today I had my mind blown by David Beazley's <a href="http://www.dabeaz.com/generators/">presentation on the power of Python's generators</a>, and it inspired me to write this highly Pythonic version of <a href="/blog/2012/01/11/picking-random-items-from-a-file/">the random word selector</a>, made almost entirely of generators:</p>
+
+<p>``` python
+import heapq
+import random</p>
+
+<p>lines       = (line for line in open("/usr/share/dict/words"))
+word_pairs  = ((random.random(), word) for word in lines)
+rand_pairs  = heapq.nlargest(4, word_pairs)</p>
+
+<p>rand_words  = [word for rand, word in rand_pairs]
+print rand_words
+```</p>
+
+<p>How does this work? First recall that a generator is an object that returns the next item in a sequence every time its <code>next()</code> method is called. There's an example of this on line 4 where a generator named <code>lines</code> is created, which returns the next line of the file every time <code>lines.next()</code> is called. What's so handy about a generator is that it can be automatically consumed by a <code>for</code> loop. That is, put a generator in a <code>for</code> loop, and the loop will automatically call the generator's <code>next()</code> method on every iteration. There's an example of this on line 5 where another generator is created that uses a <code>for</code> loop to consume the <code>lines</code> generator. This outputs a tuple containing a random number and the line returned by <code>lines.next()</code>. So, the result is that each time <code>word_pairs.next()</code> is called, you get the next line of the file paired with a random value (e.g., <code>(0.12345, 'fire\n')</code>). Finally, we use <code>heapq.nlargest(n, iter)</code> to grab the <code>n</code> largest elements from <code>iter</code>. In this case, it repeatedly calls <code>word_pairs.next()</code> and outputs a list of the 4 words with the highest random values.<sup>1</sup> These are our 4 random words. This is all done in around 3 lines (excluding <code>import</code>s and <code>print</code>ing). Wowza.</p>
+
+<p>As Beazley points out, one advantage of this technique is that it resembles the way simple commands are chained together in the shell to create a pipeline. And, just like in the shell, the pipeline is highly modular, so different filters and stages can be easily inserted at different points. Below, I've added two stages to the pipeline that strip the words of their newline characters, and skip words that aren't exactly 13 characters long:</p>
+
+<p>``` python
+import heapq
+import random</p>
+
+<p>def isValid(word):</p>
+
+<pre><code>return len(word) == 13
+</code></pre>
+
+<p>lines       = (line for line in open("/usr/share/dict/words"))
+words       = (line.strip() for line in lines)
+valid_words = (word for word in words if isValid(word))
+word_pairs  = ((random.random(), word) for word in valid_words)
+rand_pairs  = heapq.nlargest(4, word_pairs)</p>
+
+<p>rand_words  = [word for rand, word in rand_pairs]
+print rand_words
+```</p>
+
+<p>The <code>words</code> generator calls <code>strip()</code> on each <code>line</code> which removes the newline character. The <code>valid_words</code> generator only returns words that pass the <code>isValid</code> test. In this case, <code>isValid</code> returns <code>True</code> only if the word is exactly 13 characters long. The end result is 4 random words that are 13 characters long.</p>
+
+<p>One other advantage is that each generator creates its output only when requested. This translates into minimal memory use. The dictionary file being consumed might be gigabytes in size, but only one word will be loaded into memory at a time (excluding buffering done by the <code>file</code> class, etc). It's definitely a neat way of parsing large files.</p>
+
+<p>If you enjoyed this, definitely check out <a href="http://www.dabeaz.com/generators/">Beazley's presentation</a>, and venture further down the rabbit hole.</p>
+
+<h2>Notes</h2>
+
+<ol>
+<li>You could even use the built-in function <code>max()</code> if you only need one word.</li>
+</ol>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Picking Random Items From a File]]></title>
+    <link href="http://usrsb.in/blog/blog/2012/01/11/picking-random-items-from-a-file/"/>
+    <updated>2012-01-11T10:29:00-07:00</updated>
+    <id>http://usrsb.in/blog/blog/2012/01/11/picking-random-items-from-a-file</id>
+    <content type="html"><![CDATA[<p>Here's a deceptively simple programming puzzle: Develop an algorithm for randomly selecting <em>n</em> words from a dictionary file. This is essentially the puzzle I had to solve in order to write my <a href="https://github.com/beala/xkcd-password">xkcd-style password generator</a>, which implements the <a href="http://xkcd.com/936/">xkcd password spec</a>.<sup>1</sup></p>
+
+<p>The simplest solution is to parse the dictionary into individual words (easy to do in Python) and put those words into a list. Selecting four random words is then as easy as selecting four random items from the list. This is fast, easy to implement, and simple to understand, but it is also very memory inefficient. I have to load 50,000+ words into memory in order to select four of them.<sup>2</sup> Can we do better? Yes.</p>
+
+<h2>A Memory Efficient Algorithm</h2>
+
+<p>The key insight into developing a better algorithm is realizing that it should be possible to select the words as the dictionary file is being parsed, rather than loading the entire thing into memory. The difficulty is making sure that each word has an equal chance of being chosen, and that at least <em>n</em> words are chosen. If, for example, we simply give each word a 1 in 10 chance of being chosen, we'll end up with way more words than we need (assuming <em>n</em> is small). If we give each a 1 in 50,000 chance, there's the possibility that we won't choose enough words. Bryce Boe has <a href="http://www.bryceboe.com/2009/03/23/random-lines-from-a-file/">a clever solution</a> to this problem where he chooses exactly <em>n</em> words, but the proof that it works is non-trivial, and he doesn't provide it. This is why I came up with my algorithm.</p>
+
+<p>In order to explain my algorithm, it's best to think of it in terms of rolling dice. Consider the following procedure for randomly selecting 4 dice from 10.</p>
+
+<ol>
+<li>Roll all 10 dice.</li>
+<li>Select the 4 with the highest values.
+
+<ol>
+<li>If, suppose, 5 of the dice all end up with a value of 6, randomly choose 4 from those 5 (perhaps by repeating the procedure with those 5).</li>
+<li>If, suppose 2 dice get a value of 6, and 3 get a value of 5, select the 2 with the value of 6, and then randomly select 2 of the 3 with a value of 5.</li>
+</ol>
+</li>
+</ol>
+
+
+<p>How can we adapt this procedure to select random words from a file, rather than dice? Here's how: as we're parsing the dictionary file, we give each word a random value, and then select the <em>n</em> words with the highest values. The issue is, the naive implementation of this procedure doesn't really solve our memory problem. If every word gets a random value, don't we now have to store every word in memory, along with its value? The key here is to observe that only the words with the <em>n</em> highest values need to be kept in memory, and all the others can be immediately discarded. Think about this in terms of the dice example. I want to select 1 die from 10:</p>
+
+<ol>
+<li>I roll the first die. I get a value of 1. I keep this die.</li>
+<li>I roll the second. I get a value of 3. I keep this die, and discard the other.</li>
+<li>I roll the third. I get a value of 3. I keep both dice.</li>
+<li>Fourth: I get a value of 6. I keep this die and discard the other 2.</li>
+</ol>
+
+
+<p>By the end of the procedure, I might end up with 3 dice that all got a value of 6. I would then randomly select 1 from those 3.</p>
+
+<p>How can we adapt this procedure for selecting random words? We use a priority queue:</p>
+
+<ol>
+<li>Read a word from the dictionary.</li>
+<li>Give it a random value.</li>
+<li>Insert the value-word pair (as a tuple) into the priority queue.</li>
+<li>If the queue has more than <em>n</em> items, pop an item.</li>
+<li>Repeat until every word has been read.</li>
+</ol>
+
+
+<p>Remember that popping from a priority queue removes the item with the lowest value. So, we insert a word, and if we have too many words, we pop the one with the lowest value. At the end of this procedure there will be exactly <em>n</em> words in the queue. These are our <em>n</em> random words. Neat.</p>
+
+<p>There is one issue, though. What if two words have the same random value? Well, one solution is to keep both words, and then break the tie at the end like we did in the dice example, but that breaks the elegance of the priority queue implementation. Another is to break ties randomly as soon as they occur, and discard the losing word, but I'm not sure how to do this in a statistically safe way. The easiest solution is to just pray that collisions don't occur. In Python, each call to <code>random()</code> produces 53-bits of precision, so it's very unlikely that two values will collide. If 53-bits isn't enough (yeah right), you can use multiple random numbers. So, rather than a tuple of <code>(value, word)</code>, you can use <code>(value_1, value_2, value_3, word)</code>.<sup>3</sup> Python's priority queue implementation will automatically know how to sort that.</p>
+
+<p>Without further ado, here's the proof of concept:</p>
+
+<p>``` python</p>
+
+<h1>!/usr/bin/python -O</h1>
+
+<p>import random
+import heapq</p>
+
+<p>DICT_PATH = "/usr/share/dict/words"
+WORD_COUNT = 4</p>
+
+<p>dict_file = open(DICT_PATH)
+wordq = []
+for line in dict_file:</p>
+
+<pre><code>word = line.strip()
+rand_val = random.random()
+heapq.heappush(wordq, (rand_val, word) )
+if len(wordq) &gt; WORD_COUNT:
+    heapq.heappop(wordq)
+</code></pre>
+
+<p>print wordq
+```</p>
+
+<h2>Endnotes</h2>
+
+<ol>
+<li>Summary: a good password is composed of four random words.</li>
+<li>A slight improvement on this would be to store only the word's position in the file, rather than the word itself. Then the word could be retrieved by seeking to that position. <a href="http://www.bryceboe.com/2009/03/23/random-lines-from-a-file">http://www.bryceboe.com/2009/03/23/random-lines-from-a-file</a></li>
+<li><del>If you're only using one random value, and your dictionary file has 50,000 words, the chance of a collision is 50,000/2<sup>53</sup> , which is roughly 3 in 562 trillion. I'll take those odds.</del> Whoops! This is actually a version of the <a href="http://en.wikipedia.org/wiki/Birthday_problem">birthday problem</a>. The actual probability of a collision is: 1.39e-7. Still quite good.</li>
+</ol>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Search Algorithms: Finding a Bad Coin (Part II)]]></title>
+    <link href="http://usrsb.in/blog/blog/2011/08/18/search-algorithms-finding-a-bad-coin-part-ii/"/>
+    <updated>2011-08-18T13:24:00-06:00</updated>
+    <id>http://usrsb.in/blog/blog/2011/08/18/search-algorithms-finding-a-bad-coin-part-ii</id>
+    <content type="html"><![CDATA[<p>In the last post, I discussed a problem about finding the bad coin in a set of 8 coins. Here, I'll do some mathematical analysis of the different algorithms, and talk about the number of steps it takes to search through n coins using each algorithm.</p>
+
+<h2>The Simplest Algorithm</h2>
+
+<p>The first algorithm was the simplest, and consisted of weighing pairs of coins. We begin analyzing this algorithm by first noticing two things: (1) It could take anywhere between 1 and 4 trials to search through the 8 coins. (2) Each of these scenarios is equally likely. There's a 1 in 4 possibility that it will be found on the first trial. Ditto for the second, third, and fourth trial. With these two pieces of information, we can calculate the average number of steps it takes to search through 8 coins. This is done by multiplying each outcome (1, 2, 3, or 4 trials) with its probability (1 in 4) and summing the values. The expected value, or average number of steps for 8 coins, is therefore 2.5.</p>
+
+<p><img src="http://media.usrsb.in/bad-coin/avg-trials.png" alt="average trials" /></p>
+
+<p>Another way of thinking about this goes as follows: Half the time you'll find the coin on or before 2 trials, and half the time you'll find the coin on or after 3 trials. Therefore, the average number of trials is 2.5.</p>
+
+<p>That's simple enough, but can this be generalized? Yes. For n coins, the following sum represents the average number of trials:</p>
+
+<p><img src="http://media.usrsb.in/bad-coin/avgstepssimple.png" alt="average trials general" /></p>
+
+<p>If you're skeptical, try out the sum for 8 coins and verify that it produces the same equation as above. The sum simply multiplies each possible outcome (1, 2, 3, or 4 trials) by one over the total number of possible outcomes (1/4). Note that n must be an even number. If it's not, then round up to the nearest even number.
+So, what are the takeaway points?</p>
+
+<ol>
+<li>The average number of trials for n coins is proportional to n.</li>
+<li>The number of trials isn't fixed. Half the time it will take less than or equal to n/2 trials, and half the time it will take more.</li>
+<li>One out of every n/2 times, it will take only 1 trial.</li>
+</ol>
+
+
+<p>The upshot is that the algorithm isn't horrible for a small number of coins, but once n starts to get big, so does the number of steps required. In fact, for 8 coins, this algorithm is slightly better, on average, than the binary search, which always takes exactly 3 steps, but it's also slightly worse than the ternary search, which always takes 2 steps. As I'll show, this doesn't hold when the number of coins gets larger.</p>
+
+<h2>The Binary and Ternary Searches</h2>
+
+<p>Calculating the average number of steps for the binary and ternary search is much easier than for the simple algorithm, because the binary and ternary search always take a fixed number of steps, as shown by the decision tree (this isn't true if the tree is unbalanced, or if n isn't a power of 2 or 3). We can also see that for a decision tree to search through 8 coins, it must have 8 termination points at the bottom of the tree, called "leaves." The number of steps to complete the search is related to this by 2d≥8 for the binary tree and 3d≥8 for the ternary tree, where d is the number of steps or "depth" of the tree (Hein, p. 288). Solving for d we get an expression for the minimum number of steps, where n is the number of coins and b is 2 for a binary tree and 3 for a ternary tree:</p>
+
+<p><img src="http://media.usrsb.in/bad-coin/treesteps.png" alt="Minimum steps to find coin" /></p>
+
+<p>The brackets are the ceiling operator, which rounds the number up, because a tree's depth must be an integer.</p>
+
+<p>Hein takes this a step further and proves that the ternary decision tree is the optimal decision tree (p. 288). If there are 8 coins, there must be 8 leaves on the tree. The minimum depth for a tree with 8 leaves is 2. The tree in the last post has a depth of 2, and therefore must be an optimal tree (among others).</p>
+
+<p>The takeaway points here are:</p>
+
+<ol>
+<li>The ternary and binary searches take a fixed number of steps (for a balanced tree where n is a power of 2 or 3)</li>
+<li>The number of steps for n coins is proportional to logb(n).</li>
+<li>The ternary and binary searches scale much better than the simple algorithm. See the table below:</li>
+</ol>
+
+
+<table>
+<tr><td>n</td><td>Simple Algorithm</td><td>Binary</td><td>Ternary</td></tr>
+<tr><td>8</td><td>2.5</td><td>3</td><td>2</td></tr>
+<tr><td>128</td><td>32.5</td><td>7</td><td>5</td></tr>
+<tr><td>1024</td><td>256.5</td><td>10</td><td>7</td></tr>
+<tr><td>1,048,576</td><td>262,144.5</td><td>20</td><td>13</td></tr>
+</table>
+
+
+<p>As Jon Bentley points out in <a href="http://www.amazon.com/Programming-Pearls-2nd-Jon-Bentley/dp/0201657880">Programming Pearls</a> [Amazon.com], because the ternary search scales so much better, there's some sufficiently large value of n, at which a pocket calculator running the ternary search will outpace a supercomputer running the simple algorithm.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[A Search Algorithm Puzzle: Finding a Bad Coin]]></title>
+    <link href="http://usrsb.in/blog/blog/2011/08/17/a-search-algorithm-puzzle-finding-a-bad-coin/"/>
+    <updated>2011-08-17T13:30:00-06:00</updated>
+    <id>http://usrsb.in/blog/blog/2011/08/17/a-search-algorithm-puzzle-finding-a-bad-coin</id>
+    <content type="html"><![CDATA[<p>Today I have a puzzle for you from James Hein's textbook, <a href="http://www.amazon.com/Discrete-Structures-Logic-Computability-James/dp/0763772062">Discrete Structures, Logic, and Computability</a>. It's a question about finding a "bad coin" and goes as follows:</p>
+
+<blockquote><p>Suppose we are asked to use a pan balance to find the heavy coin among eight coins with the assumption that they all look alike and the other seven all have the same weight. (p. 287)
+So, the problem is that we have 8 coins, and one of them is a bad coin that weighs more than the others. With only a pan balance, what's the most efficient way to find the bad coin?</p></blockquote>
+
+<p>The simplest solution is to just weigh the coins in pairs. Grab a pair of coins and put one coin on each side of the balance. If one is heavier, you've found the bad coin and you can stop. If they weigh the same, move on to the next pair. At most, this will take 4 trials, but is this optimal? No. As James Hein points out, we can do better.</p>
+
+<p>The better solution is to put 4 of the coins on one side of the balance, and the other 4 coins on the other side of the balance. One side must be heavier than the other, because one side must contain the heavier coin. If the left side is heavier, then we discard the lighter coins on the right side. We then split the remaining coins into 2 groups of 2, and repeat the procedure by weighing one group against the other. The heavier of the two pairs then gets split and weighed. The coin that is heavier is the bad coin. This is a sure way to find the bad coin in 3 steps.</p>
+
+<p>Programmers will recognize this algorithm as a binary search, which can be represented by the following decision tree from page 287 of Hein's book:</p>
+
+<p><img src="http://media.usrsb.in/bad-coin/dectree.png" alt="Binary Search Tree" /></p>
+
+<p>First we weigh 1 through 4 against 5 through 8. If 1 through 4 is heavier, then we weigh 1 and 2 against 3 and 4 and so on until we reach the bottom of the tree. It's a neat solution that has lots of uses. The obvious application for this is searching through lots of data, but an especially cool use is the <a href="https://secure.wikimedia.org/wikipedia/en/wiki/Huffman_coding">Huffman coding algorithm</a>. A variation on Huffman coding is how zip archives are compressed.</p>
+
+<p>But wait a minute. We can do one better by allowing some decision points (nodes) on the tree to have three connections rather than two, making it a ternary tree. See the revised, and optimal, decision tree below (Hein, p. 288):</p>
+
+<p><img src="http://media.usrsb.in/bad-coin/ternary.png" alt="Optimal Decision Tree" /></p>
+
+<p>For this revised procedure, we begin by weighing 1 through 3 and 4 through 6. If those groups have equal weight, then we go down the middle branch and see that the bad coin must be 7 or 8. We follow a similar procedure if, after the first weighing, 1 through 3 is heavier. We go down the left branch and test 1 and 2. If those weigh the same, then the bad coin must be coin 3. Pretty clever.</p>
+
+<p>Next post I'll attempt some mathematical analysis on the algorithms, and see what we can say about how many steps it takes to sort through n coins. In the meantime, check out this <a href="https://secure.wikimedia.org/wikipedia/en/wiki/Binary_search_algorithm#Computer_use">interesting tidbit from Wikipedia's Binary Search article</a>. Despite its ubiquity and seeming simplicity, it's apparently quite difficult to implement!</p>
+]]></content>
+  </entry>
+  
+</feed>

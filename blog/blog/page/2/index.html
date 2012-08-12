@@ -9,7 +9,7 @@
   <meta name="author" content="Alex Beal">
 
   
-  <meta name="description" content="One thing I like about Python is that it lets you do just about anything. Classes can be modified at runtime, lists can contain a mix of types, and &hellip;">
+  <meta name="description" content="In this post I will outline a method Josh Wepman and I have developed for detecting tail calls in programs constructed from a subset of Python. Its &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -78,6 +78,502 @@
   <div id="main">
     <div id="content">
       <div class="blog-index">
+  
+    
+
+
+
+
+
+
+
+
+
+
+    <article >
+      
+  <header>
+    <h1 class="entry-title">
+
+<a href="/blog/blog/2012/01/03/a-program-analysis-for-tail-call-optimization/">A Program Analysis for Tail Call Optimization</a>
+
+</h1>
+
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-01-03T12:08:00-07:00" pubdate data-updated="true">Jan 3<span>rd</span>, 2012</time>
+         &bull; <a rel="bookmark" href="/blog/blog/2012/01/03/a-program-analysis-for-tail-call-optimization/">&infin;</a>
+        
+      </p>
+    
+  </header>
+
+<div class="entry-content"><p>In this post I will outline a method <a href="http://jwepman.com">Josh Wepman</a> and I have developed for detecting tail calls in programs constructed from a subset of Python. Its original purpose was a Python to x86 compiler we worked on together for a compiler construction course at CU.<sup>1</sup> The approach probably isn&#8217;t new, but it is straightforward and understandable, and might help other novice compiler writers understand a fundamental optimization.</p>
+
+<h2>1. What is a tail call?</h2>
+
+<p>A tail call occurs when a function (the caller) calls another function (the callee) and then immediately returns the callee&#8217;s value. Here is a simple example where <code>f()</code> is the caller, and <code>g()</code> is the callee:</p>
+
+<figure class='code'><figcaption><span>Example 1.1</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">f</span><span class="p">():</span>
+</span><span class='line'>  <span class="k">return</span> <span class="n">g</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>So, a function call is in <em>tail call position</em> when its return value is immediately returned. In the above example, it is <code>g()</code> that is in tail call position. Contrast this with the following example, where <code>g()</code> is not in tail call position:</p>
+
+<figure class='code'><figcaption><span>Example 1.2</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">f</span><span class="p">():</span>
+</span><span class='line'>  <span class="k">return</span> <span class="n">g</span><span class="p">()</span> <span class="o">*</span> <span class="mi">2</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Here, <code>g()</code> falls within the return statement of <code>f()</code>, but is not in tail call position because <code>g()</code>&#8217;s return value is used in the multiplication before it is returned by <code>f()</code>.<sup>2</sup></p>
+
+<p>Also consider the following example where <code>g()</code> is not in tail call position, but could easily be transformed into a program that is:</p>
+
+<figure class='code'><figcaption><span>Example 1.3</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">f</span><span class="p">():</span>
+</span><span class='line'>  <span class="n">x</span> <span class="o">=</span> <span class="n">g</span><span class="p">()</span>
+</span><span class='line'>  <span class="n">y</span> <span class="o">=</span> <span class="n">x</span>
+</span><span class='line'>  <span class="k">return</span> <span class="n">y</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Since the only thing that happens to <code>g()</code>&#8217;s value is that it is copied and then returned, the assignments could be removed, and <code>g()</code>&#8217;s value could be immediately returned without modifying the semantics of the program. Also notice that <code>x</code> and <code>y</code> are local variables, so it&#8217;s guaranteed that their values are not used elsewhere in the program, and so they can be safely removed. The semantically equivalent tail calling program would look like the original example (1.1):</p>
+
+<figure class='code'><figcaption><span>Example 1.1</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">f</span><span class="p">():</span>
+</span><span class='line'>  <span class="k">return</span> <span class="n">g</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>2. Why bother detecting them?</h2>
+
+<p>Why are tail calls interesting? I want this post to be mainly about the analysis, so I won&#8217;t delve too deeply into the mechanics of the machine code, but essentially tail calls allow for a compiler optimization where the callee can hand its return value straight to the caller of the caller. This will make more sense when you consider this extended version of example 1.1:</p>
+
+<figure class='code'><figcaption><span>Example 2.1</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">g</span><span class="p">():</span>
+</span><span class='line'>  <span class="k">return</span> <span class="mi">1</span>
+</span><span class='line'>  
+</span><span class='line'><span class="k">def</span> <span class="nf">f</span><span class="p">():</span>
+</span><span class='line'>  <span class="k">return</span> <span class="n">g</span><span class="p">()</span>
+</span><span class='line'>  
+</span><span class='line'><span class="k">print</span> <span class="n">f</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Here, <code>g()</code> will return 1 to <code>f()</code> and <code>f()</code> will return 1 to <code>print</code>, but, since all <code>f()</code> does is immediately return <code>g()</code>&#8217;s value to <code>print</code>, why not skip that step entirely? That is, why not simply have <code>g()</code> give its return value directly to <code>print</code>? That&#8217;s how tail call optimization works. In the optimized version, <code>g()</code> returns its value directly to <code>print</code> rather than forcing <code>f()</code> to be the middleman. This is implemented on the machine code level by having the call to <code>g()</code> reuse <code>f()</code>&#8217;s stack frame. The result is that when <code>g()</code> returns, it hands its value directly to <code>print</code>.<sup>3</sup> The advantage is that since each call doesn&#8217;t result in the allocation of a new stack frame, the compiled code will be slightly faster, and the recursion depth will be practically unlimited (or at least not limited by the size of the call stack).</p>
+
+<p>Notice, though, that the actual optimization occurs at the machine code level, in the instruction selection phase of the compiler, which isn&#8217;t the subject of this post. Instead, the subject is detecting when this optimization can be performed, and, additionally, transforming programs into ones that are eligible for this optimization. More on that in the next section.</p>
+
+<h2>3. Goals of the Analysis</h2>
+
+<p>One of the design goals of the analysis is for it to detect both of the situations outlined in section 1. That is, it should:</p>
+
+<ol>
+<li>Detect obvious cases of tail calls, where a function call is directly nested within a <code>return</code> statement and</li>
+<li>Detect less obvious cases where a program isn&#8217;t tail calling, but could be transformed into one that is.</li>
+</ol>
+
+
+<p>To elaborate on the second goal, <em>we want to detect instances where a return value is assigned to a variable, copied through a series of assignments, and then immediately returned without any intervening code.</em> This situation occurs in example 1.3, and is the reason it could be transformed into a tail calling program. Here is another example:</p>
+
+<figure class='code'><figcaption><span>Example 3.1</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">f</span><span class="p">():</span>
+</span><span class='line'>  <span class="k">if</span> <span class="nb">input</span><span class="p">():</span>
+</span><span class='line'>      <span class="n">x</span> <span class="o">=</span> <span class="n">g</span><span class="p">()</span>
+</span><span class='line'>  <span class="k">else</span><span class="p">:</span>
+</span><span class='line'>      <span class="n">x</span> <span class="o">=</span> <span class="mi">1</span>
+</span><span class='line'>  <span class="k">return</span> <span class="n">x</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>If <code>input()</code> evaluates to true, then the value of <code>g()</code> gets assigned to <code>x</code>, and is immediately returned. Transforming this into a semantically equivalent tail calling program is as simple as pushing the <code>return</code> statement up into the <code>if</code> branch:</p>
+
+<figure class='code'><figcaption><span>Example 3.2</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">f</span><span class="p">():</span>
+</span><span class='line'>  <span class="k">if</span> <span class="nb">input</span><span class="p">():</span>
+</span><span class='line'>      <span class="k">return</span> <span class="n">g</span><span class="p">()</span>
+</span><span class='line'>  <span class="k">else</span><span class="p">:</span>
+</span><span class='line'>      <span class="n">x</span> <span class="o">=</span> <span class="mi">1</span>
+</span><span class='line'>  <span class="k">return</span> <span class="n">x</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now <code>g()</code> is in tail call position, but the semantics of the program haven&#8217;t changed.</p>
+
+<p>Contrast that with this example that can&#8217;t be optimized (at least not by this analysis):</p>
+
+<figure class='code'><figcaption><span>Example 3.3</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">f</span><span class="p">():</span>
+</span><span class='line'>  <span class="n">x</span> <span class="o">=</span> <span class="n">g</span><span class="p">()</span>
+</span><span class='line'>  <span class="k">print</span> <span class="s">&quot;About to return&quot;</span>
+</span><span class='line'>  <span class="k">return</span> <span class="n">x</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This example doesn&#8217;t meet the last requirement that the copied return value is &#8220;immediately returned without any intervening code.&#8221; Since our transformation pushes the <code>return</code> statement up to the function call to <code>g()</code>, we get the following program:</p>
+
+<figure class='code'><figcaption><span>Example 3.4</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">f</span><span class="p">():</span>
+</span><span class='line'>  <span class="k">return</span> <span class="n">g</span><span class="p">()</span>
+</span><span class='line'>  <span class="k">print</span> <span class="s">&quot;About to return&quot;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now the <code>print</code> statement is never reached. A more nuanced analysis might handle a case like this, but ours won&#8217;t.</p>
+
+<h2>4. Complications: The naive analysis, dispatch code, and flattening.</h2>
+
+<p>Now that we understand the parameters of the analysis&#8211;what we will detect, and what we won&#8217;t&#8211;how do we implement it? The first requirement is to detect obvious cases where function calls are nested within <code>return</code> statements. This seems simple. Just traverse the AST<sup>4</sup> and look for that precise situation: where function calls are nested within <code>return</code> statements. The trouble with this technique, and the reason that I call it the &#8220;naive analysis,&#8221; is that, through the course of compilation, every function call gets turned into a set of nested <code>if</code> statements. Returning to example 1.1:</p>
+
+<figure class='code'><figcaption><span>Example 1.1</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">f</span><span class="p">():</span>
+</span><span class='line'>  <span class="k">return</span> <span class="n">g</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This might get transformed into something like:</p>
+
+<figure class='code'><figcaption><span>Example 4.1</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">f</span><span class="p">():</span>
+</span><span class='line'>  <span class="k">if</span> <span class="o">...</span><span class="p">:</span>
+</span><span class='line'>      <span class="n">tmp0</span> <span class="o">=</span> <span class="n">g</span><span class="p">()</span>
+</span><span class='line'>  <span class="k">else</span><span class="p">:</span>
+</span><span class='line'>      <span class="k">if</span> <span class="o">...</span><span class="p">:</span>
+</span><span class='line'>          <span class="n">tmp1</span> <span class="o">=</span> <span class="n">h</span><span class="p">()</span>
+</span><span class='line'>      <span class="k">else</span><span class="p">:</span>
+</span><span class='line'>          <span class="n">tmp1</span> <span class="o">=</span> <span class="n">throw_error</span><span class="p">()</span>
+</span><span class='line'>      <span class="n">tmp0</span> <span class="o">=</span> <span class="n">tmp1</span>
+</span><span class='line'>  <span class="k">return</span> <span class="n">tmp0</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Why the additional complexity? Remember that Python is a dynamic language. One consequence of this is that at compile time, the compiler doesn&#8217;t know the type of each variable. Is <code>g</code> an <code>int</code>? A <code>float</code>? A class? In many cases, the program needs this information. In the example above, <code>g()</code> will compile to different code if <code>g</code> is the name of a class, versus if <code>g</code> is the name of a function. Because this can&#8217;t always be detected at compile time, the executable must be able to detect the types of variables, and be ready for every case.<sup>5</sup> Returning to the example, the first <code>if</code> might be testing if <code>g</code> is the name of a class. If it is, instead of calling a function named <code>g</code>, it needs to execute <code>g</code>&#8217;s <code>__init__()</code> method. If <code>g</code> isn&#8217;t a class, then it needs to make sure <code>g</code> is a function. If it isn&#8217;t, then the program needs to throw a runtime error. This is one reason why dynamic languages can be slow.</p>
+
+<p>In any case, what matters to us is how this affects our analysis, but thankfully it doesn&#8217;t. Although our compiler has effectively eliminated instances of &#8220;obvious&#8221; tail calls, the example above is still eligible for transformation into a program that contains tail calls. Since the return values of the function calls are assigned to temporary variables, then returned, the transformation is the same as in the simpler examples: push the <code>return</code> statement up to the function calls:</p>
+
+<figure class='code'><figcaption><span>Example 4.2</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">f</span><span class="p">():</span>
+</span><span class='line'>  <span class="k">if</span> <span class="o">...</span><span class="p">:</span>
+</span><span class='line'>      <span class="k">return</span> <span class="n">g</span><span class="p">()</span>
+</span><span class='line'>  <span class="k">else</span><span class="p">:</span>
+</span><span class='line'>      <span class="k">if</span> <span class="o">...</span><span class="p">:</span>
+</span><span class='line'>          <span class="k">return</span> <span class="n">h</span><span class="p">()</span>
+</span><span class='line'>      <span class="k">else</span><span class="p">:</span>
+</span><span class='line'>          <span class="k">return</span> <span class="n">throw_error</span><span class="p">()</span>
+</span><span class='line'>      <span class="n">tmp0</span> <span class="o">=</span> <span class="n">tmp1</span>
+</span><span class='line'>  <span class="k">return</span> <span class="n">tmp0</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The <code>return</code> statements have now been pushed up into the branches of the <code>if</code> statement, and <code>g()</code>, <code>h()</code>, and <code>throw_error()</code> are now in tail call position. Nice. Notice that this transformation leaves behind <em>dead code</em>. The assignment <code>tmp0 = tmp1</code> and <code>return tmp0</code> are considered &#8220;dead&#8221; because they will never be reached. Many compilers have a separate phase that removes the dead code that gets created from optimizations like this, but that&#8217;s beyond the scope of this article.<sup>6</sup></p>
+
+<p>Aside from the addition of dispatch code, there&#8217;s another important transformation to the code before it reaches the analysis phase. Happily, this transformation actually make detecting tail calls easier. This transformation is called <em>flattening</em>, which means that deeply nested expressions get broken down into simpler statements. Consider this:</p>
+
+<figure class='code'><figcaption><span>Example 4.3</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">x</span> <span class="o">=</span> <span class="nb">input</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">g</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>That would get flattened into:</p>
+
+<figure class='code'><figcaption><span>Example 4.4</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">tmp0</span> <span class="o">=</span> <span class="nb">input</span><span class="p">()</span>
+</span><span class='line'><span class="n">tmp1</span> <span class="o">=</span> <span class="n">tmp0</span> <span class="o">+</span> <span class="mi">1</span>
+</span><span class='line'><span class="n">tmp2</span> <span class="o">=</span> <span class="n">g</span><span class="p">()</span>
+</span><span class='line'><span class="n">tmp3</span> <span class="o">=</span> <span class="n">tmp1</span> <span class="o">+</span> <span class="n">tmp2</span>
+</span><span class='line'><span class="n">x</span> <span class="o">=</span> <span class="n">tmp3</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Notice that the semantics of the program haven&#8217;t changed, but the nested expression <code>input() + 1 + g()</code> gets broken down, or flattened, into a simple series of assignments.<sup>7</sup> Although this appears to add additional complexity, it actually reduces the number of possible cases our analysis will encounter, and shrinks the depth of the AST. Notice that the examples above have already been flattened.</p>
+
+<p>So now that we have a fuller description of what we&#8217;re up against, what does the not-so-naive analysis look like?</p>
+
+<h2>5. The Not-So-Naive Analysis</h2>
+
+<p>The not-so-naive analysis is a <em>flow sensitive static analysis</em>. The analysis follows the control flow of the program and, at each program point, records information about the contents of the variables based on certain rules. A <em>program point</em> is roughly every place in a program where the state of the program could change. In a flattened program, this roughly corresponds to the point before and after every line or statement of code. In the example below, each program point is numbered. The numbers correspond to the order in which each program point will be visited:</p>
+
+<figure class='code'><figcaption><span>Example 5.1</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="p">{</span><span class="mi">0</span><span class="p">}</span>
+</span><span class='line'><span class="n">tmp0</span> <span class="o">=</span> <span class="nb">input</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span><span class="mi">1</span><span class="p">}</span>
+</span><span class='line'><span class="k">if</span> <span class="n">tmp0</span><span class="p">:</span>
+</span><span class='line'>  <span class="p">{</span><span class="mi">2</span><span class="p">}</span>
+</span><span class='line'>  <span class="n">tmp1</span> <span class="o">=</span> <span class="n">f</span><span class="p">()</span>
+</span><span class='line'>  <span class="p">{</span><span class="mi">3</span><span class="p">}</span>
+</span><span class='line'><span class="k">else</span><span class="p">:</span>
+</span><span class='line'>  <span class="p">{</span><span class="mi">4</span><span class="p">}</span>
+</span><span class='line'>  <span class="n">tmp1</span> <span class="o">=</span> <span class="n">g</span><span class="p">()</span>
+</span><span class='line'>  <span class="p">{</span><span class="mi">5</span><span class="p">}</span>
+</span><span class='line'><span class="p">{</span><span class="mi">6</span><span class="p">}</span>
+</span><span class='line'><span class="k">return</span> <span class="n">tmp1</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>So, there is a program point before and after each assignment, and a program point before and after the entire <code>if</code> statement. The order in which the two branches of the <code>if</code> statement are visited doesn&#8217;t matter, but both branches should be visited before leaving the <code>if</code> statement.</p>
+
+<p>Stepping through the program in this order is easy. Each line of code is an item in a list. Traverse the list in order. If you get to an <code>if</code> statement, do a postorder traversal. First visit the <code>if</code> branch and then the <code>else</code>. Once the value of these branches is determined, the value after the entire <code>if</code> statement can be determined. In other words, in order to determine the value at program point 6, the values at 3 and 5 must be evaluated first.</p>
+
+<p>What do I mean by &#8220;the value at program point 6?&#8221; As hinted at above, each program point is associated with a set of variables. Roughly, this set corresponds to the set of variables that contain return values. The specifics of how variables get added and removed from the set is the subject of a set of rules. Formally, each rule is a function that takes in the set at a program point (usually the one above the current statement) and the statement itself, and outputs a new set that corresponds to the program point after that statement. So, for example, the value at program point 5 is determined by looking at program point 4 and the statement on line 10 (<code>tmp1 = g()</code>). Because that statement stores a return value to <code>tmp1</code>, <code>tmp1</code> gets added to the set at point 5. This is one of the rules. Below are the rules in full. As a shorthand, the program point before a statement is called R<sub>before</sub> and the point after is called R<sub>after</sub>.</p>
+
+<ol>
+<li>If the statement is an assignment between variable <code>v</code> and a function call (<code>v = g()</code>), then <em>R<sub>after</sub> = {v}</em>.</li>
+<li>If the statement is an assignment from variable <code>t</code> to variable <code>v</code> (<code>v = t</code>), and <code>t</code> is in R<sub>before</sub>, then <em>R<sub>after</sub> = {v}</em>.</li>
+<li>At the start of a program, the beginning of a new code block (e.g. the beginning of a branch in an <code>if</code> statement), or the beginning and end of a new scope <em>R<sub>before</sub> = {}</em>.</li>
+<li>If the statement is an <code>if</code> statement, then <em>R<sub>after</sub> = R<sub>after-if</sub> ∪ R<sub>after-else</sub></em>. In other words, it is the union of the R<sub>after</sub>s of each branch.</li>
+<li>If the statement is a <code>return</code> statement, and variable <code>v</code> is being returned (<code>return v</code>), and <code>v</code> is in R<sub>before</sub>, then the <code>return</code> statement can be pushed up to wherever <code>v</code>&#8217;s value was originally created. In other words, there&#8217;s some function call above that can be put into tail call position (the function that created the value held by <code>v</code>).</li>
+<li>In all other cases, <em>R<sub>after</sub> = {}</em>.</li>
+</ol>
+
+
+<p>Some of these rules are intuitive. Some aren&#8217;t. I&#8217;ll go through them one by one and explain them. Keep in mind the goal of the analysis: we&#8217;re trying to detect when return values are copied through a series of assignments and then returned without any intervening code.</p>
+
+<p>This makes the first rule the most intuitive. If a variable gets assigned a return value, add that variable to the set. This would be the first step in detecting something like example 1.3, reproduced below with the sets at each program point. Notice rule 1 in action on lines 4 and 5:</p>
+
+<figure class='code'><figcaption><span>Example 1.3/5.2</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="p">{}</span>
+</span><span class='line'><span class="k">def</span> <span class="nf">f</span><span class="p">():</span>
+</span><span class='line'>  <span class="p">{}</span>
+</span><span class='line'>  <span class="n">x</span> <span class="o">=</span> <span class="n">g</span><span class="p">()</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">x</span><span class="p">}</span>
+</span><span class='line'>  <span class="n">y</span> <span class="o">=</span> <span class="n">x</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">y</span><span class="p">}</span>
+</span><span class='line'>  <span class="k">return</span> <span class="n">y</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The second rule keeps track of return values that get copied between variables, and is the reason the set contains <code>y</code> after the 6<sup>th</sup> line. The value of <code>x</code> gets copied to <code>y</code>, and <code>x</code> happens to be in R<sub>before</sub>, so, by rule 2, <code>y</code> is now in R<sub>after</sub>.</p>
+
+<p>The third rules initializes the analysis, and starts the program with an empty set. This rule should also be applied to new code blocks. The two branches of an <code>if</code> statement should begin with empty sets as shown below in a new example:</p>
+
+<figure class='code'><figcaption><span>Example 5.3</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="p">{}</span>
+</span><span class='line'><span class="n">y</span> <span class="o">=</span> <span class="n">g</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span><span class="n">y</span><span class="p">}</span>
+</span><span class='line'><span class="k">if</span> <span class="nb">input</span><span class="p">():</span>
+</span><span class='line'>  <span class="p">{}</span>
+</span><span class='line'>  <span class="n">y</span> <span class="o">=</span> <span class="n">f</span><span class="p">()</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">y</span><span class="p">}</span>
+</span><span class='line'><span class="k">else</span><span class="p">:</span>
+</span><span class='line'>  <span class="p">{}</span>
+</span><span class='line'>  <span class="n">y</span> <span class="o">=</span> <span class="n">h</span><span class="p">()</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">y</span><span class="p">}</span>
+</span><span class='line'>  <span class="k">print</span> <span class="s">&quot;Called h()&quot;</span>
+</span><span class='line'>  <span class="p">{}</span>
+</span><span class='line'><span class="p">{</span><span class="n">y</span><span class="p">}</span>
+</span><span class='line'><span class="k">return</span> <span class="n">y</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Although <code>y</code> is in the set before the <code>if</code> statement, both branches of the <code>if</code> statement begin with an empty set.</p>
+
+<p>Example 5.3 also demonstrates rule four. The set after an <code>if</code> statement contains the union of the two branches, in this case just <code>y</code>.</p>
+
+<p>The fifth rule comes into play on line 15. <code>y</code> is returned, and it also happens to be in R<sub>before</sub>. This means that the function call that gave <code>y</code> its value can be put in tail call position. This is done by pushing the <code>return</code> statement up to the call to <code>f()</code> on line 6:</p>
+
+<figure class='code'><figcaption><span>Example 5.4</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="p">{}</span>
+</span><span class='line'><span class="n">x</span> <span class="o">=</span> <span class="n">g</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span><span class="n">x</span><span class="p">}</span>
+</span><span class='line'><span class="k">if</span> <span class="nb">input</span><span class="p">():</span>
+</span><span class='line'>  <span class="p">{}</span>
+</span><span class='line'>  <span class="k">return</span> <span class="n">f</span><span class="p">()</span> <span class="c"># Optimized to tail call position.</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">y</span><span class="p">}</span>
+</span><span class='line'><span class="k">else</span><span class="p">:</span>
+</span><span class='line'>  <span class="p">{}</span>
+</span><span class='line'>  <span class="n">y</span> <span class="o">=</span> <span class="n">h</span><span class="p">()</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">y</span><span class="p">}</span>
+</span><span class='line'>  <span class="k">print</span> <span class="s">&quot;Called h()&quot;</span>
+</span><span class='line'>  <span class="p">{}</span>
+</span><span class='line'><span class="p">{</span><span class="n">y</span><span class="p">}</span>
+</span><span class='line'><span class="k">return</span> <span class="n">y</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The program has now been transformed into a tail calling program. The analysis has detected that a return value was assigned to a variable, and then returned without any intervening code. Notice, though, that the call to <code>h()</code> on line 10 wasn&#8217;t optimized. It was almost eligible for transformation, but the intervening <code>print</code> statement on line 12 trigged the last rule, and, correctly, prevented the <code>return</code> statement from being pushed up to the call  to <code>h()</code>. This is the purpose of the last rule&#8211;to prevent intervening code from becoming dead code.</p>
+
+<p>There is one last bit of housekeeping. In order for rule 5 to be executed, it needs to know where a variable&#8217;s value was originally created. Consider, once again, example 1.3:</p>
+
+<figure class='code'><figcaption><span>Example 1.3/5.2</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="p">{}</span>
+</span><span class='line'><span class="k">def</span> <span class="nf">f</span><span class="p">():</span>
+</span><span class='line'>  <span class="p">{}</span>
+</span><span class='line'>  <span class="n">x</span> <span class="o">=</span> <span class="n">g</span><span class="p">()</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">x</span><span class="p">}</span>
+</span><span class='line'>  <span class="n">y</span> <span class="o">=</span> <span class="n">x</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">y</span><span class="p">}</span>
+</span><span class='line'>  <span class="k">return</span> <span class="n">y</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The analysis will detect that <code>y</code> is being returned, and recognize that <code>y</code> is in R<sub>before</sub>. This will trigger rule 5, and the analysis will need to know where <code>y</code>&#8217;s value was originally created. How will it determine this? The algorithm is simple:</p>
+
+<ol>
+<li>When <code>g()</code> is first assigned to <code>x</code> and <code>x</code> gets added to R<sub>after</sub>, the analysis will record that <code>x</code> is associated with that line (or AST node).</li>
+<li>When <code>x</code> gets copied to <code>y</code>, the analysis looks up whichever node/line <code>x</code> was associated with, and then records that <code>y</code> is associated with that same node/line.</li>
+<li>When the analysis gets to the last line, it knows that <code>y</code> is associated with line 4 (<code>x = g()</code>), and knows that it can push the <code>return</code> statement up to that position.</li>
+</ol>
+
+
+<p>We are left with the optimized version:</p>
+
+<figure class='code'><figcaption><span>Example 5.5</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">f</span><span class="p">():</span>
+</span><span class='line'>  <span class="k">return</span> <span class="n">g</span><span class="p">()</span>
+</span><span class='line'>  <span class="c"># Dead code</span>
+</span><span class='line'>  <span class="n">y</span> <span class="o">=</span> <span class="n">x</span>
+</span><span class='line'>  <span class="k">return</span> <span class="n">y</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>6. Conclusion</h2>
+
+<p>Congratulations if you&#8217;ve gotten this far. We&#8217;ve covered a lot of ground. I&#8217;ve touched on several parts of the compiler, and described, in detail, a program analysis for detecting tail calls. Notice, though, that this analysis only covers a very small subset of Python. The rules assume that all <code>if</code> statements also have an <code>else</code> branch. How could this be fixed? I also haven&#8217;t addressed other control flow structures. Adding a rule for <code>while</code> loops would be an important addition. All of these issues would be good exercises to think about, and will, perhaps be the subjects of followup posts.</p>
+
+<h2>Footnotes</h2>
+
+<ol>
+<li>I&#8217;m currently in the early stages of forking the project, which I&#8217;ve redubbed <a href="http://github.com/beala/bullfrog">bullfrog</a>.</li>
+<li><a href="http://en.wikipedia.org/wiki/Tail_call#Syntactic_form">http://en.wikipedia.org/wiki/Tail_call#Syntactic_form</a></li>
+<li><a href="http://en.wikipedia.org/wiki/Tail_call#In_assembler">http://en.wikipedia.org/wiki/Tail_call#In_assembler</a></li>
+<li>AST: Abstract Syntax Tree. A tree representation of the structure (syntax) of a program. <a href="http://en.wikipedia.org/wiki/Abstract_syntax_tree">Wiki</a>.</li>
+<li>This is one reason dynamic languages can be slow, but most compilers perform additional optimizations to cut down on so called &#8220;dispatch code&#8221; by detecting variables types at compile time. This is possible when, for example, an integer is explicitly assigned to a variable: <code>x = 1</code>. In that case, it&#8217;s guaranteed that <code>x</code> contains an integer.</li>
+<li>Dead code elimination. (2011, October 20). In Wikipedia, The Free Encyclopedia. Retrieved 16:56, December 24, 2011, from <a href="http://en.wikipedia.org/w/index.php?title=Dead_code_elimination&amp;oldid=456578651">http://en.wikipedia.org/w/index.php?title=Dead_code_elimination&amp;oldid=456578651</a></li>
+<li>At first blush, this doesn&#8217;t look nested, but it is: <code>x = (((input()) + 1) + g())</code>. The infix notation is deceptive, but, as demonstrated by the parenthesized version, there are actually 2 levels of addition that roughly correspond to the structure of the flattened code.</li>
+</ol>
+
+</div>
+
+  <footer>
+    
+    
+  </footer>
+
+
+    </article>
   
     
 
@@ -1136,147 +1632,6 @@ char *s, *t;
 
     </article>
   
-    
-
-
-
-
-
-
-
-
-
-
-    <article >
-      
-  <header>
-    <h1 class="entry-title">
-
-<a href="/blog/blog/2011/08/04/how-old-school-c-programmers-process-arguments/">How Old School C Programmers Process Arguments</a>
-
-</h1>
-
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2011-08-04T16:39:00-06:00" pubdate data-updated="true">Aug 4<span>th</span>, 2011</time>
-         &bull; <a rel="bookmark" href="/blog/blog/2011/08/04/how-old-school-c-programmers-process-arguments/">&infin;</a>
-        
-      </p>
-    
-  </header>
-
-<div class="entry-content"><p>Here&#8217;s a bit of code from Kernighan&#8217;s and Ritchie&#8217;s seminal text, <a href="http://www.amazon.com/Programming-Language-2nd-Brian-Kernighan/dp/0131103628">The C Programming Language</a>. I&#8217;m not sure I&#8217;d actually recommend coding this way (as written in the book, the entire program has only one comment), but it&#8217;s so darn clever and concise, I can&#8217;t help but post it. This snippet is part of a larger program called <code>find</code> that searches text for patterns, but the details aren&#8217;t important. I want to focus on the portion below that parses the arguments passed to the program. Don&#8217;t worry about understanding it just yet. I&#8217;ll step through it below:</p>
-
-<pre><code>char *s;
-while (--argc &gt; 0 &amp;&amp; (*++argv)[0] == '-')
-    for(s = argv[0]+1; *s != '\0'; s++)
-        switch(*s) {
-            case 'x':
-                /* Set appropriate flags for 'x' option */
-                break;
-            case 'n':
-                /* Set appropriate flags for 'n' option */
-                break;
-            default:
-                printf("Illegal option %c\n", *s);
-                argc = 0;
-                break;
-        }
-if( argc != 1)
-    printf("Usage: find -x -n pattern\n");
-else
-    /* Main program logic goes here */
-</code></pre>
-
-<p>What&#8217;s so cool about this is its flexibility. Those two nested loops can process all of the following (and more):</p>
-
-<pre><code>find -xn hello
-find -nx hello
-find -x -n hello
-find -n -x hello
-find hello
-find -x hello
-...
-</code></pre>
-
-<p>As you can see, the usage is <code>find [-x] [-n] PATTERN</code>. The nested loops above process the flags, <code>-x</code> and <code>-n</code>, in any order, and either separated or concatenated. Hopefully you&#8217;re as impressed as I was.
-Anyway, let&#8217;s dive into the code and begin by looking at the while statement.</p>
-
-<h2>The while Loop</h2>
-
-<pre><code>while (--argc &gt; 0 &amp;&amp; (*++argv)[0] == '-')
-</code></pre>
-
-<p>What&#8217;s going on here? First, the while loop decrements <code>argc</code> and checks that it&#8217;s greater than 0 (as dictated by convention, <code>argc</code> holds the number of arguments passed to the program). Whenever a flag is processed, <code>argc</code> is decremented, thus making it a running count of how many flags there are left to process. If it&#8217;s 0, then there&#8217;s nothing left to do. Notice that the decrement always occurs before the &#8216;>&#8217; is evaluated. This would be true even if it were postfix (i.e., <code>argc-- &gt; 0</code>).</p>
-
-<p>If argc checks out, then we move on to <code>(*++argv)[0]=='-'</code>. Yikes. That&#8217;s a doozy. First remember that <code>argv</code> is a pointer to the strings that contain the arguments. So, <code>argv</code> points to the string containing the program name and <code>(argv+1)</code> points to the string containing the first argument. That means that <code>(*argv)[0]</code> is the first character of the program name and <code>(*argv)[1]</code> is the first character of the first argument. Putting that together, <code>(*++argv)[0]</code> increments <code>argv</code>, dereferences it to a string, and then gets the first character of that string. In other words, if <code>argv</code> was originally pointing to the string containing the program&#8217;s name, it&#8217;s now pointing to the string containing the first argument, and then grabbing the first character of that string and comparing it to &#8216;-&#8216;. Why&#8217;s it doing that? Because it wants to make sure it&#8217;s looking at a string containing a flag, and flags begin with the &#8216;-&#8217; character.</p>
-
-<p>Extra Credit: How is <code>*++argv[0] == '-'</code> different than <code>(*++argv)[0] == '-'</code>?</p>
-
-<p>By the end of all of this, <code>argc</code> represents the number of arguments remaining and <code>argv</code> is pointing to the string containing the first argument. Wow.</p>
-
-<p>That was a bit of a slog, but we&#8217;re not done yet. Let&#8217;s look at the for loop.</p>
-
-<h2>The for Loop</h2>
-
-<pre><code>char *s;
-for(s = argv[0]+1; *s != '\0'; s++)
-</code></pre>
-
-<p>Oh boy. More pointer arithmetic on arrays of arrays. Well, what&#8217;s going on here? Remember that now <code>argv</code> is pointing to the string containing the first argument. Therefore, <code>argv[0]</code> is the pointer to the first character of that string and <code>argv[0]+1</code> is the pointer to the second character of that string. <code>argv[0]+1</code> is then assigned to <code>s</code>. The result is that, if <code>argv</code> was pointing to &#8220;-xn&#8221;, then s is now pointing to the &#8220;x&#8221; in that string.
-Lucky for us, the last half is much simpler. <code>*s != '\0'</code> checks to make sure that it hasn&#8217;t reached the end of the string yet, and <code>s++</code> increments the pointer (after the loop has finished its first run, of course). If the first run processed the &#8220;x&#8221; in &#8220;-xn&#8221;, then <code>s</code> is incremented and the &#8220;n&#8221; is processed. The third iterations sees the &#8220;\0&#8221; at the end of the string and exits. So, to bring this all together, the for loop traverses concatenated flags (i.e., it moves the pointer from the &#8220;x&#8221; to the &#8220;n&#8221; in &#8220;-xn&#8221;) and the while loop traverses separated flags (i.e., it moves the pointer from the &#8220;-x&#8221; to the &#8220;-n&#8221; in &#8220;-x -n&#8221;).</p>
-
-<h1>The switch Statement</h1>
-
-<pre><code>switch(*s) {
-      case 'x':
-        /* Set appropriate flags for 'x' option */
-        break;
-    case 'n':
-         /* Set appropriate flags for 'n' option */
-        break;
-    default:
-        printf("Illegal option %c\n", *s);
-        argc = 0;
-        break;
-}
-</code></pre>
-
-<p>The switch is simple enough. It tests if <code>*s</code> is equal to one of the flags, and then does the necessary processing for that flag. Most likely it just sets an internal flag, which will be taken into account when the main part of the program runs (this is how it&#8217;s set up in the full program).</p>
-
-<h2>The if Statement</h2>
-
-<pre><code>if( argc != 1)
-    printf("Usage: find -x -n pattern\n");
-else
-    /* Main program logic goes here */
-</code></pre>
-
-<p>The last and final part is the if statement. It prints an error/usage message if <code>argc</code> is not equal to 1. Why? Because there should always be one argument left after the flags are processed (the <code>PATTERN</code> argument). The error will also be printed if the program is given an unrecognized flag and the default case in the switch is executed. If there aren&#8217;t any problems, then it executes the else where the main part of the program is contained.</p>
-
-<p>So there you have it. That&#8217;s how Kernigham and Ritchie did it in 1978. Nowadays they just haul in the software weenies with their fancy objects and methods. Lost is the subtle art of manipulating arrays of pointers to strings of characters. Alas. (Just kidding. After all, I&#8217;m probably one of those software weenies.)</p>
-</div>
-
-  <footer>
-    
-    
-  </footer>
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/blog/page/3/">&larr; Older</a>
@@ -1294,6 +1649,10 @@ else
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/blog/2012/08/12/bouncing-pythons-generators-with-a-trampoline/">Bouncing Python&#8217;s Generators With A Trampoline</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/blog/2012/07/07/testing-with-the-poisson-process/">Testing With The Poisson Process</a>
       </li>
     
@@ -1307,10 +1666,6 @@ else
     
       <li class="post">
         <a href="/blog/blog/2012/04/07/look-ma-no-loops/">Look, Ma! No Loops: Reversing Word Order</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/blog/2012/04/01/building-data-structures-from-functions/">Building Data Structures from Functions</a>
       </li>
     
   </ul>
@@ -1412,7 +1767,24 @@ else
 
 
 
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) {return;}
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/all.js#appId=212934732101925&xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
 
+
+
+  <script type="text/javascript">
+    (function() {
+      var script = document.createElement('script'); script.type = 'text/javascript'; script.async = true;
+      script.src = 'https://apis.google.com/js/plusone.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script, s);
+    })();
+  </script>
 
 
 

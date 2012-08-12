@@ -1,0 +1,407 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: compilers | /usr/sbin/blog]]></title>
+  <link href="http://usrsb.in/blog/blog/categories/compilers/atom.xml" rel="self"/>
+  <link href="http://usrsb.in/blog/"/>
+  <updated>2012-08-12T10:39:34-06:00</updated>
+  <id>http://usrsb.in/blog/</id>
+  <author>
+    <name><![CDATA[Alex Beal]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[A Program Analysis For Tail Call Optimization]]></title>
+    <link href="http://usrsb.in/blog/blog/2012/01/03/a-program-analysis-for-tail-call-optimization/"/>
+    <updated>2012-01-03T12:08:00-07:00</updated>
+    <id>http://usrsb.in/blog/blog/2012/01/03/a-program-analysis-for-tail-call-optimization</id>
+    <content type="html"><![CDATA[<p>In this post I will outline a method <a href="http://jwepman.com">Josh Wepman</a> and I have developed for detecting tail calls in programs constructed from a subset of Python. Its original purpose was a Python to x86 compiler we worked on together for a compiler construction course at CU.<sup>1</sup> The approach probably isn't new, but it is straightforward and understandable, and might help other novice compiler writers understand a fundamental optimization.</p>
+
+<h2>1. What is a tail call?</h2>
+
+<p>A tail call occurs when a function (the caller) calls another function (the callee) and then immediately returns the callee's value. Here is a simple example where <code>f()</code> is the caller, and <code>g()</code> is the callee:</p>
+
+<p>``` python Example 1.1</p>
+
+<pre><code>def f():
+    return g()
+</code></pre>
+
+<p>```</p>
+
+<p>So, a function call is in <em>tail call position</em> when its return value is immediately returned. In the above example, it is <code>g()</code> that is in tail call position. Contrast this with the following example, where <code>g()</code> is not in tail call position:</p>
+
+<p>``` python Example 1.2</p>
+
+<pre><code>def f():
+    return g() * 2
+</code></pre>
+
+<p>```</p>
+
+<p>Here, <code>g()</code> falls within the return statement of <code>f()</code>, but is not in tail call position because <code>g()</code>'s return value is used in the multiplication before it is returned by <code>f()</code>.<sup>2</sup></p>
+
+<p>Also consider the following example where <code>g()</code> is not in tail call position, but could easily be transformed into a program that is:</p>
+
+<p>``` python Example 1.3</p>
+
+<pre><code>def f():
+    x = g()
+    y = x
+    return y
+</code></pre>
+
+<p>```</p>
+
+<p>Since the only thing that happens to <code>g()</code>'s value is that it is copied and then returned, the assignments could be removed, and <code>g()</code>'s value could be immediately returned without modifying the semantics of the program. Also notice that <code>x</code> and <code>y</code> are local variables, so it's guaranteed that their values are not used elsewhere in the program, and so they can be safely removed. The semantically equivalent tail calling program would look like the original example (1.1):</p>
+
+<p>``` python Example 1.1</p>
+
+<pre><code>def f():
+    return g()
+</code></pre>
+
+<p>```</p>
+
+<h2>2. Why bother detecting them?</h2>
+
+<p>Why are tail calls interesting? I want this post to be mainly about the analysis, so I won't delve too deeply into the mechanics of the machine code, but essentially tail calls allow for a compiler optimization where the callee can hand its return value straight to the caller of the caller. This will make more sense when you consider this extended version of example 1.1:</p>
+
+<p>``` python Example 2.1</p>
+
+<pre><code>def g():
+    return 1
+
+def f():
+    return g()
+
+print f()
+</code></pre>
+
+<p>```</p>
+
+<p>Here, <code>g()</code> will return 1 to <code>f()</code> and <code>f()</code> will return 1 to <code>print</code>, but, since all <code>f()</code> does is immediately return <code>g()</code>'s value to <code>print</code>, why not skip that step entirely? That is, why not simply have <code>g()</code> give its return value directly to <code>print</code>? That's how tail call optimization works. In the optimized version, <code>g()</code> returns its value directly to <code>print</code> rather than forcing <code>f()</code> to be the middleman. This is implemented on the machine code level by having the call to <code>g()</code> reuse <code>f()</code>'s stack frame. The result is that when <code>g()</code> returns, it hands its value directly to <code>print</code>.<sup>3</sup> The advantage is that since each call doesn't result in the allocation of a new stack frame, the compiled code will be slightly faster, and the recursion depth will be practically unlimited (or at least not limited by the size of the call stack).</p>
+
+<p>Notice, though, that the actual optimization occurs at the machine code level, in the instruction selection phase of the compiler, which isn't the subject of this post. Instead, the subject is detecting when this optimization can be performed, and, additionally, transforming programs into ones that are eligible for this optimization. More on that in the next section.</p>
+
+<h2>3. Goals of the Analysis</h2>
+
+<p>One of the design goals of the analysis is for it to detect both of the situations outlined in section 1. That is, it should:</p>
+
+<ol>
+<li>Detect obvious cases of tail calls, where a function call is directly nested within a <code>return</code> statement and</li>
+<li>Detect less obvious cases where a program isn't tail calling, but could be transformed into one that is.</li>
+</ol>
+
+
+<p>To elaborate on the second goal, <em>we want to detect instances where a return value is assigned to a variable, copied through a series of assignments, and then immediately returned without any intervening code.</em> This situation occurs in example 1.3, and is the reason it could be transformed into a tail calling program. Here is another example:</p>
+
+<p>``` python Example 3.1</p>
+
+<pre><code>def f():
+    if input():
+        x = g()
+    else:
+        x = 1
+    return x
+</code></pre>
+
+<p>```</p>
+
+<p>If <code>input()</code> evaluates to true, then the value of <code>g()</code> gets assigned to <code>x</code>, and is immediately returned. Transforming this into a semantically equivalent tail calling program is as simple as pushing the <code>return</code> statement up into the <code>if</code> branch:</p>
+
+<p>``` python Example 3.2</p>
+
+<pre><code>def f():
+    if input():
+        return g()
+    else:
+        x = 1
+    return x
+</code></pre>
+
+<p>```</p>
+
+<p>Now <code>g()</code> is in tail call position, but the semantics of the program haven't changed.</p>
+
+<p>Contrast that with this example that can't be optimized (at least not by this analysis):</p>
+
+<p>``` python Example 3.3</p>
+
+<pre><code>def f():
+    x = g()
+    print "About to return"
+    return x
+</code></pre>
+
+<p>```</p>
+
+<p>This example doesn't meet the last requirement that the copied return value is "immediately returned without any intervening code." Since our transformation pushes the <code>return</code> statement up to the function call to <code>g()</code>, we get the following program:</p>
+
+<p>``` python   Example 3.4</p>
+
+<pre><code>def f():
+    return g()
+    print "About to return"
+</code></pre>
+
+<p>```</p>
+
+<p>Now the <code>print</code> statement is never reached. A more nuanced analysis might handle a case like this, but ours won't.</p>
+
+<h2>4. Complications: The naive analysis, dispatch code, and flattening.</h2>
+
+<p>Now that we understand the parameters of the analysis--what we will detect, and what we won't--how do we implement it? The first requirement is to detect obvious cases where function calls are nested within <code>return</code> statements. This seems simple. Just traverse the AST<sup>4</sup> and look for that precise situation: where function calls are nested within <code>return</code> statements. The trouble with this technique, and the reason that I call it the "naive analysis," is that, through the course of compilation, every function call gets turned into a set of nested <code>if</code> statements. Returning to example 1.1:</p>
+
+<p>``` python Example 1.1</p>
+
+<pre><code>def f():
+    return g()
+</code></pre>
+
+<p>```</p>
+
+<p>This might get transformed into something like:</p>
+
+<p>``` python Example 4.1</p>
+
+<pre><code>def f():
+    if ...:
+        tmp0 = g()
+    else:
+        if ...:
+            tmp1 = h()
+        else:
+            tmp1 = throw_error()
+        tmp0 = tmp1
+    return tmp0
+</code></pre>
+
+<p>```</p>
+
+<p>Why the additional complexity? Remember that Python is a dynamic language. One consequence of this is that at compile time, the compiler doesn't know the type of each variable. Is <code>g</code> an <code>int</code>? A <code>float</code>? A class? In many cases, the program needs this information. In the example above, <code>g()</code> will compile to different code if <code>g</code> is the name of a class, versus if <code>g</code> is the name of a function. Because this can't always be detected at compile time, the executable must be able to detect the types of variables, and be ready for every case.<sup>5</sup> Returning to the example, the first <code>if</code> might be testing if <code>g</code> is the name of a class. If it is, instead of calling a function named <code>g</code>, it needs to execute <code>g</code>'s <code>__init__()</code> method. If <code>g</code> isn't a class, then it needs to make sure <code>g</code> is a function. If it isn't, then the program needs to throw a runtime error. This is one reason why dynamic languages can be slow.</p>
+
+<p>In any case, what matters to us is how this affects our analysis, but thankfully it doesn't. Although our compiler has effectively eliminated instances of "obvious" tail calls, the example above is still eligible for transformation into a program that contains tail calls. Since the return values of the function calls are assigned to temporary variables, then returned, the transformation is the same as in the simpler examples: push the <code>return</code> statement up to the function calls:</p>
+
+<p>``` python Example 4.2</p>
+
+<pre><code>def f():
+    if ...:
+        return g()
+    else:
+        if ...:
+            return h()
+        else:
+            return throw_error()
+        tmp0 = tmp1
+    return tmp0
+</code></pre>
+
+<p>```</p>
+
+<p>The <code>return</code> statements have now been pushed up into the branches of the <code>if</code> statement, and <code>g()</code>, <code>h()</code>, and <code>throw_error()</code> are now in tail call position. Nice. Notice that this transformation leaves behind <em>dead code</em>. The assignment <code>tmp0 = tmp1</code> and <code>return tmp0</code> are considered "dead" because they will never be reached. Many compilers have a separate phase that removes the dead code that gets created from optimizations like this, but that's beyond the scope of this article.<sup>6</sup></p>
+
+<p>Aside from the addition of dispatch code, there's another important transformation to the code before it reaches the analysis phase. Happily, this transformation actually make detecting tail calls easier. This transformation is called <em>flattening</em>, which means that deeply nested expressions get broken down into simpler statements. Consider this:</p>
+
+<p>``` python Example 4.3</p>
+
+<pre><code>x = input() + 1 + g()
+</code></pre>
+
+<p>```</p>
+
+<p>That would get flattened into:</p>
+
+<p>``` python Example 4.4</p>
+
+<pre><code>tmp0 = input()
+tmp1 = tmp0 + 1
+tmp2 = g()
+tmp3 = tmp1 + tmp2
+x = tmp3
+</code></pre>
+
+<p>```</p>
+
+<p>Notice that the semantics of the program haven't changed, but the nested expression <code>input() + 1 + g()</code> gets broken down, or flattened, into a simple series of assignments.<sup>7</sup> Although this appears to add additional complexity, it actually reduces the number of possible cases our analysis will encounter, and shrinks the depth of the AST. Notice that the examples above have already been flattened.</p>
+
+<p>So now that we have a fuller description of what we're up against, what does the not-so-naive analysis look like?</p>
+
+<h2>5. The Not-So-Naive Analysis</h2>
+
+<p>The not-so-naive analysis is a <em>flow sensitive static analysis</em>. The analysis follows the control flow of the program and, at each program point, records information about the contents of the variables based on certain rules. A <em>program point</em> is roughly every place in a program where the state of the program could change. In a flattened program, this roughly corresponds to the point before and after every line or statement of code. In the example below, each program point is numbered. The numbers correspond to the order in which each program point will be visited:</p>
+
+<p>``` python Example 5.1</p>
+
+<pre><code>{0}
+tmp0 = input()
+{1}
+if tmp0:
+    {2}
+    tmp1 = f()
+    {3}
+else:
+    {4}
+    tmp1 = g()
+    {5}
+{6}
+return tmp1
+</code></pre>
+
+<p>```</p>
+
+<p>So, there is a program point before and after each assignment, and a program point before and after the entire <code>if</code> statement. The order in which the two branches of the <code>if</code> statement are visited doesn't matter, but both branches should be visited before leaving the <code>if</code> statement.</p>
+
+<p>Stepping through the program in this order is easy. Each line of code is an item in a list. Traverse the list in order. If you get to an <code>if</code> statement, do a postorder traversal. First visit the <code>if</code> branch and then the <code>else</code>. Once the value of these branches is determined, the value after the entire <code>if</code> statement can be determined. In other words, in order to determine the value at program point 6, the values at 3 and 5 must be evaluated first.</p>
+
+<p>What do I mean by "the value at program point 6?" As hinted at above, each program point is associated with a set of variables. Roughly, this set corresponds to the set of variables that contain return values. The specifics of how variables get added and removed from the set is the subject of a set of rules. Formally, each rule is a function that takes in the set at a program point (usually the one above the current statement) and the statement itself, and outputs a new set that corresponds to the program point after that statement. So, for example, the value at program point 5 is determined by looking at program point 4 and the statement on line 10 (<code>tmp1 = g()</code>). Because that statement stores a return value to <code>tmp1</code>, <code>tmp1</code> gets added to the set at point 5. This is one of the rules. Below are the rules in full. As a shorthand, the program point before a statement is called R<sub>before</sub> and the point after is called R<sub>after</sub>.</p>
+
+<ol>
+<li>If the statement is an assignment between variable <code>v</code> and a function call (<code>v = g()</code>), then <em>R<sub>after</sub> = {v}</em>.</li>
+<li>If the statement is an assignment from variable <code>t</code> to variable <code>v</code> (<code>v = t</code>), and <code>t</code> is in R<sub>before</sub>, then <em>R<sub>after</sub> = {v}</em>.</li>
+<li>At the start of a program, the beginning of a new code block (e.g. the beginning of a branch in an <code>if</code> statement), or the beginning and end of a new scope <em>R<sub>before</sub> = {}</em>.</li>
+<li>If the statement is an <code>if</code> statement, then <em>R<sub>after</sub> = R<sub>after-if</sub> ∪ R<sub>after-else</sub></em>. In other words, it is the union of the R<sub>after</sub>s of each branch.</li>
+<li>If the statement is a <code>return</code> statement, and variable <code>v</code> is being returned (<code>return v</code>), and <code>v</code> is in R<sub>before</sub>, then the <code>return</code> statement can be pushed up to wherever <code>v</code>'s value was originally created. In other words, there's some function call above that can be put into tail call position (the function that created the value held by <code>v</code>).</li>
+<li>In all other cases, <em>R<sub>after</sub> = {}</em>.</li>
+</ol>
+
+
+<p>Some of these rules are intuitive. Some aren't. I'll go through them one by one and explain them. Keep in mind the goal of the analysis: we're trying to detect when return values are copied through a series of assignments and then returned without any intervening code.</p>
+
+<p>This makes the first rule the most intuitive. If a variable gets assigned a return value, add that variable to the set. This would be the first step in detecting something like example 1.3, reproduced below with the sets at each program point. Notice rule 1 in action on lines 4 and 5:</p>
+
+<p>``` python Example 1.3/5.2
+{}
+def f():</p>
+
+<pre><code>{}
+x = g()
+{x}
+y = x
+{y}
+return y
+</code></pre>
+
+<p>```</p>
+
+<p>The second rule keeps track of return values that get copied between variables, and is the reason the set contains <code>y</code> after the 6<sup>th</sup> line. The value of <code>x</code> gets copied to <code>y</code>, and <code>x</code> happens to be in R<sub>before</sub>, so, by rule 2, <code>y</code> is now in R<sub>after</sub>.</p>
+
+<p>The third rules initializes the analysis, and starts the program with an empty set. This rule should also be applied to new code blocks. The two branches of an <code>if</code> statement should begin with empty sets as shown below in a new example:</p>
+
+<p>``` python Example 5.3
+{}
+y = g()
+{y}
+if input():</p>
+
+<pre><code>{}
+y = f()
+{y}
+</code></pre>
+
+<p>else:</p>
+
+<pre><code>{}
+y = h()
+{y}
+print "Called h()"
+{}
+</code></pre>
+
+<p>{y}
+return y
+```</p>
+
+<p>Although <code>y</code> is in the set before the <code>if</code> statement, both branches of the <code>if</code> statement begin with an empty set.</p>
+
+<p>Example 5.3 also demonstrates rule four. The set after an <code>if</code> statement contains the union of the two branches, in this case just <code>y</code>.</p>
+
+<p>The fifth rule comes into play on line 15. <code>y</code> is returned, and it also happens to be in R<sub>before</sub>. This means that the function call that gave <code>y</code> its value can be put in tail call position. This is done by pushing the <code>return</code> statement up to the call to <code>f()</code> on line 6:</p>
+
+<p>``` python Example 5.4
+{}
+x = g()
+{x}
+if input():</p>
+
+<pre><code>{}
+return f() # Optimized to tail call position.
+{y}
+</code></pre>
+
+<p>else:</p>
+
+<pre><code>{}
+y = h()
+{y}
+print "Called h()"
+{}
+</code></pre>
+
+<p>{y}
+return y
+```</p>
+
+<p>The program has now been transformed into a tail calling program. The analysis has detected that a return value was assigned to a variable, and then returned without any intervening code. Notice, though, that the call to <code>h()</code> on line 10 wasn't optimized. It was almost eligible for transformation, but the intervening <code>print</code> statement on line 12 trigged the last rule, and, correctly, prevented the <code>return</code> statement from being pushed up to the call  to <code>h()</code>. This is the purpose of the last rule--to prevent intervening code from becoming dead code.</p>
+
+<p>There is one last bit of housekeeping. In order for rule 5 to be executed, it needs to know where a variable's value was originally created. Consider, once again, example 1.3:</p>
+
+<p>``` python Example 1.3/5.2
+{}
+def f():</p>
+
+<pre><code>{}
+x = g()
+{x}
+y = x
+{y}
+return y
+</code></pre>
+
+<p>```</p>
+
+<p>The analysis will detect that <code>y</code> is being returned, and recognize that <code>y</code> is in R<sub>before</sub>. This will trigger rule 5, and the analysis will need to know where <code>y</code>'s value was originally created. How will it determine this? The algorithm is simple:</p>
+
+<ol>
+<li>When <code>g()</code> is first assigned to <code>x</code> and <code>x</code> gets added to R<sub>after</sub>, the analysis will record that <code>x</code> is associated with that line (or AST node).</li>
+<li>When <code>x</code> gets copied to <code>y</code>, the analysis looks up whichever node/line <code>x</code> was associated with, and then records that <code>y</code> is associated with that same node/line.</li>
+<li>When the analysis gets to the last line, it knows that <code>y</code> is associated with line 4 (<code>x = g()</code>), and knows that it can push the <code>return</code> statement up to that position.</li>
+</ol>
+
+
+<p>We are left with the optimized version:</p>
+
+<p>``` python Example 5.5</p>
+
+<pre><code>def f():
+    return g()
+    # Dead code
+    y = x
+    return y
+</code></pre>
+
+<p>```</p>
+
+<h2>6. Conclusion</h2>
+
+<p>Congratulations if you've gotten this far. We've covered a lot of ground. I've touched on several parts of the compiler, and described, in detail, a program analysis for detecting tail calls. Notice, though, that this analysis only covers a very small subset of Python. The rules assume that all <code>if</code> statements also have an <code>else</code> branch. How could this be fixed? I also haven't addressed other control flow structures. Adding a rule for <code>while</code> loops would be an important addition. All of these issues would be good exercises to think about, and will, perhaps be the subjects of followup posts.</p>
+
+<h2>Footnotes</h2>
+
+<ol>
+<li>I'm currently in the early stages of forking the project, which I've redubbed <a href="http://github.com/beala/bullfrog">bullfrog</a>.</li>
+<li><a href="http://en.wikipedia.org/wiki/Tail_call#Syntactic_form">http://en.wikipedia.org/wiki/Tail_call#Syntactic_form</a></li>
+<li><a href="http://en.wikipedia.org/wiki/Tail_call#In_assembler">http://en.wikipedia.org/wiki/Tail_call#In_assembler</a></li>
+<li>AST: Abstract Syntax Tree. A tree representation of the structure (syntax) of a program. <a href="http://en.wikipedia.org/wiki/Abstract_syntax_tree">Wiki</a>.</li>
+<li>This is one reason dynamic languages can be slow, but most compilers perform additional optimizations to cut down on so called "dispatch code" by detecting variables types at compile time. This is possible when, for example, an integer is explicitly assigned to a variable: <code>x = 1</code>. In that case, it's guaranteed that <code>x</code> contains an integer.</li>
+<li>Dead code elimination. (2011, October 20). In Wikipedia, The Free Encyclopedia. Retrieved 16:56, December 24, 2011, from <a href="http://en.wikipedia.org/w/index.php?title=Dead_code_elimination&amp;oldid=456578651">http://en.wikipedia.org/w/index.php?title=Dead_code_elimination&amp;oldid=456578651</a></li>
+<li>At first blush, this doesn't look nested, but it is: <code>x = (((input()) + 1) + g())</code>. The infix notation is deceptive, but, as demonstrated by the parenthesized version, there are actually 2 levels of addition that roughly correspond to the structure of the flattened code.</li>
+</ol>
+
+]]></content>
+  </entry>
+  
+</feed>

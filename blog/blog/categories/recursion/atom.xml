@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: recursion | /usr/sbin/blog]]></title>
+  <link href="http://usrsb.in/blog/blog/categories/recursion/atom.xml" rel="self"/>
+  <link href="http://usrsb.in/blog/"/>
+  <updated>2012-08-12T10:39:34-06:00</updated>
+  <id>http://usrsb.in/blog/</id>
+  <author>
+    <name><![CDATA[Alex Beal]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Bouncing Python's Generators With A Trampoline]]></title>
+    <link href="http://usrsb.in/blog/blog/2012/08/12/bouncing-pythons-generators-with-a-trampoline/"/>
+    <updated>2012-08-12T10:06:00-06:00</updated>
+    <id>http://usrsb.in/blog/blog/2012/08/12/bouncing-pythons-generators-with-a-trampoline</id>
+    <content type="html"><![CDATA[<p>In this post, I'm going to combine two of my favorite topics: recursion and Python's generators. My aim is to address a real pain point in Python: its lack of tail call optimization. Let's start with a simple <code>countdown</code> function that counts from <code>start</code> to <code>0</code> using recursion:</p>
+
+<p>``` python Recursive Countdown
+def countdown(start):</p>
+
+<pre><code>print start
+if start == 0:
+    return 0
+else:
+    return countdown(start - 1)
+</code></pre>
+
+<p>```</p>
+
+<p>This function needs no explanation. It simply prints <code>start</code> and then calls itself with <code>start - 1</code>. The issue here is that for large values of <code>start</code>, we can easily blow Python's stack:</p>
+
+<p><code>python Countdown Demo
+% countdown(1000)
+1000
+999
+[...]
+3
+2
+Traceback (most recent call last):
+  File "&lt;stdin&gt;", line 1, in &lt;module&gt;
+  File "&lt;stdin&gt;", line 6, in countdown
+[...]
+RuntimeError: maximum recursion depth exceeded
+</code></p>
+
+<p>Of course, one option is to just loop:</p>
+
+<p><code>python For Loop Countdown
+print "\n".join([str(i) for i in xrange(1000,-1,-1)])
+</code></p>
+
+<p>But I didn't write this post just to tell you that recursive functions can be translated into loops (duh). Instead, I'm going to use a technique called trampolining to convert tail-recursive functions into tail-recursive generators, which won't blow the stack.</p>
+
+<p>Returning to the countdown example, let's think about why the recursive call is a problem in the first place. The issue is that in <code>return countdown(start - 1)</code>, the call to <code>countdown</code> must complete before its value can be returned, thus increasing the call stack. "Well, of course," you say. "That's how recursive functions work." But wait a minute. Is that really necessary? What if, rather than <code>countdown</code> calling itself, it simply <em>returned the next recursive call in the sequence</em> for its caller to execute. Hey, I think we might be on to something:</p>
+
+<p>``` python A Tail-Recursive Generator
+def countdown(start):</p>
+
+<pre><code>print start
+if start == 0:
+    yield 0
+else:
+    yield countdown(start - 1)
+</code></pre>
+
+<p>```</p>
+
+<p>So now <code>countdown</code> is a generator which calls itself. That's kind of wacky. Let's call it and see what happens.</p>
+
+<p><code>python Trying It Out
+% countdown(5)
+&lt;generator object countdown at 0x100492550&gt;
+</code></p>
+
+<p>That's interesting. We now have a generator. Think about that for a moment. What does this generator represent? Ah, that's right. <em>It's the next recursive call in the sequence.</em> It just hasn't been executed yet. Let's execute it:</p>
+
+<p><code>python Sweet
+% g = countdown(5)
+% g = g.next()
+5
+</code></p>
+
+<p>We're getting somewhere.</p>
+
+<p><code>python Manual Trampoline
+% g = countdown(5)
+% g = g.next()
+5
+% g = g.next()
+4
+% g = g.next()
+3
+% g = g.next()
+2
+% g = g.next()
+1
+% g = g.next()
+0
+% g = g.next()
+Traceback (most recent call last):
+  File "&lt;stdin&gt;", line 1, in &lt;module&gt;
+AttributeError: 'int' object has no attribute 'next'
+</code></p>
+
+<p>Well, that's really neat. Each generator represents one recursive call, and a generator's return value is the next recursive call in the sequence, except for the last call. What happened there? We reached the base case, and the last generator returned <code>0</code>.</p>
+
+<p>We now have a general pattern. Let's write a function which executes these tail-recursive generators automatically:</p>
+
+<p>``` python Trampoline Function
+import types</p>
+
+<p>def tramp(gen, *args, **kwargs):</p>
+
+<pre><code>g = gen(*args, **kwargs)
+while isinstance(g, types.GeneratorType):
+    g=g.next()
+return g
+</code></pre>
+
+<p>```</p>
+
+<p>So, a generator function is passed in, which is then used to create the generator <code>g</code>. <code>g.next()</code> is repeatedly called, and the next recursive call is stored back to <code>g</code>. We keep doing this until <code>g</code> no longer returns a generator. If <code>g</code> is not a generator, then we've reached the base case, and we return it (if the base case is a generator, you'll have to use something like exceptions to signal that you've reached the base case).</p>
+
+<p><strong>Note:</strong> It's about time that I explained where the word "trampoline" comes from. The idea is that each recursive call is "trampolined" off the trampoline runner (the <code>tramp</code> function in this case). That is, each recursive call is returned to <code>tramp</code> and is bounced off of it. I also like to think that each recursive call bounces higher (just like on a trampoline) because the "virtual" recursion depth increases, but it's very possible that I made that up in my head.</p>
+
+<p>Let's try this with countdown, and a large <code>start</code> value:</p>
+
+<p>``` python Trampoline Test
+% tramp(countdown, 1000)
+1000
+999
+[...]
+2
+1
+0
+0   &lt;--- Since we executed in the interactive interp,</p>
+
+<pre><code>     this is the return val of `tramp`.
+</code></pre>
+
+<p>```</p>
+
+<p>Excellent! The original function blew the stack, but the trampolined generator does just fine. Furthermore, we've written a general trampoline runner to execute these trampolined generators. But, before we call it a day, we have to write a trampolined version of the Fibonacci function, otherwise, <em>what's even the point of recursion?</em></p>
+
+<p>``` python Trampolined Fibonacci
+def fib(count, cur=0, next_=1):</p>
+
+<pre><code>if count &lt;= 1:
+    yield cur
+else:
+    # Notice that this is the tail-recursive version
+    # of fib.
+    yield fib(count-1, next_, cur + next_)
+</code></pre>
+
+<p>```</p>
+
+<p>Let's take this for a test drive:</p>
+
+<p>``` python The First 10 Fib Numbers</p>
+
+<h1>Print the first 10 Fibonacci numbers.</h1>
+
+<p>for i in xrange(1,11):</p>
+
+<pre><code>print tramp(fib, i)
+</code></pre>
+
+<p>Output:
+0
+1
+1
+2
+3
+5
+8
+13
+21
+34
+```</p>
+
+<p>Well, that's terrific. Not only is the tail-recursive version just as efficient as the <code>for-loop</code> version (except, of course, for function calling, and generator overhead), it also won't blow the stack.</p>
+
+<p>So, this is yet another example of the power of Python's generators (Python's most under appreciated feature, as David Beazley argues). What are the takeaways?</p>
+
+<ol>
+<li>This technique only works for <em>tail-recursive</em> functions. The recursive call must be the last thing the function does.</li>
+<li>The translation to a trampolined generator is easy! Just turn the <code>return</code> statements into <code>yield</code> expression.</li>
+<li>Although this will protect your stack, creating a generator for each call is probably slow.</li>
+</ol>
+
+
+<p>If this was fun for you, then definitely check out David Beazley's <a href="http://www.dabeaz.com/coroutines/index.html">presentation on coroutines and concurrency</a>. He uses trampolining, generators, and coroutines to write an OS in Python, complete with a task scheduler, sys calls, and blocking and non-block IO. This man is a wizard.</p>
+
+<p>Eli Bendersky also has a couple great articles on using generators for <a href="http://eli.thegreenplace.net/2012/08/09/using-sub-generators-for-lexical-scanning-in-python/">lexical scanning</a> and <a href="http://eli.thegreenplace.net/2009/08/29/co-routines-as-an-alternative-to-state-machines/">state machines</a>. Those posts inspired me to write a <a href="https://gist.github.com/3325354">command line argument parser</a> using coroutines, which can process a stream of characters and handles all the usual suspects, like quotes and escape characters. As you can tell, I've been getting quite a bit of mileage out of these techniques.</p>
+]]></content>
+  </entry>
+  
+</feed>
